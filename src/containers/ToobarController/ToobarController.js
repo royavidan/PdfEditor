@@ -7,6 +7,7 @@ import { FileContext } from '../../context/file-context'
 import { ViewportContext } from '../../context/viewport-context'
 import { CounterContext } from '../../context/counter-context'
 import { ModificationContext } from '../../context/modification-context'
+import { BloonsContext } from '../../context/bloons-context'
 
 const getPositiveAngle = angle => ((angle % 360) + 360) % 360
 
@@ -20,6 +21,13 @@ function translatePos(angle, x, y, width, height) {
       return { x: width - x, y: height - y }
     case 270:
       return { x: width - y, y: x }
+  }
+}
+
+async function exportBloons(bloons) {
+  //TODO: real implementation
+  for (const [id, bloon] of Object.entries(bloons).sort((a, b) => a[0] - b[0])) {
+    console.log(`bloon ${id}: ${JSON.stringify(bloon)}`)
   }
 }
 
@@ -76,6 +84,7 @@ function ToolbarController({ children }) {
   const { scale, setScale, fontSize, setFontSize } = useContext(ViewportContext)
   const { initialCounter, setInitialCounter, counter, resetCounter } = useContext(CounterContext)
   const { modList, resetModList } = useContext(ModificationContext)
+  const { bloons } = useContext(BloonsContext)
   const onZoomChange = amount => setScale(scale => scale + amount)
 
   return children({
@@ -97,6 +106,7 @@ function ToolbarController({ children }) {
     setInitialCounter,
     counter,
     onDownload: () => download(fileData, modList, fontSize),
+    onExport: () => exportBloons(bloons),
     fontSize,
     setFontSize
   })

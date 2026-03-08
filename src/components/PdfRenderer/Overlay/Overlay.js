@@ -1,5 +1,6 @@
-import React, { useRef, useState, useEffect } from 'react'
+import React, { useRef, useState, useEffect, useContext } from 'react'
 import KeyboardEventHandler from 'react-keyboard-event-handler'
+import { ModificationContext } from '../../../context/modification-context'
 
 import OverlayItem from './OverlayItem'
 
@@ -15,7 +16,9 @@ function getRelativeMousePos(element, event) {
 
 function Overlay({ items, scale, onItemMove, onItemDelete, fontSize }) {
   const overlayRef = useRef(null)
+  const { nextId } = useContext(ModificationContext)
   const [selectedItemId, setSelectedItemId] = useState(null)
+  useEffect(() => setSelectedItemId(nextId - 1), [nextId])
 
   useEffect(() => {
     if (items.length === 0) {

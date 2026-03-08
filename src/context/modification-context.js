@@ -5,6 +5,7 @@ const initialId = 0
 
 export const ModificationContext = createContext({
   modList: initialModList,
+  nextId: initialId,
   resetModList: () => {},
   addMod: () => {},
   changeMod: (id, changeFunc) => {},
@@ -49,6 +50,7 @@ export default ({ children }) => {
     <ModificationContext.Provider
       value={{
         modList,
+        nextId,
         resetModList,
         addMod,
         changeMod,

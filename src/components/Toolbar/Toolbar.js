@@ -12,6 +12,7 @@ function toolbar({
   onRotate,
   onDownload,
   onLoad,
+  onExport,
   fontSize,
   setFontSize
 }) {
@@ -76,6 +77,9 @@ function toolbar({
       </button>
       <button disabled={disabled} onClick={onDownload}>
         Download
+      </button>
+      <button disabled={disabled} onClick={onExport}>
+        Export
       </button>
       <div className={styles.group}>
         <div className={styles.text}>
