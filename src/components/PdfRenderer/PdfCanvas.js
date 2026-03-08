@@ -49,13 +49,16 @@ class PdfCanvas extends Component {
   }
 
   render() {
-    const { onClick } = this.props
+    const { onClick, onMouseMove } = this.props
 
     return (
       <canvas
         ref={this.canvasRef}
         onClick={event =>
           onClick(event, this.getMousePos(event.clientX, event.clientY))
+        }
+        onMouseMove={event =>
+          onMouseMove(event, this.getMousePos(event.clientX, event.clientY))
         }
         style={{ cursor: 'crosshair' }}
       />

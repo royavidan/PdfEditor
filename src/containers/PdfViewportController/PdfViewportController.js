@@ -6,55 +6,6 @@ import { CounterContext } from '../../context/counter-context'
 import { ModificationContext } from '../../context/modification-context'
 import { BloonsContext } from '../../context/bloons-context'
 
-function startRunningCounter(scale,
-  counter,
-  position,
-  addModification,
-  incrementCounter,
-  setOnClick,
-  addBloon) {
-  setOnClick(() => (event, newPosition) => stopRunningCounter(
-    scale,
-    counter,
-    newPosition,
-    addModification,
-    incrementCounter,
-    setOnClick,
-    position,
-    addBloon
-  ))
-}
-
-function stopRunningCounter(scale,
-  counter,
-  position,
-  addModification,
-  incrementCounter,
-  setOnClick,
-  formerPosition,
-  addBloon) {
-  const template = value => `(${value})`
-  addModification({
-    position: {
-      x: (position.x + scale) / scale,
-      y: position.y / scale
-    },
-    value: counter,
-    template
-  })
-  addBloon(counter, { top: formerPosition.y / scale, left: formerPosition.x / scale, bottom: position.y / scale, right: position.x / scale })
-  incrementCounter()
-  setOnClick(() => (event, position) => startRunningCounter(
-    scale,
-    counter,
-    position,
-    addModification,
-    incrementCounter,
-    setOnClick,
-    addBloon
-  ))
-}
-
 function PdfViewportController({ children }) {
   const { data } = useContext(FileContext)
   const { scale, fontSize } = useContext(ViewportContext)
@@ -65,16 +16,26 @@ function PdfViewportController({ children }) {
     ModificationContext
   )
   const { addBloon } = useContext(BloonsContext)
-  const [onClick, setOnClick] = useState(() => (event, pos) =>
-      startRunningCounter(
-        scale,
-        counter,
-        pos,
-        addModification,
-        incrementCounter,
-        setOnClick,
-        addBloon
-      ))
+  const [markedPosition, setMarkedPosition] = useState(null)
+
+  const onClick = (event, position) => {
+    if (markedPosition === null) {
+      setMarkedPosition(position)
+    } else {
+      const template = value => `(${value})`
+      addModification({
+        position: {
+          x: (position.x + scale) / scale,
+          y: position.y / scale
+        },
+        value: counter,
+        template
+      })
+      addBloon(counter, { top: markedPosition.y / scale, left: markedPosition.x / scale, bottom: position.y / scale, right: position.x / scale })
+      incrementCounter()
+      setMarkedPosition(null)
+    }
+  }
 
   return children({
     data,
@@ -95,7 +56,8 @@ function PdfViewportController({ children }) {
       removeMod(id)
       decrementCounter()
     },
-    fontSize
+    fontSize,
+    markedPosition
   })
 }
 
