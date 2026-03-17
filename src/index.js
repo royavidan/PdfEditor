@@ -4,7 +4,9 @@ import './index.css'
 import App from './containers/App'
 import * as serviceWorker from './serviceWorker'
 import pdfjs from '@bundled-es-modules/pdfjs-dist/build/pdf'
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf'
 
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/legacy/build/pdf.worker.min.js`
 pdfjs.GlobalWorkerOptions.workerSrc =
   'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.1.266/build/pdf.worker.min.js' // TODO: replace cdn with package worker
 // '@bundled-es-modules/pdfjs-dist/build/pdf.worker.min.js'

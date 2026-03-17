@@ -8,11 +8,13 @@
     "@pdf-lib/fontkit": "^0.0.4",
     "file-saver": "^2.0.2",
     "pdf-lib": "^1.0.1",
+    "pdfjs-dist": "^2.16.105",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-files": "^2.4.8",
     "react-keyboard-event-handler": "^1.5.1",
-    "react-scripts": "^3.4.1"
+    "react-scripts": "^3.4.1",
+    "xlsx-populate": "^1.21.0"
   },
   "scripts": {
     "start": "react-scripts start",

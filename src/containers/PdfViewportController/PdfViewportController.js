@@ -12,10 +12,10 @@ function PdfViewportController({ children }) {
   const { counter, incrementCounter, decrementCounter } = useContext(
     CounterContext
   )
-  const { modList, addMod: addModification, changeMod, removeMod } = useContext(
+  const { modList, nextId, addMod: addModification, changeMod, removeMod } = useContext(
     ModificationContext
   )
-  const { addBloon } = useContext(BloonsContext)
+  const { addBloon, removeBloon } = useContext(BloonsContext)
   const [markedPosition, setMarkedPosition] = useState(null)
 
   const onClick = (event, position) => {
@@ -23,6 +23,7 @@ function PdfViewportController({ children }) {
       setMarkedPosition(position)
     } else {
       const template = value => `(${value})`
+      addBloon(nextId, { id: counter, top: markedPosition.y / scale, left: markedPosition.x / scale, bottom: position.y / scale, right: position.x / scale })
       addModification({
         position: {
           x: (position.x + scale) / scale,
@@ -31,7 +32,6 @@ function PdfViewportController({ children }) {
         value: counter,
         template
       })
-      addBloon(counter, { top: markedPosition.y / scale, left: markedPosition.x / scale, bottom: position.y / scale, right: position.x / scale })
       incrementCounter()
       setMarkedPosition(null)
     }
@@ -53,7 +53,9 @@ function PdfViewportController({ children }) {
       }))
     },
     onItemDelete: id => {
+      console.log(`OnItemDelete(${id})`)
       removeMod(id)
+      removeBloon(id)
       decrementCounter()
     },
     fontSize,

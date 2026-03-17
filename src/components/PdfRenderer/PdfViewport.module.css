@@ -24,3 +24,11 @@
   pointer-events: none;
   opacity: 0.5;
 }
+
+.markingbox {
+  position: absolute;
+  background: transparent;
+  border: 1px dashed black;
+  pointer-events: none;
+  opacity: 0.5;
+}
