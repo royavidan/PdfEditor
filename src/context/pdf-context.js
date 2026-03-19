@@ -1,14 +1,13 @@
 import React, { useState, useEffect, createContext, useContext } from 'react'
 import { FileContext } from './file-context'
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf'
-
-export const KnownSymbols = {
-    phi: Symbol('phi')
-}
+import pdfjs from '@bundled-es-modules/pdfjs-dist/build/pdf'
 
 export const PDFContext = createContext({
     text: [],
-    symbols: {}
+    symbols: {
+        phi: []
+    },
+    isEmpty: () => true
 })
 
 const Point = point => {
@@ -26,21 +25,29 @@ const isCircle = path => path.length >= 10 && arrayIsEqual(path[0], path[path.le
 const isLine = path => path.length === 2
 
 const parseShapes = (fn, args, pageHeight) => {
-    const Y = y => pageHeight - y
+    const flipY = y => pageHeight - y
+
+    global.fn = fn
+    global.args = args
 
     const shapes = {
         circles: [],
         lines: []
     }
 
-    const Shape = (path, rect) => {
-        path.rect = rect
-        path.left = rect[0]
-        path.bottom = Y(rect[1])
-        path.right = rect[2]
-        path.top = Y(rect[3])
+    const Shape = (path, transform) => {
+        const X = path.map(p => p[0]), Y = path.map(p => p[1])
+
+        path.left = Math.min(...X)
+        path.bottom = flipY(Math.min(...Y))
+        path.right = Math.max(...X)
+        path.top = flipY(Math.max(...Y))
+        path.width = path.right - path.left
+        path.height = path.top - path.bottom
         path.center = middle(Point([path.left, path.bottom]), Point([path.right, path.top]))
-        for (let i = 0; i < path.length; i++) path[i] = Point([path[i][0], Y(path[i][1])])
+        path.transform = transform
+        path.angle = -Math.atan2(transform[1], transform[0]) * (180 / Math.PI)
+        for (let i = 0; i < path.length; i++) path[i] = Point([path[i][0], flipY(path[i][1])])
         return path
     }
 
@@ -60,21 +67,45 @@ const parseShapes = (fn, args, pageHeight) => {
 
     //STEP 1: read paths
     const paths = []
+    let transforms = [[1,0,0,1,0,0]]
 
     for (let i = 0; i < fn.length; i++) {
         switch (fn[i]) {
-            case pdfjsLib.OPS.constructPath:
-                const obj = args[i][1][0]
+            case pdfjs.OPS.transform:
+                transforms[0] = args[i]
+                break
+
+            case pdfjs.OPS.save:
+                transforms.unshift(transforms[0])
+                break
+
+            case pdfjs.OPS.restore:
+                transforms.shift()
+                break
+
+            case pdfjs.OPS.constructPath:
                 const path = []
-                for (let j = 0; j < obj.length; j++) {
-                    //TODO: curves
-                    if (obj[j] === 4) path.push(path[0]) //Close shape
-                    else { //MoveTo, LineTo (I expect only LineTo except the first)
-                        path.push(obj.slice(j + 1, j + 3))
-                        j += 2
+                let index = 0, hasCurves = false
+                for (let j = 0; j < args[i][0].length; j++) {
+                    const op = j === 0 && args[i][0][0] === pdfjs.OPS.moveTo ? pdfjs.OPS.lineTo : args[i][0][j]
+                    switch (op) {
+                        case pdfjs.OPS.lineTo:
+                            path.push(args[i][1].slice(index, index + 2))
+                            index += 2
+                            break
+                        case pdfjs.OPS.curveTo:
+                            //TODO: curves
+                            hasCurves = true
+                            break
+                        case pdfjs.OPS.closePath:
+                            path.push(path[0])
+                            break
+                        default:
+                            //TODO: ??
+                            break
                     }
                 }
-                paths.push(Shape(path, args[i][2]))
+                if (!hasCurves) paths.push(Shape(path, transforms[0]))
                 break
 
             default:
@@ -82,17 +113,24 @@ const parseShapes = (fn, args, pageHeight) => {
         }
     }
 
+    console.log(`paths=${paths.length}`)
+
+    global.paths = paths
+
     //STEP 2: Identify shapes
     for (const path of paths) {
         if (isCircle(path)) shapes.circles.push(Circle(path))
         else if (isLine(path)) shapes.lines.push(Line(path))
     }
 
-    return paths
+    console.log(`Shapes: circles=${shapes.circles.length}, lines=${shapes.lines.length}`)
+
+    return shapes
 }
 
 async function extractPDFData(fileData) {
-    const loadingTask = pdfjsLib.getDocument({ data: fileData })
+    console.log('Loading PDF context')
+    const loadingTask = pdfjs.getDocument({ data: fileData })
     const pdfDocument = await loadingTask.promise
     const page = await pdfDocument.getPage(1)
     const opList = await page.getOperatorList()
@@ -101,18 +139,24 @@ async function extractPDFData(fileData) {
     const { circles, lines } = parseShapes(opList.fnArray, opList.argsArray, viewport.height)
     const text = textContent.items.map(item => ({
         str: item.str,
-        top: viewport.height - item.transform[5],
+        top: viewport.height - (item.transform[5] + item.height),
         left: item.transform[4],
         width: item.width,
-        height: item.height
+        height: item.height,
+        right: item.transform[4] + item.width,
+        bottom: viewport.height - item.transform[5],
+        angle: -Math.atan2(item.transform[1], item.transform[0]) * (180 / Math.PI)
     }))
 
-    const symbols = { [KnownSymbols.phi]: [] }
+    const symbols = { phi: [] }
     
     for (const circle of circles) {
         //TODO: assuming the line goes down
-        const match = lines.filter(l => diff(Point(circle.center.x, circle.top), l[0]) < 10 && diff(Point(circle.center.x, circle.bottom), l[1]) < 10 && l.distance(circle.center) < 10)
-        if (match.length === 1) symbols[KnownSymbols.phi].push([circle, match[0]])
+        const match = lines.filter(l => diff(Point([circle.center.x, circle.top]), l[0]) < 10 && diff(Point([circle.center.x, circle.bottom]), l[1]) < 10 && l.distance(circle.center) < 10)
+        if (match.length === 1) {
+            console.log('found phi')
+            symbols.phi.push([circle, match[0]])
+        }
     }
 
     return { text, symbols }
@@ -122,6 +166,8 @@ export default ({ children }) => {
     const { data: fileData, isFileLoaded } = useContext(FileContext)
     const [text, setText] = useState([])
     const [symbols, setSymbols] = useState({})
+
+    const isEmpty = () => text.length === 0 && Object.keys(symbols).length === 0
 
     useEffect(() => {
         if (isFileLoaded()) {
@@ -134,7 +180,7 @@ export default ({ children }) => {
 
     return (
         <PDFContext.Provider
-            value={{ text, symbols }}
+            value={{ text, symbols, isEmpty }}
         >
             {children}
         </PDFContext.Provider>

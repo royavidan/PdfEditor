@@ -1,65 +1,31 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import PdfDoc from './PdfDoc'
 import PdfPage from './PdfPage'
 import PdfCanvas from './PdfCanvas'
 import Overlay from './Overlay/Overlay'
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf'
 
 import styles from './PdfViewport.module.css'
+import { PDFContext } from '../../context/pdf-context'
 
-/**
- * Parses a PDF and returns an array of styled React <div> elements 
- * that visually map the exact area and rotation of every text item.
- * * @param {Uint8Array | ArrayBuffer} binaryPdfData - The PDF file content.
- * @param {number} pageNumber - The page to extract from (defaults to 1).
- * @returns {Promise<Array<JSX.Element>>} Array of styled <div> elements.
- */
-export async function generateTextOverlays(binaryPdfData, cls, pageNumber = 1) {
-  console.log('tettt')
-  const loadingTask = pdfjsLib.getDocument({ data: binaryPdfData });
-  const pdfDocument = await loadingTask.promise;
-  const page = await pdfDocument.getPage(pageNumber);
+function getMarkingBoxes(text, symbols) {
+  const boxes = []
 
-  const viewport = page.getViewport({ scale: 1 });
-  const pageHeight = viewport.height;
+  text.forEach((item, index) => boxes.push(<div key={index} className={styles.markingbox} style={{
+    width: `${item.width}px`,
+    height: `${item.height}px`,
+    transform: `translate(${item.left}px, ${item.top}px) rotate(${item.angle}deg)`
+  }} />))
 
-  const textContent = await page.getTextContent({ includeMarkedContent: true });
-  const divElements = [];
-
-  textContent.items.forEach((item, index) => {
-    // Transform matrix: [scaleX, skewY, skewX, scaleY, translateX, translateY]
-    const [a, b, c, d, e, f] = item.transform;
-
-    // 1. Calculate the rotation angle
-    // Math.atan2 returns radians. We multiply by (180 / Math.PI) for degrees.
-    // We make it negative because CSS rotates clockwise, PDF rotates counter-clockwise.
-    const angleDeg = -Math.atan2(b, a) * (180 / Math.PI);
-
-    // 2. Map coordinates to a top-left DOM system using translate
-    // 'e' is the X position. 'f' is the bottom-left Y position.
-    const translateX = e;
-    
-    // We subtract item.height because CSS top/left naturally targets the top-left corner, 
-    // but we need to shift our box up so its bottom aligns with the PDF's bottom-left origin.
-    const translateY = pageHeight - f - item.height;
-
-    // 3. Construct the CSS
-    const style = {
-      top: 0,
-      left: 0,
+  for (const [symbol, matches] of Object.entries(symbols)) {
+    matches.forEach((item, index) => boxes.push(<div key={`${symbol}-${index}`} className={styles.markingbox} style={{
+      borderColor: 'red',
       width: `${item.width}px`,
       height: `${item.height}px`,
-      transformOrigin: 'bottom left',
-      transform: `translate(${translateX}px, ${translateY}px) rotate(${angleDeg}deg)`,
-      pointerEvents: 'none'
-    };
+      transform: `translate(${item.left}px, ${item.top}px) rotate(${item.angle}deg)`
+    }}/>))
+  }
 
-    divElements.push(
-      <div key={index} className={cls} style={style}/>
-    );
-  });
-
-  return divElements;
+  return boxes
 }
 
 function PdfViewport({
@@ -77,7 +43,10 @@ function PdfViewport({
 }) {
   const [currentMousePos, setCurrentMousePos] = useState(null)
   const [selectionBox, setSelectionBox] = useState(null)
-  if (data && !selectionBox) generateTextOverlays(data, styles.markingbox).then(setSelectionBox)
+  const { text, symbols, isEmpty } = useContext(PDFContext)
+  if (data && !isEmpty() && !selectionBox) {
+    setSelectionBox(getMarkingBoxes(text, symbols))
+  }
   return (
     <div className={`${className} ${styles.viewport}`} style={style}>
       <div className={styles.page}>
