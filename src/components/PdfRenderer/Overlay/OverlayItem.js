@@ -5,6 +5,7 @@ import styles from './Overlay.module.css'
 function OverlayItem({
   position,
   size,
+  title,
   value,
   scale,
   template,
@@ -20,7 +21,7 @@ function OverlayItem({
         fontSize: `${size * scale}px`
       }}
       draggable={isSelected}
-      title={isSelected ? 'Press <Delete> to remove this' : null}
+      title={isSelected ? title : null}
       {...otherProps}
     >
       {template(value)}

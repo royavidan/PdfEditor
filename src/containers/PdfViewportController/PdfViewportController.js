@@ -5,10 +5,12 @@ import { ViewportContext } from '../../context/viewport-context'
 import { CounterContext } from '../../context/counter-context'
 import { ModificationContext } from '../../context/modification-context'
 import { BloonsContext } from '../../context/bloons-context'
+import { PDFContext } from '../../context/pdf-context'
 
 function PdfViewportController({ children }) {
   const { data } = useContext(FileContext)
   const { scale, fontSize } = useContext(ViewportContext)
+  const { text, symbols } = useContext(PDFContext)
   const { counter, incrementCounter, decrementCounter } = useContext(
     CounterContext
   )
@@ -23,13 +25,19 @@ function PdfViewportController({ children }) {
       setMarkedPosition(position)
     } else {
       const template = value => `(${value})`
-      addBloon(nextId, { id: counter, top: markedPosition.y / scale, left: markedPosition.x / scale, bottom: position.y / scale, right: position.x / scale })
+      const bloon = { id: counter, top: markedPosition.y / scale, left: markedPosition.x / scale, bottom: position.y / scale, right: position.x / scale }
+      const isInside = elem => elem.left >= bloon.left && elem.right <= bloon.right && elem.top >= bloon.top && elem.bottom <= bloon.bottom
+      bloon.text = text.filter(isInside)
+      bloon.symbols = Object.fromEntries(Object.entries(symbols).filter(e => [e[0], e[1].filter(isInside)]))
+
+      addBloon(nextId, bloon)
       addModification({
         position: {
           x: (position.x + scale) / scale,
           y: position.y / scale
         },
         value: counter,
+        title: bloon.text.map(t => t.str).join(''),
         template
       })
       incrementCounter()

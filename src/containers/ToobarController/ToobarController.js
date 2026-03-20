@@ -8,7 +8,6 @@ import { ViewportContext } from '../../context/viewport-context'
 import { CounterContext } from '../../context/counter-context'
 import { ModificationContext } from '../../context/modification-context'
 import { BloonsContext } from '../../context/bloons-context'
-import { PDFContext } from '../../context/pdf-context'
 
 const getPositiveAngle = angle => ((angle % 360) + 360) % 360
 
@@ -25,11 +24,9 @@ function translatePos(angle, x, y, width, height) {
   }
 }
 
-function exportBloons(bloons, { text, symbols }) {
+function exportBloons(bloons) {
   for (const [id, bloon] of Object.entries(bloons).sort((a, b) => a[0].id - b[0].id)) {
-    const isInside = elem => elem.left >= bloon.left && elem.right <= bloon.right && elem.top >= bloon.top && elem.bottom <= bloon.bottom
-    const textElements = text.filter(isInside)
-    console.log(`${id}: bloon ${bloon.id} text elements: ${JSON.stringify(textElements.map(t => t.text))}`)
+    console.log(`${id}: bloon ${bloon.id} text elements: ${JSON.stringify(bloon.text.map(t => t.str))}`)
   }
 }
 
@@ -87,7 +84,6 @@ function ToolbarController({ children }) {
   const { initialCounter, setInitialCounter, counter, resetCounter } = useContext(CounterContext)
   const { modList, resetModList } = useContext(ModificationContext)
   const { bloons, resetBloons } = useContext(BloonsContext)
-  const pdfContent = useContext(PDFContext)
   const onZoomChange = amount => setScale(scale => scale + amount)
 
   return children({
@@ -110,7 +106,7 @@ function ToolbarController({ children }) {
     setInitialCounter,
     counter,
     onDownload: () => download(fileData, modList, fontSize),
-    onExport: () => exportBloons(bloons, pdfContent),
+    onExport: () => exportBloons(bloons),
     fontSize,
     setFontSize
   })

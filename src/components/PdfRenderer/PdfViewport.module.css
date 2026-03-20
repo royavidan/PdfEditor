@@ -30,7 +30,7 @@
   left: 0;
   top: 0;
   background: transparent;
-  border: 1px dashed black;
+  border: 1px dashed darkred;
   pointer-events: none;
   opacity: 0.5;
   transform-origin: bottom left;

@@ -52,6 +52,7 @@ function Overlay({ items, scale, onItemMove, onItemDelete, fontSize, markedPosit
           key={item.id}
           position={item.position}
           size={fontSize}
+          title={item.title}
           value={item.value}
           scale={scale}
           template={item.template}
