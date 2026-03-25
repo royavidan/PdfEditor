@@ -16,24 +16,28 @@ function getMarkingBoxes(text, symbols) {
   //   transform: `translate(${item.left}px, ${item.top}px) rotate(${item.angle}rad)`
   // }} />))
 
-  // for (const [symbol, matches] of Object.entries(symbols)) {
-  //   matches.forEach((item, index) => boxes.push(<div key={`${symbol}-${index}`} className={styles.markingbox} style={{
-  //     width: `${item.width}px`,
-  //     height: `${item.height}px`,
-  //     transform: `translate(${item.left}px, ${item.top}px) rotate(${item.angle}rad)`
-  //   }}/>))
-  // }
+  for (const [symbol, matches] of Object.entries(symbols)) {
+    matches.forEach((item, index) => boxes.push(<div key={`${symbol}-${index}`} className={styles.markingbox} style={{
+      width: `${item.width}px`,
+      height: `${item.height}px`,
+      transform: `translate(${item.left}px, ${item.top}px) rotate(${item.angle}rad)`
+    }}/>))
+  }
 
-  symbols.phi.forEach((item, index) => boxes.push(<div key={`phi-${index}-circle`} className={styles.markingbox} style={{
+  const circleDiv = (circle, key) => <div key={key} className={styles.markingbox} style={{
     borderRadius: '50%',
-    width: `${item.circle.width}px`,
-    height: `${item.circle.height}px`,
-    transform: `translate(${item.circle.left}px, ${item.circle.top}px)`
-  }}/>, <div key={`phi-${index}-line`} className={styles.markingbox} style={{
-    width: Math.hypot(item.line.width, item.line.height),
+    width: `${circle.width}px`,
+    height: `${circle.height}px`,
+    transform: `translate(${circle.left}px, ${circle.top}px)`
+  }}/>
+  const lineDiv = (line, key) => <div key={key} className={styles.markingbox} style={{
+    width: Math.hypot(line.width, line.height),
     transformOrigin: 'top left',
-    transform: `translate(${item.line[0].x}px, ${item.line[0].y}px) rotate(${Math.atan2(item.line[1].y - item.line[0].y, item.line[1].x - item.line[0].x)}rad)`
-  }}/>))
+    transform: `translate(${line[0].x}px, ${line[0].y}px) rotate(${Math.atan2(line[1].y - line[0].y, line[1].x - line[0].x)}rad)`
+  }}/>
+
+  // symbols.diameter.forEach((item, index) => boxes.push(circleDiv(item.circle, `diameter-${index}-circle`), lineDiv(item.line, `phi-${index}-line`)))
+  // symbols.position.forEach((item, index) => boxes.push(circleDiv(item.circle, `position-${index}-circle`), lineDiv(item.horizontal, `position-${index}-horizontal`), lineDiv(item.vertical, `position-${index}-vertical`)))
 
   return boxes
 }
@@ -53,7 +57,11 @@ function PdfViewport({
 }) {
   const [currentMousePos, setCurrentMousePos] = useState(null)
   const [selectionBox, setSelectionBox] = useState(null)
-  const { text, symbols, isLoaded } = useContext(PDFContext)
+  const { text, symbols, isLoaded, setMousePos } = useContext(PDFContext)
+  const onMouseMove = (event, position) => {
+    setCurrentMousePos(position)
+    setMousePos(position)
+  }
   if (data && isLoaded() && !selectionBox) setSelectionBox(getMarkingBoxes(text, symbols)) //TODO: for debugging purposes
   return (
     <div className={`${className} ${styles.viewport}`} style={style}>
@@ -73,7 +81,7 @@ function PdfViewport({
                       markedPosition={markedPosition}
                     />
                     <PdfCanvas page={page} scale={scale} onClick={onClick}
-                      onMouseMove={(event, position) => setCurrentMousePos(position)} />
+                      onMouseMove={onMouseMove} />
                     {selectionBox}
                     {markedPosition && currentMousePos && (
                       <div className={styles.selectionbox}

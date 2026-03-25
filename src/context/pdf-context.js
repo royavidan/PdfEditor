@@ -2,14 +2,6 @@ import React, { useState, useEffect, createContext, useContext } from 'react'
 import { FileContext } from './file-context'
 import pdfjs from '@bundled-es-modules/pdfjs-dist/build/pdf'
 
-export const PDFContext = createContext({
-    text: [],
-    symbols: {
-        phi: []
-    },
-    isLoaded: () => false
-})
-
 const Point = point => {
     point.x = point[0]
     point.y = point[1]
@@ -23,7 +15,16 @@ const middle = (a, b) => Point([(a.x + b.x) / 2, (a.y + b.y) / 2])
 const isCircle = path => path.length >= 10 && arrayIsEqual(path[0], path[path.length - 1])
 const isLine = path => path.length === 2
 
+export const PDFContext = createContext({
+    text: [],
+    symbols: {},
+    isLoaded: () => false,
+    mousePos: Point([0, 0]),
+    setMousePos: () => { }
+})
+
 const parseShapes = (fn, args, pageHeight) => {
+    global.pageHeight = pageHeight
     const flipY = y => pageHeight - y
 
     global.fn = fn
@@ -63,13 +64,26 @@ const parseShapes = (fn, args, pageHeight) => {
         path.slope = (path[1].y - path[0].y) / (path[1].x - path[0].x)
         path.len = diff(path[0], path[1])
         path.cross = point => floatIsEqual((point.x - path[0].x) / (point.y - path[0].y), (path[1].x - point.x) / (path[1].y - point.y))
-        path.distance = point => Math.abs((path[1].x - path[0].x) * (path[0].y - point.y) - (path[0].x - point.x) * (path[1].y - path[0].y)) / path.len
+        path.distance = point => {
+            if (path.slope === 0) {
+                if (point.x >= path.left && point.x <= path.right) return Math.abs(point.y - path[0].y)
+                return Math.min(diff(point, path[0]), diff(point, path[1]))
+            }
+            if (!Number.isFinite(path.slope)) {
+                if (point.y >= path.top && point.y <= path.bottom) return Math.abs(point.x - path[0].x)
+                return Math.min(diff(point, path[0]), diff(point, path[1]))
+            }
+            const x = (point.x / path.slope + point.y + path.slope * path[0].x - path[0].y) / (path.slope + 1 / path.slope)
+            if (x < path.left || x > path.right) return Math.min(diff(point, path[0]), diff(point, path[1]))
+            const y = path.slope * (x - path[0].x) + path[0].y
+            return diff(point, Point([x, y]))
+        }
         return path
     }
 
     //STEP 1: read paths
     const paths = []
-    let transforms = [[1,0,0,1,0,0]]
+    let transforms = [[1, 0, 0, 1, 0, 0]]
 
     for (let i = 0; i < fn.length; i++) {
         switch (fn[i]) {
@@ -103,8 +117,9 @@ const parseShapes = (fn, args, pageHeight) => {
                             break
                     }
                 }
-                shapes.textsMap[str] = real.join('')
-            }   break
+                const realStr = real.join('')
+                if (realStr !== str) shapes.textsMap[str] = real.join('')
+            } break
 
             case pdfjs.OPS.constructPath: {
                 const path = []
@@ -128,8 +143,11 @@ const parseShapes = (fn, args, pageHeight) => {
                             break
                     }
                 }
-                if (!hasCurves) paths.push(Shape(path, transforms[0]))
-            }   break
+                if (!hasCurves) {
+                    paths.push(Shape(path, transforms[0]))
+                    paths[paths.length - 1].i = i
+                }
+            } break
 
             default:
                 break
@@ -165,28 +183,72 @@ async function extractPDFData(fileData) {
         angle: -Math.atan2(item.transform[1], item.transform[0])
     }))
 
-    const symbols = { phi: [] }
-    
+    const symbols = {
+        diameter: [],
+
+        perpendicularity: [],
+        parallelism: [],
+        position: [],
+        concentricity: []
+    }
+    const addRects = base => {
+        const shapes = Object.values(base).filter(s => typeof s === 'object')
+        base.left = Math.min(...shapes.map(s => s.left))
+        base.right = Math.max(...shapes.map(s => s.right))
+        base.top = Math.min(...shapes.map(s => s.top))
+        base.bottom = Math.max(...shapes.map(s => s.bottom))
+        base.width = base.right - base.left
+        base.height = base.bottom - base.top
+        base.angle = 0
+        return base
+    }
+
     for (const circle of circles) {
         const edgeDistance = circle.radius * 1.5, centerDistance = circle.radius * 0.5
-        //TODO: assuming the line goes down
-        const match = lines.filter(l => diff(Point([circle.center.x, circle.top]), l[0]) < edgeDistance && diff(Point([circle.center.x, circle.bottom]), l[1]) < edgeDistance && l.distance(circle.center) < centerDistance)
-        if (match.length === 1) {
-            const line = match[0]
-            const obj = {
-                circle,
-                line,
-                left: Math.min(line.left, circle.left),
-                top: Math.min(line.top, circle.top),
-                right: Math.max(line.right, circle.right),
-                bottom: Math.max(line.bottom, circle.bottom),
-                angle: 0
-            }
-            obj.width = obj.right - obj.left
-            obj.height = obj.bottom - obj.top
+        const closeLines = lines.filter(l => l.distance(circle.center) < centerDistance)
+        //DIAMETER:
+        const matchPhi = l => {
+            const [top, bottom] = l[0].y < l[1].y ? l : [l[1], l[0]]
+            //TODO: confirm that position isn't included here by mistake (shouldn't)
+            return diff(Point([circle.center.x, circle.top]), top) < edgeDistance && diff(Point([circle.center.x, circle.bottom]), bottom) < edgeDistance
+        }
+        if (closeLines.length === 1 && matchPhi(closeLines[0])) {
+            const line = closeLines[0]
             //TODO: angle? (both have transform, if that helps)
+            symbols.diameter.push(addRects({ circle, line }))
+        }
 
-            symbols.phi.push(obj)
+        //POSITION:
+        const match = [
+            closeLines.filter(l => l.len < circle.width * 2.5 && floatIsEqual(l.slope, 0)),
+            closeLines.filter(l => l.len < circle.width * 2.5 && !Number.isFinite(l.slope))
+        ]
+        if (match[0].length === 1 && match[1].length === 1) {
+            const horizontal = match[0][0], vertical = match[1][0]
+            symbols.position.push(addRects({ circle, horizontal, vertical }))
+        }
+
+        //CONCENTRICITY:
+        const innerCircles = circles.filter(c => diff(circle.center, c.center) < centerDistance
+            && c.left > circle.left && c.right < circle.right && c.top > circle.top && c.bottom < circle.bottom)
+        if (innerCircles.length === 1) {
+            symbols.concentricity.push(addRects({ outer: circle, inner: innerCircles[0] }))
+        }
+    }
+
+    for (const line of lines) {
+        //PARALLELISM:
+        const parallelLines = lines.filter(l => floatIsEqual(l.slope, line.slope) && l.left > line.left && floatIsEqual(l.len, line.len)
+            && Math.min(diff(l[0], line[0]), diff(l[1], line[0]) < l.len))
+        if (parallelLines.length === 1) {
+            symbols.parallelism.push(addRects({ left: line, right: parallelLines[0] }))
+        }
+
+        //PERPENDICULARITY:
+        const perpendicularLines = lines.filter(l => (floatIsEqual(diff(line.center, l[0]), 0) || floatIsEqual(diff(line.center, l[1]), 0))
+            && ((!Number.isFinite(l.slope) && line.slope === 0) || (!Number.isFinite(line.slope) && l.slope === 0) || floatIsEqual(l.slope * line.slope, -1)))
+        if (perpendicularLines.length === 1) {
+            symbols.perpendicularity.push(addRects({ base: line, perpendicular: perpendicularLines[0] }))
         }
     }
 
@@ -200,8 +262,10 @@ export default ({ children }) => {
     const { data: fileData, isFileLoaded } = useContext(FileContext)
     const [text, setText] = useState(null)
     const [symbols, setSymbols] = useState(null)
+    const [mousePos, _setMousePos] = useState(Point([0, 0]))
 
     const isLoaded = () => text !== null && symbols !== null
+    const setMousePos = pos => _setMousePos(Point([pos.x, pos.y]))
 
     useEffect(() => {
         if (isFileLoaded()) {
@@ -209,12 +273,15 @@ export default ({ children }) => {
                 setText(text)
                 setSymbols(symbols)
             })
+        } else {
+            setText(null)
+            setSymbols(null)
         }
     }, [fileData, isFileLoaded])
 
     return (
         <PDFContext.Provider
-            value={{ text, symbols, isLoaded }}
+            value={{ text, symbols, isLoaded, mousePos, setMousePos }}
         >
             {children}
         </PDFContext.Provider>
