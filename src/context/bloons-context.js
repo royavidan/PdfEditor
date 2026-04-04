@@ -10,6 +10,7 @@ export const BloonsContext = createContext({
 
 export default ({ children }) => {
     const [bloons, setBloons] = useState([])
+    global.bloons = bloons
 
     const addBloon = (id, bloon) => setBloons(bloons => ({ ...bloons, [id]: bloon }))
     // eslint-disable-next-line eqeqeq

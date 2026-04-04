@@ -39,6 +39,7 @@ const parseShapes = (fn, args, pageHeight) => {
     global.shapes = shapes
 
     const Shape = (path, transform) => {
+        path = path.map(p => [p[0] * transform[0] + p[1] * transform[2] + transform[4], p[0] * transform[1] + p[1] * transform[3] + transform[5]])
         const X = path.map(p => p[0]), Y = path.map(p => p[1])
 
         path.left = Math.min(...X)
@@ -49,7 +50,6 @@ const parseShapes = (fn, args, pageHeight) => {
         path.height = path.bottom - path.top
         path.center = middle(Point([path.left, path.bottom]), Point([path.right, path.top]))
         path.transform = transform
-        path.angle = -Math.atan2(transform[1], transform[0])
         for (let i = 0; i < path.length; i++) path[i] = Point([path[i][0], flipY(path[i][1])])
         return path
     }
@@ -83,6 +83,7 @@ const parseShapes = (fn, args, pageHeight) => {
 
     //STEP 1: read paths
     const paths = []
+    global.paths = paths
     let transforms = [[1, 0, 0, 1, 0, 0]]
 
     for (let i = 0; i < fn.length; i++) {
@@ -95,7 +96,7 @@ const parseShapes = (fn, args, pageHeight) => {
                 transforms.unshift(transforms[0])
                 break
 
-            case pdfjs.OPS.restore:
+        case pdfjs.OPS.restore:
                 transforms.shift()
                 break
 
@@ -122,11 +123,23 @@ const parseShapes = (fn, args, pageHeight) => {
             } break
 
             case pdfjs.OPS.constructPath: {
-                const path = []
+                let path = []
                 let index = 0, hasCurves = false
                 for (let j = 0; j < args[i][0].length; j++) {
-                    const op = j === 0 && args[i][0][0] === pdfjs.OPS.moveTo ? pdfjs.OPS.lineTo : args[i][0][j]
-                    switch (op) {
+                    switch (args[i][0][j]) {
+                        case pdfjs.OPS.moveTo:
+                            if (j) {
+                                if (!hasCurves) {
+                                    paths.push(Shape(path, transforms[0]))
+                                    paths[paths.length - 1].i = i
+                                }
+                                hasCurves = false
+                                path = [args[i][1].slice(index, index + 2)]
+                            } else {
+                                path.push(args[i][1].slice(index, index + 2))
+                            }
+                            index += 2
+                            break
                         case pdfjs.OPS.lineTo:
                             path.push(args[i][1].slice(index, index + 2))
                             index += 2
@@ -171,15 +184,17 @@ async function extractPDFData(fileData) {
     const opList = await page.getOperatorList()
     const viewport = page.getViewport({ scale: 1 })
     const textContent = await page.getTextContent()
+    global.textContent = textContent
     const { circles, lines, textsMap } = parseShapes(opList.fnArray, opList.argsArray, viewport.height)
-    const text = textContent.items.map(item => ({
+    const text = textContent.items.filter(item => item.str.trim()).map(item => ({
         str: textsMap[item.str] || item.str,
         top: viewport.height - (item.transform[5] + item.height),
         left: item.transform[4],
-        width: item.width,
-        height: item.height,
-        right: item.transform[4] + item.width,
+        width: Math.abs(item.width),
+        height: Math.abs(item.height),
+        right: item.transform[4] + Math.abs(item.width),
         bottom: viewport.height - item.transform[5],
+        transform: item.transform,
         angle: -Math.atan2(item.transform[1], item.transform[0])
     }))
 
@@ -199,11 +214,11 @@ async function extractPDFData(fileData) {
         base.bottom = Math.max(...shapes.map(s => s.bottom))
         base.width = base.right - base.left
         base.height = base.bottom - base.top
-        base.angle = 0
         return base
     }
 
     for (const circle of circles) {
+        if (circle.width > 15) continue
         const edgeDistance = circle.radius * 1.5, centerDistance = circle.radius * 0.5
         const closeLines = lines.filter(l => l.distance(circle.center) < centerDistance)
         //DIAMETER:
@@ -214,7 +229,6 @@ async function extractPDFData(fileData) {
         }
         if (closeLines.length === 1 && matchPhi(closeLines[0])) {
             const line = closeLines[0]
-            //TODO: angle? (both have transform, if that helps)
             symbols.diameter.push(addRects({ circle, line }))
         }
 
@@ -237,9 +251,10 @@ async function extractPDFData(fileData) {
     }
 
     for (const line of lines) {
+        if (line.len > 15) continue
         //PARALLELISM:
         const parallelLines = lines.filter(l => floatIsEqual(l.slope, line.slope) && l.left > line.left && floatIsEqual(l.len, line.len)
-            && Math.min(diff(l[0], line[0]), diff(l[1], line[0]) < l.len))
+            && Math.min(diff(l[0], line[0]), diff(l[1], line[0]) < l.len / 2))
         if (parallelLines.length === 1) {
             symbols.parallelism.push(addRects({ left: line, right: parallelLines[0] }))
         }

@@ -7,20 +7,31 @@ import Overlay from './Overlay/Overlay'
 import styles from './PdfViewport.module.css'
 import { PDFContext } from '../../context/pdf-context'
 
+const colors = {
+  diameter: 'red',
+
+  perpendicularity: 'green',
+  parallelism: 'blue',
+  position: 'orange',
+  concentricity: 'purple'
+}
+
 function getMarkingBoxes(text, symbols) {
   const boxes = []
 
-  // text.forEach((item, index) => boxes.push(<div key={index} className={styles.markingbox} style={{
-  //   width: `${item.width}px`,
-  //   height: `${item.height}px`,
-  //   transform: `translate(${item.left}px, ${item.top}px) rotate(${item.angle}rad)`
-  // }} />))
+  text.forEach((item, index) => boxes.push(<div key={index} className={styles.markingbox} style={{
+    width: `${item.width}px`,
+    height: `${item.height}px`,
+    transform: `translate(${item.left}px, ${item.top}px) rotate(${item.angle}rad)`,
+    borderColor: 'black'
+  }} />))
 
   for (const [symbol, matches] of Object.entries(symbols)) {
     matches.forEach((item, index) => boxes.push(<div key={`${symbol}-${index}`} className={styles.markingbox} style={{
       width: `${item.width}px`,
       height: `${item.height}px`,
-      transform: `translate(${item.left}px, ${item.top}px) rotate(${item.angle}rad)`
+      transform: `translate(${item.left}px, ${item.top}px)`,
+      borderColor: colors[symbol]
     }}/>))
   }
 
@@ -49,7 +60,9 @@ function PdfViewport({
   overlayItems,
   className = '',
   style,
-  onClick,
+  onMouseDown,
+  onMouseUp,
+  onMouseLeave,
   onItemMove,
   onItemDelete,
   fontSize,
@@ -78,19 +91,13 @@ function PdfViewport({
                       onItemMove={onItemMove}
                       onItemDelete={onItemDelete}
                       fontSize={fontSize}
-                      markedPosition={markedPosition}
                     />
-                    <PdfCanvas page={page} scale={scale} onClick={onClick}
+                    <PdfCanvas page={page} scale={scale} onMouseDown={onMouseDown} onMouseUp={onMouseUp} onMouseLeave={onMouseLeave}
                       onMouseMove={onMouseMove} />
                     {selectionBox}
                     {markedPosition && currentMousePos && (
                       <div className={styles.selectionbox}
                         style={{
-                          position: 'absolute',
-                          background: '#b3e5fc',
-                          border: '1px solid #01579b',
-                          pointerEvents: 'none',
-                          opacity: 0.5,
                           left: Math.min(markedPosition.x, currentMousePos.x),
                           top: Math.min(markedPosition.y, currentMousePos.y),
                           width: Math.abs(markedPosition.x - currentMousePos.x),

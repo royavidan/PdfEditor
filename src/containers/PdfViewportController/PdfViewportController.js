@@ -20,37 +20,39 @@ function PdfViewportController({ children }) {
   const { addBloon, removeBloon } = useContext(BloonsContext)
   const [markedPosition, setMarkedPosition] = useState(null)
 
-  const onClick = (event, position) => {
-    if (markedPosition === null) {
-      setMarkedPosition(position)
-    } else {
-      const template = value => `(${value})`
-      const bloon = { id: counter, top: markedPosition.y / scale, left: markedPosition.x / scale, bottom: position.y / scale, right: position.x / scale }
-      const isInside = elem => elem.left >= bloon.left && elem.right <= bloon.right && elem.top >= bloon.top && elem.bottom <= bloon.bottom
-      bloon.text = text.filter(isInside)
-      bloon.symbols = Object.fromEntries(Object.entries(symbols).filter(e => [e[0], e[1].filter(isInside)]))
+  const isMain = event => event.button === 0
+  const onMouseDown = (event, position) => isMain(event) && setMarkedPosition(position)
+  const onMouseUp = (event, position) => {
+    if (!isMain(event) || !markedPosition) return
+    const template = value => `(${value})`
+    const bloon = { id: counter, top: markedPosition.y / scale, left: markedPosition.x / scale, bottom: position.y / scale, right: position.x / scale }
+    const isInside = elem => elem.left >= bloon.left && elem.right <= bloon.right && elem.top >= bloon.top && elem.bottom <= bloon.bottom
+    bloon.text = text.filter(isInside)
+    bloon.symbols = Object.fromEntries(Object.entries(symbols).map(e => [e[0], e[1].find(isInside)]).filter(e => e[1]))
 
-      addBloon(nextId, bloon)
-      addModification({
-        position: {
-          x: (position.x + scale) / scale,
-          y: position.y / scale
-        },
-        value: counter,
-        title: bloon.text.map(t => t.str).join(''),
-        template
-      })
-      incrementCounter()
-      setMarkedPosition(null)
-    }
+    addBloon(nextId, bloon)
+    addModification({
+      position: {
+        x: (position.x + scale) / scale,
+        y: position.y / scale
+      },
+      value: counter,
+      title: bloon.text.map(t => t.str).join(''),
+      template
+    })
+    incrementCounter()
+    setMarkedPosition(null)
   }
+  const onMouseLeave = event => isMain(event) && setMarkedPosition(null)
 
   return children({
     data,
     pageNum: 1,
     scale,
     overlayItems: modList,
-    onClick,
+    onMouseDown,
+    onMouseUp,
+    onMouseLeave,
     onItemMove: (event, position, id) => {
       changeMod(id, mod => ({
         ...mod,
@@ -61,7 +63,6 @@ function PdfViewportController({ children }) {
       }))
     },
     onItemDelete: id => {
-      console.log(`OnItemDelete(${id})`)
       removeMod(id)
       removeBloon(id)
       decrementCounter()

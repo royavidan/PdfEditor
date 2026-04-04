@@ -14,7 +14,7 @@ function getRelativeMousePos(element, event) {
   }
 }
 
-function Overlay({ items, scale, onItemMove, onItemDelete, fontSize, markedPosition }) {
+function Overlay({ items, scale, onItemMove, onItemDelete, fontSize }) {
   const overlayRef = useRef(null)
   const { nextId } = useContext(ModificationContext)
   const [selectedItemId, setSelectedItemId] = useState(null)
