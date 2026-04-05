@@ -26,18 +26,20 @@ function PdfViewportController({ children }) {
     if (!isMain(event) || !markedPosition) return
     const template = value => `(${value})`
     const bloon = { id: counter, top: markedPosition.y / scale, left: markedPosition.x / scale, bottom: position.y / scale, right: position.x / scale }
-    const isInside = elem => elem.left >= bloon.left && elem.right <= bloon.right && elem.top >= bloon.top && elem.bottom <= bloon.bottom
-    bloon.text = text.filter(isInside)
+    const isInside = (border) => border.left >= bloon.left && border.right <= bloon.right && border.top >= bloon.top && border.bottom <= bloon.bottom
+    bloon.text = text.filter(t => isInside(t.border))
     bloon.symbols = Object.fromEntries(Object.entries(symbols).map(e => [e[0], e[1].find(isInside)]).filter(e => e[1]))
 
     addBloon(nextId, bloon)
+    console.log(bloon.content)
+    const toleranceString = bloon.tolerance ? ` (${bloon.tolerance['+']}/${bloon.tolerance['-']})` : ''
     addModification({
       position: {
         x: (position.x + scale) / scale,
         y: position.y / scale
       },
       value: counter,
-      title: bloon.text.map(t => t.str).join(''),
+      title: `${bloon.measurement}: ${bloon.content}${toleranceString}`,
       template
     })
     incrementCounter()

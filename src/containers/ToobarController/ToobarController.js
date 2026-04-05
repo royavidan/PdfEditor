@@ -66,8 +66,14 @@ async function exportBloons(bloons) {
       colObj.elements = xml2js(`<v>${index}</v>`).elements
     }
 
-    for (const [id, bloon] of Object.entries(bloons).sort((a, b) => a[0].id - b[0].id)) {
-      insert(`D${bloon.id + 22}`, JSON.stringify(bloon.text.map(t => t.str)))
+    insert('B23', 'VISUAL')
+    for (const bloon of Object.values(bloons)) {
+      insert(`B${bloon.id + 22}`, bloon.measurement)
+      insert(`D${bloon.id + 22}`, bloon.content)
+      if (bloon.tolerance) {
+        insert(`E${bloon.id + 22}`, bloon.tolerance['+'])
+        insert(`F${bloon.id + 22}`, bloon.tolerance['-'])
+      }
     }
 
     writeXml('xl/sharedStrings.xml', sharedStrings)

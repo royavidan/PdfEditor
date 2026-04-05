@@ -1,14 +1,14 @@
 import React, { useState, useEffect, createContext, useContext } from 'react'
 import { FileContext } from './file-context'
-import pdfjs from '@bundled-es-modules/pdfjs-dist/build/pdf'
+import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.js'
+import { arrayIsEqual, floatIsEqual } from '../utils'
 
 const Point = point => {
     point.x = point[0]
     point.y = point[1]
     return point
 }
-const arrayIsEqual = (a, b) => a.length === b.length && a.every((e, i) => e === b[i])
-const floatIsEqual = (a, b) => Math.abs(a - b) < 0.0001
+
 const diff = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
 const middle = (a, b) => Point([(a.x + b.x) / 2, (a.y + b.y) / 2])
 
@@ -31,7 +31,6 @@ const parseShapes = (fn, args, pageHeight) => {
     global.args = args
 
     const shapes = {
-        textsMap: {},
         circles: [],
         lines: []
     }
@@ -96,31 +95,9 @@ const parseShapes = (fn, args, pageHeight) => {
                 transforms.unshift(transforms[0])
                 break
 
-        case pdfjs.OPS.restore:
+            case pdfjs.OPS.restore:
                 transforms.shift()
                 break
-
-            case pdfjs.OPS.showText:
-            case pdfjs.OPS.showSpacedText: {
-                let real = [''], str = ''
-                for (const s of args[i][0]) {
-                    switch (typeof s) {
-                        case 'number':
-                            if (s >= 100) {
-                                real.unshift('')
-                            }
-                            break
-                        case 'object':
-                            real[0] += s.unicode
-                            str += s.unicode
-                            break
-                        default: //??
-                            break
-                    }
-                }
-                const realStr = real.join('')
-                if (realStr !== str) shapes.textsMap[str] = real.join('')
-            } break
 
             case pdfjs.OPS.constructPath: {
                 let path = []
@@ -185,9 +162,9 @@ async function extractPDFData(fileData) {
     const viewport = page.getViewport({ scale: 1 })
     const textContent = await page.getTextContent()
     global.textContent = textContent
-    const { circles, lines, textsMap } = parseShapes(opList.fnArray, opList.argsArray, viewport.height)
+    const { circles, lines } = parseShapes(opList.fnArray, opList.argsArray, viewport.height)
     const text = textContent.items.filter(item => item.str.trim()).map(item => ({
-        str: textsMap[item.str] || item.str,
+        str: item.str,
         top: viewport.height - (item.transform[5] + item.height),
         left: item.transform[4],
         width: Math.abs(item.width),
@@ -197,13 +174,34 @@ async function extractPDFData(fileData) {
         transform: item.transform,
         angle: -Math.atan2(item.transform[1], item.transform[0])
     }))
+    text.forEach(t => {
+        if (t.angle) {
+            const x = t.transform[4], y = viewport.height - t.transform[5], a = -t.angle, w = t.width, h = t.height
+            const cos = Math.cos(a), sin = Math.sin(a)
+            const points = [
+                [x, y],
+                [x - h * sin, y - h * cos],
+                [x - h * sin + w * cos, y - h * cos - w * sin],
+                [x + w * cos, y - w * sin]
+            ]
+            const X = points.map(p => p[0]), Y = points.map(p => p[1])
+            t.border = {
+                left: Math.min(...X),
+                right: Math.max(...X),
+                top: Math.min(...Y),
+                bottom: Math.max(...Y)
+            }
+        } else {
+            t.border = t
+        }
+    })
 
     const symbols = {
-        diameter: [],
+        dia: [],
 
         perpendicularity: [],
         parallelism: [],
-        position: [],
+        'true position': [],
         concentricity: []
     }
     const addRects = base => {
@@ -229,7 +227,7 @@ async function extractPDFData(fileData) {
         }
         if (closeLines.length === 1 && matchPhi(closeLines[0])) {
             const line = closeLines[0]
-            symbols.diameter.push(addRects({ circle, line }))
+            symbols.dia.push(addRects({ circle, line }))
         }
 
         //POSITION:
@@ -239,7 +237,7 @@ async function extractPDFData(fileData) {
         ]
         if (match[0].length === 1 && match[1].length === 1) {
             const horizontal = match[0][0], vertical = match[1][0]
-            symbols.position.push(addRects({ circle, horizontal, vertical }))
+            symbols['true position'].push(addRects({ circle, horizontal, vertical }))
         }
 
         //CONCENTRICITY:
