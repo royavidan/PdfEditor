@@ -32,7 +32,8 @@ const parseShapes = (fn, args, pageHeight) => {
 
     const shapes = {
         circles: [],
-        lines: []
+        lines: [],
+        halfCircles: []
     }
 
     global.shapes = shapes
@@ -59,8 +60,18 @@ const parseShapes = (fn, args, pageHeight) => {
         return path
     }
 
+    //Top Only
+    const HalfCircle = path => {
+        path.radius = (path.right - path.left) / 2
+        path.full = arrayIsEqual(path[0], path[path.length - 1])
+        path.realCenter = Point([path.center.x, path.bottom])
+        path.isInside = point => diff(point, path.realCenter) <= path.radius && point.y <= path.bottom
+        return path
+    }
+
     const Line = path => {
         path.slope = (path[1].y - path[0].y) / (path[1].x - path[0].x)
+        path.angle = -Math.atan2(path[1].y - path[0].y, path[1].x - path[0].x)
         path.len = diff(path[0], path[1])
         path.cross = point => floatIsEqual((point.x - path[0].x) / (point.y - path[0].y), (path[1].x - point.x) / (path[1].y - point.y))
         path.distance = point => {
@@ -77,6 +88,7 @@ const parseShapes = (fn, args, pageHeight) => {
             const y = path.slope * (x - path[0].x) + path[0].y
             return diff(point, Point([x, y]))
         }
+        path.perpendicular = line => ((!Number.isFinite(path.slope) && line.slope === 0) || (!Number.isFinite(line.slope) && path.slope === 0) || floatIsEqual(path.slope * line.slope, -1))
         return path
     }
 
@@ -121,15 +133,11 @@ const parseShapes = (fn, args, pageHeight) => {
                             path.push(args[i][1].slice(index, index + 2))
                             index += 2
                             break
-                        case pdfjs.OPS.curveTo:
-                            //TODO: curves
-                            hasCurves = true
-                            break
                         case pdfjs.OPS.closePath:
-                            path.push(path[0])
+                            if (path[0] !== path[path.length - 1]) path.push(path[0])
                             break
                         default:
-                            //TODO: ??
+                            hasCurves = true
                             break
                     }
                 }
@@ -146,11 +154,59 @@ const parseShapes = (fn, args, pageHeight) => {
 
     //STEP 2: Identify shapes
     for (const path of paths) {
-        if (isCircle(path)) shapes.circles.push(Circle(path))
+        const edge = arrayIsEqual(path[0], path[path.length - 1]) ? path[path.length - 2] : path[path.length - 1]
+        if (path.length >= 7 && floatIsEqual(path[0].x, path.left) && floatIsEqual(edge.x, path.right) && floatIsEqual(path[0].y, edge.y))
+            shapes.halfCircles.push(HalfCircle(path))
+        else if (isCircle(path)) shapes.circles.push(Circle(path))
         else if (isLine(path)) shapes.lines.push(Line(path))
     }
 
     return shapes
+}
+
+function fixPlusMinus(lines, text) {
+    lines.forEach((line, index) => line.index = index)
+    const linesToRemove = new Set()
+    const horizontal = lines.filter(l => l.len < 20 && l.slope === 0), vertical = lines.filter(l => l.len < 20 && !Number.isFinite(l.slope))
+    
+    const [_h, _v, _m] = lines.slice(73, 76)
+    //STEP 1: find plus signs
+    const plus = []
+    for (const h of horizontal) {
+        const v = vertical.find(l => floatIsEqual(diff(l.center, h.center), 0))
+        if (v) plus.push({ h, v })
+    }
+
+    //STEP 2: find plusminus
+    const addPlusMinus = (plus, minus, angle) => {
+        const shapes = [plus.h, plus.v, minus]
+        shapes.forEach(s => linesToRemove.add(s.index))
+        const r = {
+            left: Math.min(...shapes.map(s => s.left)),
+            right: Math.max(...shapes.map(s => s.right)),
+            top: Math.min(...shapes.map(s => s.top)),
+            bottom: Math.max(...shapes.map(s => s.bottom)),
+            str: '±',
+            transform: [1, 0, 0, 1, 0, 0],
+            angle
+        }
+        r.width = r.right - r.left
+        r.height = r.bottom - r.top
+        if (angle) {
+            r.left += r.width
+            r.right += r.width
+        }
+        text.push(r)
+    }
+    for (const { h, v } of plus) {
+        const hminus = horizontal.find(l => diff(l.center, v[0].y < v[1].y ? v[1] : v[0]) < l.len / 5)
+        if (hminus) addPlusMinus({ h, v }, hminus, 0)
+        
+        const vminus = vertical.find(l => diff(l.center, h[0].x < h[1].x ? h[1] : h[0]) < l.len / 5)
+        if (vminus) addPlusMinus({ h, v }, vminus, -Math.PI / 2)
+    }
+    lines.forEach(l => delete l.index)
+    return linesToRemove
 }
 
 async function extractPDFData(fileData) {
@@ -162,7 +218,7 @@ async function extractPDFData(fileData) {
     const viewport = page.getViewport({ scale: 1 })
     const textContent = await page.getTextContent()
     global.textContent = textContent
-    const { circles, lines } = parseShapes(opList.fnArray, opList.argsArray, viewport.height)
+    let { circles, lines, halfCircles } = parseShapes(opList.fnArray, opList.argsArray, viewport.height)
     const text = textContent.items.filter(item => item.str.trim()).map(item => ({
         str: item.str,
         top: viewport.height - (item.transform[5] + item.height),
@@ -174,6 +230,8 @@ async function extractPDFData(fileData) {
         transform: item.transform,
         angle: -Math.atan2(item.transform[1], item.transform[0])
     }))
+    const linesToRemove = fixPlusMinus(lines, text)
+    lines = lines.filter((_, i) => !linesToRemove.has(i))
     text.forEach(t => {
         if (t.angle) {
             const x = t.transform[4], y = viewport.height - t.transform[5], a = -t.angle, w = t.width, h = t.height
@@ -198,11 +256,20 @@ async function extractPDFData(fileData) {
 
     const symbols = {
         dia: [],
+        depth: [],
 
+        straightness: [],
+        flatness: [],
+        circlarity: [],
+        cylindricity: [],
+        'surface profile': [],
         perpendicularity: [],
+        angularity: [],
         parallelism: [],
+        symmetry: [],
         'true position': [],
-        concentricity: []
+        concentricity: [],
+        'run out': []
     }
     const addRects = base => {
         const shapes = Object.values(base).filter(s => typeof s === 'object')
@@ -246,23 +313,59 @@ async function extractPDFData(fileData) {
         if (innerCircles.length === 1) {
             symbols.concentricity.push(addRects({ outer: circle, inner: innerCircles[0] }))
         }
+
+        //CYLINDRICITY:
+        const tangentLines = lines.filter(l => floatIsEqual(l.distance(circle.center), circle.radius))
+        if (tangentLines.length === 2 && floatIsEqual(tangentLines[0].slope, tangentLines[1].slope)) {
+            symbols.cylindricity.push(addRects({ top: tangentLines[0], bottom: tangentLines[1], circle }))
+        }
     }
 
     for (const line of lines) {
         if (line.len > 15) continue
         //PARALLELISM:
-        const parallelLines = lines.filter(l => floatIsEqual(l.slope, line.slope) && l.left > line.left && floatIsEqual(l.len, line.len)
-            && Math.min(diff(l[0], line[0]), diff(l[1], line[0]) < l.len / 2))
-        if (parallelLines.length === 1) {
-            symbols.parallelism.push(addRects({ left: line, right: parallelLines[0] }))
+        if (line.slope && Number.isFinite(line.slope)) {
+            const parallelLines = lines.filter(l => floatIsEqual(l.slope, line.slope) && l.left > line.left && floatIsEqual(l.len, line.len)
+                && Math.min(diff(l[0], line[0]), diff(l[1], line[0])) < l.len / 2)
+            if (parallelLines.length === 1) {
+                symbols.parallelism.push(addRects({ left: line, right: parallelLines[0] }))
+            }
         }
 
         //PERPENDICULARITY:
-        const perpendicularLines = lines.filter(l => (floatIsEqual(diff(line.center, l[0]), 0) || floatIsEqual(diff(line.center, l[1]), 0))
-            && ((!Number.isFinite(l.slope) && line.slope === 0) || (!Number.isFinite(line.slope) && l.slope === 0) || floatIsEqual(l.slope * line.slope, -1)))
+        const perpendicularLines = lines.filter(l => (floatIsEqual(diff(line.center, l[0]), 0) || floatIsEqual(diff(line.center, l[1]), 0)) && line.perpendicular(l))
         if (perpendicularLines.length === 1) {
             symbols.perpendicularity.push(addRects({ base: line, perpendicular: perpendicularLines[0] }))
         }
+
+        //SYMMETRY:
+        const symmetricLines = lines.filter(l => floatIsEqual(l.slope, line.slope) && l.len < line.len && diff(l.center, line.center) < line.len / 2)
+        if (symmetricLines.length === 2 && floatIsEqual(symmetricLines[0].len, symmetricLines[1].len) && diff(line.center, middle(symmetricLines[0].center, symmetricLines[1].center)) < line.len / 2) {
+            symbols.symmetry.push(addRects({ top: symmetricLines[0], bottom: symmetricLines[1], middle: line }))
+        }
+
+        //ANGULARITY:
+        const angularLines = lines.filter(l => (l[0] === line[0] || l[0] === line[1] || l[1] === line[0] || l[1] === line[1]) && floatIsEqual(l.slope - line.slope, -0.75))
+        if (angularLines.length === 1) {
+            symbols.angularity.push(addRects({ flat: line, angular: angularLines[0] }))
+        }
+
+        //FLATNESS:
+        const flatTopLines = lines.filter(l => floatIsEqual(l.slope, line.slope) && floatIsEqual(l.len, line.len) && l.left > line.left && l.top > line.top)
+        if (flatTopLines.length === 1) {
+            const l1 = line[0].x < line[1].x ? [line[0], line[1]] : [line[1], line[0]]
+            const l2 = flatTopLines[0][0].x < flatTopLines[0][1].x ? [flatTopLines[0][0], flatTopLines[0][1]] : [flatTopLines[0][1], flatTopLines[0][0]]
+            const leftLine = lines.filter(l => (diff(l[0], l1[0]) < 0.5 && diff(l[1], l2[0]) < 0.5) || (diff(l[1], l1[0]) < 0.5 && diff(l[0], l2[0]) < 0.5))
+            const rightLine = lines.filter(l => (diff(l[0], l1[1]) < 0.5 && diff(l[1], l2[1]) < 0.5) || (diff(l[1], l1[1]) < 0.5 && diff(l[0], l2[1]) < 0.5))
+            if (leftLine.length === 1 && rightLine.length === 1 && floatIsEqual(leftLine.len, rightLine.len)) {
+                symbols.flatness.push(addRects({ left: leftLine[0], right: rightLine[0], top: flatTopLines[0], bottom: line }))
+            }
+        }
+    }
+
+    for (const halfCircle of halfCircles) {
+        //SURFACE PROFILE:
+        symbols['surface profile'].push(addRects({ arc: halfCircle }))
     }
 
     global.text = text

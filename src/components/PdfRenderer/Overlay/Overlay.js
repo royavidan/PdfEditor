@@ -14,7 +14,7 @@ function getRelativeMousePos(element, event) {
   }
 }
 
-function Overlay({ items, scale, onItemMove, onItemDelete, fontSize }) {
+function Overlay({ items, scale, onItemMove, onItemDelete, onChangeMeasurement, fontSize }) {
   const overlayRef = useRef(null)
   const { nextId } = useContext(ModificationContext)
   const [selectedItemId, setSelectedItemId] = useState(null)
@@ -68,6 +68,8 @@ function Overlay({ items, scale, onItemMove, onItemDelete, fontSize }) {
             setSelectedItemId(item.id)
             event.stopPropagation()
           }}
+          onDelete={() => onItemDelete(item.id)}
+          onChangeMeasurement={measurement => onChangeMeasurement(item.id, measurement)}
         />
       ))}
     </div>

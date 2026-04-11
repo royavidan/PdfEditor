@@ -8,12 +8,21 @@ import styles from './PdfViewport.module.css'
 import { PDFContext } from '../../context/pdf-context'
 
 const colors = {
-  diameter: 'red',
+  dia: 'red',
+  depth: 'yellow',
 
-  perpendicularity: 'green',
-  parallelism: 'blue',
-  position: 'orange',
-  concentricity: 'purple'
+  straightness: 'blue',
+  flatness: 'green',
+  circlarity: 'purple',
+  cylindricity: 'brown',
+  'surface profile': 'pink',
+  perpendicularity: 'sand',
+  angularity: 'gray',
+  parallelism: 'aqua',
+  symmetry: 'turquoise',
+  'true position': 'chocolate',
+  concentricity: 'violet',
+  'run out': 'cyan'
 }
 
 function getMarkingBoxes(text, symbols) {
@@ -32,7 +41,7 @@ function getMarkingBoxes(text, symbols) {
       height: `${item.height}px`,
       transform: `translate(${item.left}px, ${item.top}px)`,
       borderColor: colors[symbol]
-    }}/>))
+    }} />))
   }
 
   const circleDiv = (circle, key) => <div key={key} className={styles.markingbox} style={{
@@ -40,12 +49,12 @@ function getMarkingBoxes(text, symbols) {
     width: `${circle.width}px`,
     height: `${circle.height}px`,
     transform: `translate(${circle.left}px, ${circle.top}px)`
-  }}/>
+  }} />
   const lineDiv = (line, key) => <div key={key} className={styles.markingbox} style={{
     width: Math.hypot(line.width, line.height),
     transformOrigin: 'top left',
     transform: `translate(${line[0].x}px, ${line[0].y}px) rotate(${Math.atan2(line[1].y - line[0].y, line[1].x - line[0].x)}rad)`
-  }}/>
+  }} />
 
   // symbols.diameter.forEach((item, index) => boxes.push(circleDiv(item.circle, `diameter-${index}-circle`), lineDiv(item.line, `phi-${index}-line`)))
   // symbols.position.forEach((item, index) => boxes.push(circleDiv(item.circle, `position-${index}-circle`), lineDiv(item.horizontal, `position-${index}-horizontal`), lineDiv(item.vertical, `position-${index}-vertical`)))
@@ -66,7 +75,8 @@ function PdfViewport({
   onItemMove,
   onItemDelete,
   fontSize,
-  markedPosition
+  markedPosition,
+  onChangeMeasurement
 }) {
   const [currentMousePos, setCurrentMousePos] = useState(null)
   const [selectionBox, setSelectionBox] = useState(null)
@@ -84,12 +94,13 @@ function PdfViewport({
             {doc => (
               <PdfPage document={doc} pageNum={pageNum}>
                 {page => (
-                  <React.Fragment>
+                  <>
                     <Overlay
                       items={overlayItems}
                       scale={scale}
                       onItemMove={onItemMove}
                       onItemDelete={onItemDelete}
+                      onChangeMeasurement={onChangeMeasurement}
                       fontSize={fontSize}
                     />
                     <PdfCanvas page={page} scale={scale} onMouseDown={onMouseDown} onMouseUp={onMouseUp} onMouseLeave={onMouseLeave}
@@ -105,7 +116,7 @@ function PdfViewport({
                         }}
                       />
                     )}
-                  </React.Fragment>
+                  </>
                 )}
               </PdfPage>
             )}

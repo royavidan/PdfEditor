@@ -9,6 +9,8 @@ pdfjs.GlobalWorkerOptions.workerSrc =
   'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.16.105/legacy/build/pdf.worker.min.js' // TODO: replace cdn with package worker
 // 'pdfjs-dist/build/pdf.worker.min.js'
 
+if (window.location.pathname === '/') window.location.pathname = '/PdfEditor'
+
 ReactDOM.render(<App />, document.getElementById('root'))
 
 // If you want your app to work offline and load faster, you can change

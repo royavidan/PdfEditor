@@ -3,13 +3,14 @@ import { crossIntervals, floatIsEqual, mostCommon } from '../utils'
 
 export const BloonsContext = createContext({
     bloons: {},
+    fillBloon: () => { },
     addBloon: () => { },
     removeBloon: () => { },
     modifyBloon: () => { },
     resetBloons: () => { }
 })
 
-function readBloon(bloon) {
+function fillBloon(bloon) {
     //STEP 1: read text and find tolerances
     const mainAngle = mostCommon(bloon.text.map(s => s.angle)) ?? 0
     let text = bloon.text.filter(t => floatIsEqual(t.angle, mainAngle))
@@ -28,16 +29,17 @@ function readBloon(bloon) {
             let top = text[i], bottom = text[j]
             if (top.y > bottom.y) [top, bottom] = [bottom, top]
 
-            if (crossIntervals([top.x, top.x + top.width], [bottom.x, bottom.x + bottom.width])) {
-                const indexes = [i, j], plusminus = text.map((_, i) => i).filter(i => '+-'.includes(text[i].str))
+            if (!Number.isNaN(Number(top.str)) && !Number.isNaN(Number(bottom.str)) && crossIntervals([top.x, top.x + top.width], [bottom.x, bottom.x + bottom.width])) {
+                const currentText = text
+                const indexes = [i, j], plusminus = currentText.map((_, i) => i).filter(i => '+-'.includes(currentText[i].str))
                 let topText = top.str, bottomText = bottom.str, match
                 const matching = (base, t) => (base.x - t.x - t.width) < 5 && Math.abs(base.y - t.y) < 5
-                if (!'+-'.includes(topText[0]) && topText !== '0' && undefined !== (match = plusminus.find(t => matching(top, text[t])))) {
-                    if (text[match].str === '-') topText = text[match].str + topText
+                if (!'+-'.includes(topText[0]) && topText !== '0' && undefined !== (match = plusminus.find(t => matching(top, currentText[t])))) {
+                    if (currentText[match].str === '-') topText = currentText[match].str + topText
                     indexes.push(match)
                 }
-                if (!'+-'.includes(bottomText[0]) && bottomText !== '0' && undefined !== (match = plusminus.find(t => matching(bottom, text[t])))) {
-                    if (text[match].str === '-') bottomText = text[match].str + bottomText
+                if (!'+-'.includes(bottomText[0]) && bottomText !== '0' && undefined !== (match = plusminus.find(t => matching(bottom, currentText[t])))) {
+                    if (currentText[match].str === '-') bottomText = currentText[match].str + bottomText
                     indexes.push(match)
                 }
                 bloon.tolerance = { '+': topText, '-': bottomText }
@@ -48,7 +50,8 @@ function readBloon(bloon) {
     }
 
     text.sort((a, b) => a.x - b.x)
-    bloon.content = text.map(t => t.str).reduce((a, b) => a + (/[a-zA-Z-]/.test(b[0]) && b !== 'x' ? ' ' : '') + b).trim()
+    bloon.content = text.map(t => t.str).reduce((a, b) => a + (a.endsWith('R') || (/[a-zA-Z-]/.test(b[0]) && b !== 'x') ? ' ' : '') + b, '').trim()
+    bloon.content = bloon.content.replaceAll('*', '')
     let plusminus = /±([\d.]+)/.exec(bloon.content)
     if (plusminus) {
         bloon.tolerance = { '+': plusminus[1], '-': plusminus[1] }
@@ -56,7 +59,7 @@ function readBloon(bloon) {
     }
 
     //STEP 2: find measurement
-    bloon.measurement = (function() {
+    bloon.measurement = (function () {
         const txt = bloon.content.replaceAll(' ', '')
         const words = bloon.content.split(' ')
         let symbol = Object.keys(bloon.symbols).find(sym => sym !== 'dia')
@@ -70,10 +73,10 @@ function readBloon(bloon) {
             }
         }
 
-        if (/^([\d.]+x)R[\d.]+?$/.test(txt)) return 'RADIUS'
+        if (words.includes('R')) return 'RADIUS'
 
         if (['M', 'MF', 'UNC', 'UNF', 'UNEF', 'VNJF', 'G', 'BA', 'BSF', 'H-C', 'Pg', 'TR', 'W', 'Batress'].find(s => words.includes(s)))
-                return 'TAP'
+            return 'TAP'
 
         if (txt.startsWith('Ra') || txt.startsWith('Rz') || /^N1?\d/.test(txt)) return 'SURFACE FINISH'
 
@@ -89,15 +92,15 @@ export default ({ children }) => {
     const [bloons, setBloons] = useState([])
     global.bloons = bloons
 
-    const addBloon = (id, bloon) => setBloons(bloons => ({ ...bloons, [id]: readBloon(bloon) }))
+    const addBloon = (id, bloon) => setBloons(bloons => ({ ...bloons, [id]: bloon }))
     // eslint-disable-next-line eqeqeq
     const removeBloon = id => setBloons(bloons => Object.fromEntries(Object.entries(bloons).filter(e => e[0] != id)))
-    const modifyBloon = addBloon
+    const modifyBloon = (id, mod) => setBloons(bloons => ({ ...bloons, [id]: { ...bloons[id], ...mod } }))
     const resetBloons = () => setBloons({})
 
     return (
         <BloonsContext.Provider
-            value={{ bloons, addBloon, removeBloon, modifyBloon, resetBloons }}
+            value={{ bloons, fillBloon, addBloon, removeBloon, modifyBloon, resetBloons }}
         >
             {children}
         </BloonsContext.Provider>
