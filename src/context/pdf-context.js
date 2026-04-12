@@ -1,7 +1,7 @@
 import React, { useState, useEffect, createContext, useContext } from 'react'
 import { FileContext } from './file-context'
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.js'
-import { arrayIsEqual, floatIsEqual } from '../utils'
+import { arrayIsEqual, floatIsEqual, findOne } from '../utils'
 
 const Point = point => {
     point.x = point[0]
@@ -18,9 +18,7 @@ const isLine = path => path.length === 2
 export const PDFContext = createContext({
     text: [],
     symbols: {},
-    isLoaded: () => false,
-    mousePos: Point([0, 0]),
-    setMousePos: () => { }
+    isLoaded: () => false
 })
 
 const parseShapes = (fn, args, pageHeight) => {
@@ -168,12 +166,11 @@ function fixPlusMinus(lines, text) {
     lines.forEach((line, index) => line.index = index)
     const linesToRemove = new Set()
     const horizontal = lines.filter(l => l.len < 20 && l.slope === 0), vertical = lines.filter(l => l.len < 20 && !Number.isFinite(l.slope))
-    
-    const [_h, _v, _m] = lines.slice(73, 76)
+
     //STEP 1: find plus signs
     const plus = []
     for (const h of horizontal) {
-        const v = vertical.find(l => floatIsEqual(diff(l.center, h.center), 0))
+        const v = vertical.find(l => floatIsEqual(diff(l.center, h.center), 0) && floatIsEqual(l.len, h.len))
         if (v) plus.push({ h, v })
     }
 
@@ -196,13 +193,14 @@ function fixPlusMinus(lines, text) {
             r.left += r.width
             r.right += r.width
         }
+        r.plusminus = true
         text.push(r)
     }
     for (const { h, v } of plus) {
-        const hminus = horizontal.find(l => diff(l.center, v[0].y < v[1].y ? v[1] : v[0]) < l.len / 5)
+        const hminus = horizontal.find(l => floatIsEqual(l.len, h.len) && diff(l.center, v[0].y < v[1].y ? v[1] : v[0]) < l.len / 5)
         if (hminus) addPlusMinus({ h, v }, hminus, 0)
-        
-        const vminus = vertical.find(l => diff(l.center, h[0].x < h[1].x ? h[1] : h[0]) < l.len / 5)
+
+        const vminus = vertical.find(l => floatIsEqual(l.len, v.len) && diff(l.center, h[0].x < h[1].x ? h[1] : h[0]) < l.len / 5)
         if (vminus) addPlusMinus({ h, v }, vminus, -Math.PI / 2)
     }
     lines.forEach(l => delete l.index)
@@ -285,33 +283,31 @@ async function extractPDFData(fileData) {
     for (const circle of circles) {
         if (circle.width > 15) continue
         const edgeDistance = circle.radius * 1.5, centerDistance = circle.radius * 0.5
-        const closeLines = lines.filter(l => l.distance(circle.center) < centerDistance)
+
         //DIAMETER:
-        const matchPhi = l => {
-            const [top, bottom] = l[0].y < l[1].y ? l : [l[1], l[0]]
-            //TODO: confirm that position isn't included here by mistake (shouldn't)
-            return diff(Point([circle.center.x, circle.top]), top) < edgeDistance && diff(Point([circle.center.x, circle.bottom]), bottom) < edgeDistance
-        }
-        if (closeLines.length === 1 && matchPhi(closeLines[0])) {
-            const line = closeLines[0]
-            symbols.dia.push(addRects({ circle, line }))
+        const closeLines = lines.filter(l => l.distance(circle.center) < centerDistance)
+        if (closeLines.length === 1) {
+            const match = closeLines[0]
+            const [top, bottom] = match[0].y < match[1].y ? match : [match[1], match[0]]
+            if (diff(Point([circle.center.x, circle.top]), top) < edgeDistance && diff(Point([circle.center.x, circle.bottom]), bottom) < edgeDistance) {
+                symbols.dia.push(addRects({ circle, line: match }))
+            }
         }
 
         //POSITION:
-        const match = [
-            closeLines.filter(l => l.len < circle.width * 2.5 && floatIsEqual(l.slope, 0)),
-            closeLines.filter(l => l.len < circle.width * 2.5 && !Number.isFinite(l.slope))
-        ]
-        if (match[0].length === 1 && match[1].length === 1) {
-            const horizontal = match[0][0], vertical = match[1][0]
-            symbols['true position'].push(addRects({ circle, horizontal, vertical }))
+        {
+            const horizontal = findOne(closeLines, l => l.len < circle.width * 2.5 && floatIsEqual(l.slope, 0))
+            const vertical = findOne(closeLines, l => l.len < circle.width * 2.5 && !Number.isFinite(l.slope))
+            if (horizontal && vertical) {
+                symbols['true position'].push(addRects({ circle, horizontal, vertical }))
+            }
         }
 
         //CONCENTRICITY:
-        const innerCircles = circles.filter(c => diff(circle.center, c.center) < centerDistance
+        const innerCircle = findOne(circles, c => diff(circle.center, c.center) < centerDistance
             && c.left > circle.left && c.right < circle.right && c.top > circle.top && c.bottom < circle.bottom)
-        if (innerCircles.length === 1) {
-            symbols.concentricity.push(addRects({ outer: circle, inner: innerCircles[0] }))
+        if (innerCircle) {
+            symbols.concentricity.push(addRects({ outer: circle, inner: innerCircle }))
         }
 
         //CYLINDRICITY:
@@ -325,17 +321,24 @@ async function extractPDFData(fileData) {
         if (line.len > 15) continue
         //PARALLELISM:
         if (line.slope && Number.isFinite(line.slope)) {
-            const parallelLines = lines.filter(l => floatIsEqual(l.slope, line.slope) && l.left > line.left && floatIsEqual(l.len, line.len)
+            const parallelLine = findOne(lines, l => floatIsEqual(l.slope, line.slope) && l.left > line.left && floatIsEqual(l.len, line.len)
                 && Math.min(diff(l[0], line[0]), diff(l[1], line[0])) < l.len / 2)
-            if (parallelLines.length === 1) {
-                symbols.parallelism.push(addRects({ left: line, right: parallelLines[0] }))
+            if (parallelLine) {
+                symbols.parallelism.push(addRects({ left: line, right: parallelLine }))
             }
         }
 
-        //PERPENDICULARITY:
-        const perpendicularLines = lines.filter(l => (floatIsEqual(diff(line.center, l[0]), 0) || floatIsEqual(diff(line.center, l[1]), 0)) && line.perpendicular(l))
-        if (perpendicularLines.length === 1) {
-            symbols.perpendicularity.push(addRects({ base: line, perpendicular: perpendicularLines[0] }))
+        //PERPENDICULARITY (and depth):
+        const touchOne = (l, p) => floatIsEqual(Math.min(diff(l[0], p), diff(l[1], p)), 0)
+        const perpendicularLine = findOne(lines, l => touchOne(line, l.center) && line.perpendicular(l))
+        if (perpendicularLine) {
+            const between = (val, limits) => val >= limits[0] && val <= limits[1]
+            const untouchedPoint = floatIsEqual(diff(perpendicularLine.center, line[0])) ? line[1] : line[0]
+            const limitAngles = [55, 65].map(a => a * Math.PI / 180)
+            const right = findOne(lines, l => l.len < line.len && touchOne(l, untouchedPoint) && between(l.angle - line.angle, limitAngles))
+            const left = findOne(lines, l => l.len < line.len && touchOne(l, untouchedPoint) && between(line.angle - l.angle, limitAngles))
+            if (right && left) symbols.depth.push(addRects({ base: line, perpendicular: perpendicularLine, right, left }))
+            else symbols.perpendicularity.push(addRects({ base: line, perpendicular: perpendicularLine }))
         }
 
         //SYMMETRY:
@@ -345,20 +348,20 @@ async function extractPDFData(fileData) {
         }
 
         //ANGULARITY:
-        const angularLines = lines.filter(l => (l[0] === line[0] || l[0] === line[1] || l[1] === line[0] || l[1] === line[1]) && floatIsEqual(l.slope - line.slope, -0.75))
-        if (angularLines.length === 1) {
-            symbols.angularity.push(addRects({ flat: line, angular: angularLines[0] }))
+        const angularLine = findOne(lines, l => (l[0] === line[0] || l[0] === line[1] || l[1] === line[0] || l[1] === line[1]) && floatIsEqual(l.slope - line.slope, -0.75))
+        if (angularLine) {
+            symbols.angularity.push(addRects({ flat: line, angular: angularLine }))
         }
 
         //FLATNESS:
-        const flatTopLines = lines.filter(l => floatIsEqual(l.slope, line.slope) && floatIsEqual(l.len, line.len) && l.left > line.left && l.top > line.top)
-        if (flatTopLines.length === 1) {
+        const flatTopLine = findOne(lines, l => floatIsEqual(l.slope, line.slope) && floatIsEqual(l.len, line.len) && l.left > line.left && l.top > line.top && diff(l.center, line.center) < l.len)
+        if (flatTopLine) {
             const l1 = line[0].x < line[1].x ? [line[0], line[1]] : [line[1], line[0]]
-            const l2 = flatTopLines[0][0].x < flatTopLines[0][1].x ? [flatTopLines[0][0], flatTopLines[0][1]] : [flatTopLines[0][1], flatTopLines[0][0]]
-            const leftLine = lines.filter(l => (diff(l[0], l1[0]) < 0.5 && diff(l[1], l2[0]) < 0.5) || (diff(l[1], l1[0]) < 0.5 && diff(l[0], l2[0]) < 0.5))
-            const rightLine = lines.filter(l => (diff(l[0], l1[1]) < 0.5 && diff(l[1], l2[1]) < 0.5) || (diff(l[1], l1[1]) < 0.5 && diff(l[0], l2[1]) < 0.5))
-            if (leftLine.length === 1 && rightLine.length === 1 && floatIsEqual(leftLine.len, rightLine.len)) {
-                symbols.flatness.push(addRects({ left: leftLine[0], right: rightLine[0], top: flatTopLines[0], bottom: line }))
+            const l2 = flatTopLine[0].x < flatTopLine[1].x ? [flatTopLine[0], flatTopLine[1]] : [flatTopLine[1], flatTopLine[0]]
+            const leftLine = findOne(lines, l => (diff(l[0], l1[0]) < 0.5 && diff(l[1], l2[0]) < 0.5) || (diff(l[1], l1[0]) < 0.5 && diff(l[0], l2[0]) < 0.5))
+            const rightLine = findOne(lines, l => (diff(l[0], l1[1]) < 0.5 && diff(l[1], l2[1]) < 0.5) || (diff(l[1], l1[1]) < 0.5 && diff(l[0], l2[1]) < 0.5))
+            if (leftLine && rightLine && floatIsEqual(leftLine.len, rightLine.len)) {
+                symbols.flatness.push(addRects({ left: leftLine, right: rightLine, top: flatTopLine, bottom: line }))
             }
         }
     }
@@ -378,10 +381,8 @@ export default ({ children }) => {
     const { data: fileData, isFileLoaded } = useContext(FileContext)
     const [text, setText] = useState(null)
     const [symbols, setSymbols] = useState(null)
-    const [mousePos, _setMousePos] = useState(Point([0, 0]))
 
     const isLoaded = () => text !== null && symbols !== null
-    const setMousePos = pos => _setMousePos(Point([pos.x, pos.y]))
 
     useEffect(() => {
         if (isFileLoaded()) {
@@ -397,7 +398,7 @@ export default ({ children }) => {
 
     return (
         <PDFContext.Provider
-            value={{ text, symbols, isLoaded, mousePos, setMousePos }}
+            value={{ text, symbols, isLoaded }}
         >
             {children}
         </PDFContext.Provider>

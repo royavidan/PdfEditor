@@ -32,7 +32,7 @@ function getMarkingBoxes(text, symbols) {
     width: `${item.width}px`,
     height: `${item.height}px`,
     transform: `translate(${item.left}px, ${item.top}px) rotate(${item.angle}rad)`,
-    borderColor: 'black'
+    borderColor: item.plusminus ? 'salmon' : 'black'
   }} />))
 
   for (const [symbol, matches] of Object.entries(symbols)) {
@@ -80,11 +80,8 @@ function PdfViewport({
 }) {
   const [currentMousePos, setCurrentMousePos] = useState(null)
   const [selectionBox, setSelectionBox] = useState(null)
-  const { text, symbols, isLoaded, setMousePos } = useContext(PDFContext)
-  const onMouseMove = (event, position) => {
-    setCurrentMousePos(position)
-    setMousePos(position)
-  }
+  const { text, symbols, isLoaded } = useContext(PDFContext)
+  const onMouseMove = (event, position) => setCurrentMousePos(position)
   if (data && isLoaded() && !selectionBox) setSelectionBox(getMarkingBoxes(text, symbols)) //TODO: for debugging purposes
   return (
     <div className={`${className} ${styles.viewport}`} style={style}>

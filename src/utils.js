@@ -40,3 +40,29 @@ export const mostCommon = arr => {
 export const crossIntervals = (i1, i2) => {
     return (i1[0] >= i2[0] && i1[0] <= i2[1]) || (i1[1] >= i2[0] && i1[1] <= i2[1]) || (i1[0] <= i2[0] && i1[1] >= i2[1])
 }
+
+/**
+ * Returns the only element that matches the predicate (or `undefined` there is none or more than one).
+ * @template T The array elements type.
+ * @param {readonly T[]} arr The array.
+ * @param {(value: T, index: number, obj: readonly T[]) => boolean} pred find calls predicate once for each element of the array, in ascending
+     * order, until it finds one where predicate returns true.
+ * @returns {T | undefined} The only element that matches the predicate, if such exists.
+ */
+export const findOne = (arr, pred) => {
+    const index = arr.findIndex(pred)
+    return index >= 0 && arr.findIndex((value, i, obj) => i > index && pred(value, i, obj)) === -1 ? arr[index] : undefined
+}
+
+/**
+ * Returns the index of the only element that matches the predicate (or `-1` there is none or more than one).
+ * @template T The array elements type.
+ * @param {readonly T[]} arr The array.
+ * @param {(value: T, index: number, obj: readonly T[]) => boolean} pred find calls predicate once for each element of the array, in ascending
+     * order, until it finds one where predicate returns true.
+ * @returns {number} The index of the only element that matches the predicate, if such exists.
+ */
+export const findOneIndex = (arr, pred) => {
+    const index = arr.findIndex(pred)
+    return index >= 0 && arr.findIndex((value, i, obj) => i > index && pred(value, i, obj)) === -1 ? index : -1
+}

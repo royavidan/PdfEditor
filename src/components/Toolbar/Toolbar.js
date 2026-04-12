@@ -1,7 +1,6 @@
 import React from 'react'
 
 import styles from './Toolbar.module.css'
-import { PDFContext } from '../../context/pdf-context'
 
 function Toolbar({
   disabled,
@@ -17,7 +16,6 @@ function Toolbar({
   fontSize,
   setFontSize
 }) {
-  const { mousePos } = React.useContext(PDFContext)
   const runningLabelText = disabled ? null : (
     <div className={styles.text}>
       Place next running label: {`(${counter})`}
@@ -96,9 +94,6 @@ function Toolbar({
           disabled={!disabled}
         />
         {runningLabelText}
-      </div>
-      <div>
-        Position: {mousePos.x}, {mousePos.y}
       </div>
     </div>
   )
