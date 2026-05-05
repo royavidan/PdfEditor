@@ -10,9 +10,10 @@ export const arrayIsEqual = (a, b) => a.length === b.length && a.every((e, i) =>
  * Compares floating-points numbers with a tolerance.
  * @param {number} a The first number.
  * @param {number} b The second number.
+ * @param {number | undefined} epsilon The tolerance.
  * @returns {boolean} Whether the numbers are close enough.
  */
-export const floatIsEqual = (a, b) => Math.abs(a - b) < 0.0001
+export const floatIsEqual = (a, b, epsilon = 0.0001) => Math.abs(a - b) < epsilon
 /**
  * Returns the element that is found most times in the array.
  * @template T The element type.
@@ -66,3 +67,34 @@ export const findOneIndex = (arr, pred) => {
     const index = arr.findIndex(pred)
     return index >= 0 && arr.findIndex((value, i, obj) => i > index && pred(value, i, obj)) === -1 ? index : -1
 }
+
+/**
+ * Translate a position by a rotation angle.
+ * @param {number} angle The rotation angle, either 0, 90, 180 or 270.
+ * @param {number} x The x-axis position.
+ * @param {number} y The y-axis position.
+ * @param {number} width The page width.
+ * @param {number} height The page height.
+ * @returns {{x: number, y: number}} The translated position.
+ */
+export const translatePos = (angle, x, y, width, height) => {
+    switch (getPositiveAngle(angle)) {
+        case 0:
+            return { x, y }
+        case 90:
+            return { x: y, y: height - x }
+        case 180:
+            return { x: width - x, y: height - y }
+        case 270:
+            return { x: width - y, y: x }
+        default:
+            return { x, y }
+    }
+}
+
+/**
+ * Get positive angle.
+ * @param {number} angle The angle (in degrees).
+ * @returns {number} The positive angle.
+ */
+export const getPositiveAngle = angle => ((angle % 360) + 360) % 360

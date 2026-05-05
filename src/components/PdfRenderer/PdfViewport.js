@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import PdfDoc from './PdfDoc'
 import PdfPage from './PdfPage'
 import PdfCanvas from './PdfCanvas'
@@ -32,7 +32,8 @@ function getMarkingBoxes(text, symbols) {
     width: `${item.width}px`,
     height: `${item.height}px`,
     transform: `translate(${item.left}px, ${item.top}px) rotate(${item.angle}rad)`,
-    borderColor: item.plusminus ? 'salmon' : 'black'
+    borderColor: 'black',
+    borderRadius: item.plusminus ? '25%' : 0
   }} />))
 
   for (const [symbol, matches] of Object.entries(symbols)) {
@@ -82,7 +83,9 @@ function PdfViewport({
   const [selectionBox, setSelectionBox] = useState(null)
   const { text, symbols, isLoaded } = useContext(PDFContext)
   const onMouseMove = (event, position) => setCurrentMousePos(position)
-  if (data && isLoaded() && !selectionBox) setSelectionBox(getMarkingBoxes(text, symbols)) //TODO: for debugging purposes
+  useEffect(() => {
+    if(data && isLoaded()) setSelectionBox(getMarkingBoxes(text, symbols))
+  }, [data, isLoaded, text, symbols])
   return (
     <div className={`${className} ${styles.viewport}`} style={style}>
       <div className={styles.page}>

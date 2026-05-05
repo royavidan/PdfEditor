@@ -46,10 +46,30 @@ function fillBloon(bloon) {
                 text = text.filter((_, index) => !indexes.includes(index))
                 break
             }
+            
+            let left = text[i], right = text[j]
+            if (left.x > right.x) [left, right] = [right, left]
+            if (!Number.isNaN(Number(left.str)) && !Number.isNaN(Number(right.str)) && crossIntervals([left.y, left.y + left.height], [right.y, right.y + right.height])) {
+                const currentText = text
+                const indexes = [i, j], plusminus = currentText.map((_, i) => i).filter(i => '+-'.includes(currentText[i].str))
+                let leftText = left.str, rightText = right.str, match
+                const matching = (base, t) => (base.y - t.y - t.height) < 5 && Math.abs(base.x - t.x) < 5
+                if (!'+-'.includes(leftText[0]) && leftText !== '0' && undefined !== (match = plusminus.find(t => matching(left, currentText[t])))) {
+                    if (currentText[match].str === '-') leftText = currentText[match].str + leftText
+                    indexes.push(match)
+                }
+                if (!'+-'.includes(rightText[0]) && rightText !== '0' && undefined !== (match = plusminus.find(t => matching(right, currentText[t])))) {
+                    if (currentText[match].str === '-') rightText = currentText[match].str + rightText
+                    indexes.push(match)
+                }
+                bloon.tolerance = { '+': leftText, '-': rightText }
+                text = text.filter((_, index) => !indexes.includes(index))
+                break
+            }
         }
     }
 
-    text.sort((a, b) => a.x - b.x)
+    text.sort((a, b) => floatIsEqual(a.x, b.x) ? (b.y - a.y) : (a.x - b.x))
     bloon.content = text.map(t => t.str).reduce((a, b) => a + (a.endsWith('R') || (/[a-zA-Z-]/.test(b[0]) && b !== 'x') ? ' ' : '') + b, '').trim()
     bloon.content = bloon.content.replaceAll('*', '')
     let plusminus = /±([\d.]+)/.exec(bloon.content)

@@ -10,21 +10,7 @@ import { ViewportContext } from '../../context/viewport-context'
 import { CounterContext } from '../../context/counter-context'
 import { ModificationContext } from '../../context/modification-context'
 import { BloonsContext } from '../../context/bloons-context'
-
-const getPositiveAngle = angle => ((angle % 360) + 360) % 360
-
-function translatePos(angle, x, y, width, height) {
-  switch (angle) {
-    case 0:
-      return { x, y }
-    case 90:
-      return { x: y, y: height - x }
-    case 180:
-      return { x: width - x, y: height - y }
-    case 270:
-      return { x: width - y, y: x }
-  }
-}
+import { translatePos, getPositiveAngle } from '../../utils'
 
 async function exportBloons(bloons) {
   for (const [id, bloon] of Object.entries(bloons).sort((a, b) => a[0].id - b[0].id)) {
@@ -66,20 +52,20 @@ async function exportBloons(bloons) {
       colObj.elements = xml2js(`<v>${index}</v>`).elements
     }
 
-    insert('B23', 'VISUAL')
+    const firstRowNum = 22
+    insert(`B${firstRowNum + 1}`, 'VISUAL')
     for (const bloon of Object.values(bloons)) {
-      insert(`B${bloon.id + 22}`, bloon.measurement)
-      insert(`D${bloon.id + 22}`, bloon.content)
+      insert(`B${bloon.id + firstRowNum}`, bloon.measurement)
+      insert(`D${bloon.id + firstRowNum}`, bloon.content)
       if (bloon.tolerance) {
-        insert(`E${bloon.id + 22}`, bloon.tolerance['+'])
-        insert(`F${bloon.id + 22}`, bloon.tolerance['-'])
+        insert(`E${bloon.id + firstRowNum}`, bloon.tolerance['+'])
+        insert(`F${bloon.id + firstRowNum}`, bloon.tolerance['-'])
       }
     }
 
     writeXml('xl/sharedStrings.xml', sharedStrings)
     writeXml(`xl/${sheetPath}`, sheet)
-
-    const blob = new Blob([await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })], { type: 'application/vnd.ms-excel.sheet.macroEnabled.12' })
+    const blob = new Blob([await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })], { type: template.headers.get('Content-Type') })
     console.log('request to download file accepted', blob)
     saveAs(blob, 'דוח ביקורת.xlsm')
   }
@@ -96,7 +82,6 @@ async function download(fileData, modificationList, fontSize) {
   const { width, height } = firstPage.getSize()
   const originalAngle = firstPage.getRotation().angle
   const angle = getPositiveAngle(originalAngle)
-  console.log(`original: ${originalAngle} angle: ${angle}`)
 
   modificationList.forEach(item => {
     const position = translatePos(

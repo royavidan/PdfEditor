@@ -6,11 +6,12 @@ import { CounterContext } from '../../context/counter-context'
 import { ModificationContext } from '../../context/modification-context'
 import { BloonsContext } from '../../context/bloons-context'
 import { PDFContext } from '../../context/pdf-context'
+import { translatePos } from '../../utils'
 
 function PdfViewportController({ children }) {
   const { data } = useContext(FileContext)
   const { scale, fontSize } = useContext(ViewportContext)
-  const { text, symbols } = useContext(PDFContext)
+  const { text, symbols, size, angle } = useContext(PDFContext)
   const { counter, incrementCounter, decrementCounter } = useContext(
     CounterContext
   )
@@ -24,11 +25,22 @@ function PdfViewportController({ children }) {
   const onMouseDown = (event, position) => isMain(event) && setMarkedPosition(position)
   const onMouseUp = (event, position) => {
     if (!isMain(event) || !markedPosition) return
+
     const id = nextId
     const template = value => `(${value})`
-    const bloon = { id: counter, top: markedPosition.y / scale, left: markedPosition.x / scale, bottom: position.y / scale, right: position.x / scale }
-    const isInside = (border) => border.left >= bloon.left && border.right <= bloon.right && border.top >= bloon.top && border.bottom <= bloon.bottom
+    const positions = [markedPosition, position].map(p => translatePos(angle, p.x, p.y, size.width, size.height))
+    const X = positions.map(p => p.x / scale), Y = positions.map(p => p.y / scale)
+    console.log(`size=${JSON.stringify(size)}, angle=${angle}`)
+    const bloon = {
+      id: counter,
+      left: Math.min(...X),
+      right: Math.max(...X),
+      top: Math.min(...Y),
+      bottom: Math.max(...Y)
+    }
+    const isInside = border => border.left >= bloon.left && border.right <= bloon.right && border.top >= bloon.top && border.bottom <= bloon.bottom
     bloon.text = text.filter(t => isInside(t.border))
+    bloon.lines = global.shapes.lines.filter(l => isInside(l))
     bloon.symbols = Object.fromEntries(Object.entries(symbols).map(e => [e[0], e[1].find(isInside)]).filter(e => e[1]))
 
     fillBloon(bloon)
