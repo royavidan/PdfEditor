@@ -2,7 +2,7 @@
   "name": "pdf-editor",
   "version": "0.5.0",
   "private": true,
-  "homepage": "https://oren-l.github.io/PdfEditor",
+  "homepage": "https://royavidan.github.io/PdfEditor",
   "dependencies": {
     "@pdf-lib/fontkit": "^0.0.4",
     "file-saver": "^2.0.2",
