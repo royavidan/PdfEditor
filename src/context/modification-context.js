@@ -9,6 +9,7 @@ export const ModificationContext = createContext({
   resetModList: () => {},
   addMod: () => {},
   changeMod: (id, changeFunc) => {},
+  insertMod: (mod) => {},
   removeMod: id => {}
 })
 
@@ -20,13 +21,13 @@ export default ({ children }) => {
     setNextId(initialId)
   }
 
-  const addMod = mod => {
+  const addMod = (mod, imm = 0) => {
     setNextId(id => id + 1)
     return setModList(modList => [
-      ...modList,
+      ...modList.map(m => m.value < mod.value ? m : { ...m, value: m.value + 1 }),
       {
         ...mod,
-        id: nextId
+        id: nextId + imm
       }
     ])
   }
@@ -39,11 +40,21 @@ export default ({ children }) => {
     setModList(changedModList)
   }
 
+  const insertMod = (mod) => {
+    setNextId(id => id + 1)
+    return setModList(modList => [
+      ...modList.map(m => m.value < mod.value ? m : { ...m, value: m.value + 1 }),
+      {
+        ...mod,
+        id: nextId
+      }
+    ])
+  }
+
   const removeMod = id => {
-    const changedModList = modList
+    setModList(modList => modList
       .filter(mod => mod.id !== id)
-      .map(mod => (mod.id < id ? mod : { ...mod, value: mod.value - 1 }))
-    setModList(changedModList)
+      .map(mod => (mod.value < modList[id].value ? mod : { ...mod, value: mod.value - 1 })))
   }
 
   return (
@@ -54,6 +65,7 @@ export default ({ children }) => {
         resetModList,
         addMod,
         changeMod,
+        insertMod,
         removeMod
       }}
     >

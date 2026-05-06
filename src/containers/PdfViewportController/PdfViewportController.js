@@ -18,19 +18,18 @@ function PdfViewportController({ children }) {
   const { modList, nextId, addMod: addModification, changeMod, removeMod } = useContext(
     ModificationContext
   )
-  const { addBloon, removeBloon, fillBloon, modifyBloon } = useContext(BloonsContext)
+  const { bloons, addBloon, insertBloon, removeBloon, fillBloon, modifyBloon } = useContext(BloonsContext)
   const [markedPosition, setMarkedPosition] = useState(null)
 
   const isMain = event => event.button === 0
   const onMouseDown = (event, position) => isMain(event) && setMarkedPosition(position)
+  const template = value => `(${value})`
   const onMouseUp = (event, position) => {
     if (!isMain(event) || !markedPosition) return
 
     const id = nextId
-    const template = value => `(${value})`
     const positions = [markedPosition, position].map(p => translatePos(angle, p.x, p.y, size.width, size.height))
     const X = positions.map(p => p.x / scale), Y = positions.map(p => p.y / scale)
-    console.log(`size=${JSON.stringify(size)}, angle=${angle}`)
     const bloon = {
       id: counter,
       left: Math.min(...X),
@@ -40,7 +39,6 @@ function PdfViewportController({ children }) {
     }
     const isInside = border => border.left >= bloon.left && border.right <= bloon.right && border.top >= bloon.top && border.bottom <= bloon.bottom
     bloon.text = text.filter(t => isInside(t.border))
-    bloon.lines = global.shapes.lines.filter(l => isInside(l))
     bloon.symbols = Object.fromEntries(Object.entries(symbols).map(e => [e[0], e[1].find(isInside)]).filter(e => e[1]))
 
     fillBloon(bloon)
@@ -64,10 +62,11 @@ function PdfViewportController({ children }) {
           x: (position.x + scale) / scale + 25,
           y: position.y / scale
         },
-        value: counter,
+        value: counter + 1,
+        disabled: true,
         title: `${newBloon.measurement}: ${newBloon.content}${newBloon.tolerance ? ` (${newBloon.tolerance['+']}/${newBloon.tolerance['-']})` : ''}`,
         template
-      })
+      }, 1)
       incrementCounter()
     }
   }
@@ -91,18 +90,50 @@ function PdfViewportController({ children }) {
       }))
     },
     onItemDelete: id => {
+      if (modList.find(mod => mod.id === id).disabled) return
+      const originalBloon = bloons[id]
+      const idToRemove = Number(Object.entries(bloons).find(e => e[1].id === originalBloon.id + 1)?.[0])
       removeMod(id)
       removeBloon(id)
       decrementCounter()
+      if (originalBloon.measurement === 'TAP') {
+        removeMod(idToRemove)
+        removeBloon(idToRemove)
+        decrementCounter()
+      }
     },
     fontSize,
     markedPosition,
     onChangeMeasurement: (id, measurement) => {
+      const originalMeasurement = bloons[id].measurement
+      if (measurement === originalMeasurement) return
       modifyBloon(id, { measurement })
       changeMod(id, mod => {
         mod.title = measurement + mod.title.slice(mod.title.indexOf(':'))
         return mod
       })
+
+      if (measurement === 'TAP') {
+        const value = bloons[id].id + 1
+        const newBloon = { ...bloons[id], id: value, measurement: 'DIA' }
+        insertBloon(nextId, newBloon)
+        addModification({
+          position: {
+            x: modList.find(mod => mod.id === id).position.x + 25,
+            y: modList.find(mod => mod.id === id).position.y
+          },
+          value,
+          disabled: true,
+          title: `${newBloon.measurement}: ${newBloon.content}${newBloon.tolerance ? ` (${newBloon.tolerance['+']}/${newBloon.tolerance['-']})` : ''}`,
+          template
+        })
+        incrementCounter()
+      } else if (originalMeasurement === 'TAP') {
+        const idToRemove = Number(Object.entries(bloons).find(e => e[1].id === bloons[id].id + 1)[0])
+        removeMod(idToRemove)
+        removeBloon(idToRemove)
+        decrementCounter()
+      }
     }
   })
 }

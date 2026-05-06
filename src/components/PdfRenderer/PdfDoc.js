@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import { Component } from 'react'
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.js'
 
 function loadDocument(data) {

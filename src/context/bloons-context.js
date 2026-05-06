@@ -3,10 +3,11 @@ import { crossIntervals, floatIsEqual, mostCommon } from '../utils'
 
 export const BloonsContext = createContext({
     bloons: {},
-    fillBloon: () => { },
-    addBloon: () => { },
-    removeBloon: () => { },
-    modifyBloon: () => { },
+    fillBloon: bloon => bloon,
+    addBloon: (id, bloon) => { },
+    removeBloon: id => { },
+    insertBloon: (id, bloon) => { },
+    modifyBloon: (id, mod) => { },
     resetBloons: () => { }
 })
 
@@ -109,18 +110,24 @@ function fillBloon(bloon) {
 }
 
 export default ({ children }) => {
-    const [bloons, setBloons] = useState([])
-    global.bloons = bloons
+    const [bloons, setBloons] = useState({})
 
     const addBloon = (id, bloon) => setBloons(bloons => ({ ...bloons, [id]: bloon }))
     // eslint-disable-next-line eqeqeq
-    const removeBloon = id => setBloons(bloons => Object.fromEntries(Object.entries(bloons).filter(e => e[0] != id)))
+    const removeBloon = id => setBloons(bloons => Object.fromEntries(Object.entries(bloons).filter(e => e[0] != id).map(e => {
+        if (e[1].id > bloons[id].id) e[1].id--
+        return e
+    })))
+    const insertBloon = (id, bloon) => setBloons(bloons => ({ ...Object.fromEntries(Object.entries(bloons).map(e => {
+        if (e[1].id >= bloon.id) e[1].id++
+        return e
+    })), [id]: bloon }))
     const modifyBloon = (id, mod) => setBloons(bloons => ({ ...bloons, [id]: { ...bloons[id], ...mod } }))
     const resetBloons = () => setBloons({})
 
     return (
         <BloonsContext.Provider
-            value={{ bloons, fillBloon, addBloon, removeBloon, modifyBloon, resetBloons }}
+            value={{ bloons, fillBloon, addBloon, removeBloon, insertBloon, modifyBloon, resetBloons }}
         >
             {children}
         </BloonsContext.Provider>

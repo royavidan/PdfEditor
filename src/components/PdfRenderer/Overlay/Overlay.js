@@ -56,6 +56,7 @@ function Overlay({ items, scale, onItemMove, onItemDelete, onChangeMeasurement, 
           value={item.value}
           scale={scale}
           template={item.template}
+          hasContextMenu={!item.disabled}
           onDragEnd={event =>
             onItemMove(
               event,

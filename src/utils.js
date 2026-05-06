@@ -21,6 +21,7 @@ export const floatIsEqual = (a, b, epsilon = 0.0001) => Math.abs(a - b) < epsilo
  * @returns {T} The most common element.
  */
 export const mostCommon = arr => {
+    // eslint-disable-next-line no-sequences
     const counts = arr.reduce((curr, elem) => (curr.set(elem, (curr.get(elem) || 0) + 1), curr), new Map())
     let maxCount = 0, maxElem
     for (const [elem, count] of counts.entries()) {

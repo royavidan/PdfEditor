@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react'
+import { useState, useContext } from 'react'
 
 import { FileContext } from '../../context/file-context'
 import { ViewportContext } from '../../context/viewport-context'

@@ -10,6 +10,7 @@ function OverlayItem({
   scale,
   template,
   isSelected,
+  hasContextMenu,
   onDelete,
   onChangeMeasurement,
   ...otherProps
@@ -36,7 +37,7 @@ function OverlayItem({
   const handleContextMenu = (e) => {
     e.preventDefault()
     e.stopPropagation()
-    setContextMenu({ x: e.clientX, y: e.clientY })
+    hasContextMenu && setContextMenu({ x: e.clientX, y: e.clientY })
   }
 
   return (
@@ -82,7 +83,7 @@ function OverlayItem({
             Change Measurement {String.fromCharCode(showSubMenu ? 9654 : 9660)}
             {showSubMenu && (
               <div className={styles.contextsubmenu} ref={ref => ref && (ref.style.top = `${Math.min(0, window.innerHeight - ref.getBoundingClientRect().bottom) - 1}px`)}>
-                {['MATERIAL', 'COATING', 'PAINTING', 'HEAT', 'TREATMENT', 'MARKING', 'SURFACE', 'TEXTURE', 'REMOVE BURRS'].map(measurement => (
+                {['TAP', 'MATERIAL', 'COATING', 'PAINTING', 'HEAT', 'TREATMENT', 'MARKING', 'SURFACE', 'TEXTURE', 'REMOVE BURRS'].map(measurement => (
                   <div
                     key={measurement}
                     className={styles.contextbutton}
