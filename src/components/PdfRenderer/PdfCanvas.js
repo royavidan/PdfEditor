@@ -49,14 +49,17 @@ class PdfCanvas extends Component {
   }
 
   render() {
-    const { onClick } = this.props
+    const { onClick, onMouseDown, onMouseUp, onMouseLeave, onMouseMove } = this.props
+    const wrap = handler => handler && (event => handler(event, this.getMousePos(event.clientX, event.clientY)))
 
     return (
       <canvas
         ref={this.canvasRef}
-        onClick={event =>
-          onClick(event, this.getMousePos(event.clientX, event.clientY))
-        }
+        onClick={wrap(onClick)}
+        onMouseDown={wrap(onMouseDown)}
+        onMouseUp={wrap(onMouseUp)}
+        onMouseLeave={wrap(onMouseLeave)}
+        onMouseMove={wrap(onMouseMove)}
         style={{ cursor: 'crosshair' }}
       />
     )

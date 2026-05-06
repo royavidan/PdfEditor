@@ -1,5 +1,5 @@
-import React, { Component } from 'react'
-import pdfjs from '@bundled-es-modules/pdfjs-dist/build/pdf'
+import { Component } from 'react'
+import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.js'
 
 function loadDocument(data) {
   return pdfjs.getDocument(data).promise

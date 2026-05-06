@@ -16,3 +16,11 @@
   position: relative;
   margin: auto;
 }
+
+.selectionbox {
+  position: absolute;
+  background: #b3e5fc;
+  border: 1px solid #01579b;
+  pointer-events: none;
+  opacity: 0.5;
+}

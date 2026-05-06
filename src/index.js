@@ -3,11 +3,13 @@ import ReactDOM from 'react-dom'
 import './index.css'
 import App from './containers/App'
 import * as serviceWorker from './serviceWorker'
-import pdfjs from '@bundled-es-modules/pdfjs-dist/build/pdf'
+import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.js'
 
 pdfjs.GlobalWorkerOptions.workerSrc =
-  'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.1.266/build/pdf.worker.min.js' // TODO: replace cdn with package worker
-// '@bundled-es-modules/pdfjs-dist/build/pdf.worker.min.js'
+  'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.16.105/legacy/build/pdf.worker.min.js' // TODO: replace cdn with package worker
+// 'pdfjs-dist/build/pdf.worker.min.js'
+
+if (window.location.pathname === '/') window.location.pathname = '/PdfEditor'
 
 ReactDOM.render(<App />, document.getElementById('root'))
 

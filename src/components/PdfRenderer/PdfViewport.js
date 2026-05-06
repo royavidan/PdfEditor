@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import PdfDoc from './PdfDoc'
 import PdfPage from './PdfPage'
 import PdfCanvas from './PdfCanvas'
@@ -13,11 +13,17 @@ function PdfViewport({
   overlayItems,
   className = '',
   style,
-  onClick,
+  onMouseDown,
+  onMouseUp,
+  onMouseLeave,
   onItemMove,
   onItemDelete,
-  fontSize
+  fontSize,
+  markedPosition,
+  onChangeMeasurement
 }) {
+  const [currentMousePos, setCurrentMousePos] = useState(null)
+  const onMouseMove = (event, position) => setCurrentMousePos(position)
   return (
     <div className={`${className} ${styles.viewport}`} style={style}>
       <div className={styles.page}>
@@ -26,16 +32,28 @@ function PdfViewport({
             {doc => (
               <PdfPage document={doc} pageNum={pageNum}>
                 {page => (
-                  <React.Fragment>
+                  <>
                     <Overlay
                       items={overlayItems}
                       scale={scale}
                       onItemMove={onItemMove}
                       onItemDelete={onItemDelete}
+                      onChangeMeasurement={onChangeMeasurement}
                       fontSize={fontSize}
                     />
-                    <PdfCanvas page={page} scale={scale} onClick={onClick} />
-                  </React.Fragment>
+                    <PdfCanvas page={page} scale={scale} onMouseDown={onMouseDown} onMouseUp={onMouseUp} onMouseLeave={onMouseLeave}
+                      onMouseMove={onMouseMove} />
+                    {markedPosition && currentMousePos && (
+                      <div className={styles.selectionbox}
+                        style={{
+                          left: Math.min(markedPosition.x, currentMousePos.x),
+                          top: Math.min(markedPosition.y, currentMousePos.y),
+                          width: Math.abs(markedPosition.x - currentMousePos.x),
+                          height: Math.abs(markedPosition.y - currentMousePos.y)
+                        }}
+                      />
+                    )}
+                  </>
                 )}
               </PdfPage>
             )}

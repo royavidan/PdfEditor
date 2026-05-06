@@ -1,5 +1,6 @@
-import React, { useRef, useState, useEffect } from 'react'
+import React, { useRef, useState, useEffect, useContext } from 'react'
 import KeyboardEventHandler from 'react-keyboard-event-handler'
+import { ModificationContext } from '../../../context/modification-context'
 
 import OverlayItem from './OverlayItem'
 
@@ -13,9 +14,11 @@ function getRelativeMousePos(element, event) {
   }
 }
 
-function Overlay({ items, scale, onItemMove, onItemDelete, fontSize }) {
+function Overlay({ items, scale, onItemMove, onItemDelete, onChangeMeasurement, fontSize }) {
   const overlayRef = useRef(null)
+  const { nextId } = useContext(ModificationContext)
   const [selectedItemId, setSelectedItemId] = useState(null)
+  useEffect(() => setSelectedItemId(nextId - 1), [nextId])
 
   useEffect(() => {
     if (items.length === 0) {
@@ -49,9 +52,11 @@ function Overlay({ items, scale, onItemMove, onItemDelete, fontSize }) {
           key={item.id}
           position={item.position}
           size={fontSize}
+          title={item.title}
           value={item.value}
           scale={scale}
           template={item.template}
+          hasContextMenu={!item.disabled}
           onDragEnd={event =>
             onItemMove(
               event,
@@ -64,6 +69,8 @@ function Overlay({ items, scale, onItemMove, onItemDelete, fontSize }) {
             setSelectedItemId(item.id)
             event.stopPropagation()
           }}
+          onDelete={() => onItemDelete(item.id)}
+          onChangeMeasurement={measurement => onChangeMeasurement(item.id, measurement)}
         />
       ))}
     </div>

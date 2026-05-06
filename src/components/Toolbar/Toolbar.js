@@ -2,7 +2,7 @@ import React from 'react'
 
 import styles from './Toolbar.module.css'
 
-function toolbar({
+function Toolbar({
   disabled,
   scale,
   initialCounter,
@@ -12,6 +12,7 @@ function toolbar({
   onRotate,
   onDownload,
   onLoad,
+  onExport,
   fontSize,
   setFontSize
 }) {
@@ -77,6 +78,9 @@ function toolbar({
       <button disabled={disabled} onClick={onDownload}>
         Download
       </button>
+      <button disabled={disabled} onClick={onExport}>
+        Export
+      </button>
       <div className={styles.group}>
         <div className={styles.text}>
           Initial counter
@@ -95,4 +99,4 @@ function toolbar({
   )
 }
 
-export default toolbar
+export default Toolbar
