@@ -13,6 +13,7 @@ function Toolbar({
   onDownload,
   onLoad,
   onExport,
+  onSave,
   fontSize,
   setFontSize
 }) {
@@ -80,6 +81,9 @@ function Toolbar({
       </button>
       <button disabled={disabled} onClick={onExport}>
         Export
+      </button>
+      <button disabled={disabled} onClick={onSave}>
+        Save
       </button>
       <div className={styles.group}>
         <div className={styles.text}>

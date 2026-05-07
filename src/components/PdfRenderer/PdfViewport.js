@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import KeyboardEventHandler from 'react-keyboard-event-handler'
+
 import PdfDoc from './PdfDoc'
 import PdfPage from './PdfPage'
 import PdfCanvas from './PdfCanvas'
@@ -20,7 +22,8 @@ function PdfViewport({
   onItemDelete,
   fontSize,
   markedPosition,
-  onChangeMeasurement
+  onChangeMeasurement,
+  onSave
 }) {
   const [currentMousePos, setCurrentMousePos] = useState(null)
   const onMouseMove = (event, position) => setCurrentMousePos(position)
@@ -33,6 +36,15 @@ function PdfViewport({
               <PdfPage document={doc} pageNum={pageNum}>
                 {page => (
                   <>
+                  <KeyboardEventHandler
+                    handleKeys={['ctrl+s']}
+                    handleEventType="keydown"
+                    onKeyEvent={(_, e) => {
+                      e.stopPropagation()
+                      e.preventDefault()
+                      onSave()
+                    }}
+                  />
                     <Overlay
                       items={overlayItems}
                       scale={scale}

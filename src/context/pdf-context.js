@@ -202,10 +202,12 @@ function fixPlusMinus(lines, text) {
         text.push(r)
     }
     for (const { h, v } of plus) {
-        const hminus = horizontal.find(l => floatIsEqual(l.len, h.len) && diff(l.center, v[0].y < v[1].y ? v[1] : v[0]) < l.len / 5)
+        const hminus = horizontal.find(l => !floatIsEqual(l.top, h.top) && floatIsEqual(l.len, h.len) && (diff(l.center, v[0].y < v[1].y ? v[1] : v[0]) < l.len / 5
+            || (diff(l.center, v[0].y < v[1].y ? v[1] : v[0]) < l.len && floatIsEqual(l.left,h.left))))
         if (hminus) addPlusMinus({ h, v }, hminus, 0)
 
-        const vminus = vertical.find(l => floatIsEqual(l.len, v.len) && diff(l.center, h[0].x < h[1].x ? h[1] : h[0]) < l.len / 5)
+        const vminus = vertical.find(l => !floatIsEqual(l.left, v.left) && floatIsEqual(l.len, v.len) && (diff(l.center, h[0].x < h[1].x ? h[1] : h[0]) < l.len / 5
+            || (diff(l.center, h[0].x < h[1].x ? h[1] : h[0]) < l.len && floatIsEqual(l.top, v.top))))
         if (vminus) addPlusMinus({ h, v }, vminus, -Math.PI / 2)
     }
     lines.forEach(l => delete l.index)

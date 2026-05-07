@@ -13,62 +13,59 @@ import { BloonsContext } from '../../context/bloons-context'
 import { translatePos, getPositiveAngle } from '../../utils'
 
 async function exportBloons(bloons) {
-  for (const [id, bloon] of Object.entries(bloons).sort((a, b) => a[0].id - b[0].id)) {
-    console.log(`${id}: bloon ${bloon.id} text elements: ${JSON.stringify(bloon.text.map(t => t.str))}`)
-    const template = await fetch(process.env.PUBLIC_URL + '/template.xlsm')
-    const zip = await JSZip.loadAsync(await template.blob())
-    const readXml = async path => xml2js(await zip.file(path).async('string'), { trim: false, compact: false, captureSpacesBetweenElements: true })
-    const writeXml = (path, data) => zip.file(path, js2xml(data))
-    const first = e => e.elements.find(elem => elem.type === 'element')
-    const only = (e, t) => { const f = e.elements.filter(elem => elem.type === 'element'); return f.length === 1 && f[0].name === t }
+  const template = await fetch(process.env.PUBLIC_URL + '/template.xlsm')
+  const zip = await JSZip.loadAsync(await template.blob())
+  const readXml = async path => xml2js(await zip.file(path).async('string'), { trim: false, compact: false, captureSpacesBetweenElements: true })
+  const writeXml = (path, data) => zip.file(path, js2xml(data))
+  const first = e => e.elements.find(elem => elem.type === 'element')
+  const only = (e, t) => { const f = e.elements.filter(elem => elem.type === 'element'); return f.length === 1 && f[0].name === t }
 
-    const sharedStrings = await readXml('xl/sharedStrings.xml')
-    const sharedStringsObj = Object.fromEntries(first(sharedStrings).elements.map((e, i) => [e, i]).filter(([e]) => e.name === 'si' && only(e, 't'))
-      .map(([e, i]) => [first(e), i]).filter(([e]) => e.elements.length === 1 && e.elements[0].type === 'text').map(([e, i]) => [e.elements[0].text, i]))
-    let sharedStringsIndex = first(sharedStrings).elements.filter(e => e.type === 'element').length
+  const sharedStrings = await readXml('xl/sharedStrings.xml')
+  const sharedStringsObj = Object.fromEntries(first(sharedStrings).elements.map((e, i) => [e, i]).filter(([e]) => e.name === 'si' && only(e, 't'))
+    .map(([e, i]) => [first(e), i]).filter(([e]) => e.elements.length === 1 && e.elements[0].type === 'text').map(([e, i]) => [e.elements[0].text, i]))
+  let sharedStringsIndex = first(sharedStrings).elements.filter(e => e.type === 'element').length
 
-    const workbook = await readXml('xl/workbook.xml')
-    const sheetId = first(workbook).elements.find(e => e.name === 'sheets').elements.find(e => e.name === 'sheet' && e.attributes.name === 'דוח ביקורת').attributes['r:id']
+  const workbook = await readXml('xl/workbook.xml')
+  const sheetId = first(workbook).elements.find(e => e.name === 'sheets').elements.find(e => e.name === 'sheet' && e.attributes.name === 'דוח ביקורת').attributes['r:id']
 
-    const workbookRel = await readXml('xl/_rels/workbook.xml.rels')
-    const sheetPath = first(workbookRel).elements.find(e => e.name === 'Relationship' && e.attributes.Id === sheetId).attributes.Target
+  const workbookRel = await readXml('xl/_rels/workbook.xml.rels')
+  const sheetPath = first(workbookRel).elements.find(e => e.name === 'Relationship' && e.attributes.Id === sheetId).attributes.Target
 
-    const sheet = await readXml(`xl/${sheetPath}`)
+  const sheet = await readXml(`xl/${sheetPath}`)
 
-    const insert = (cell, data) => {
-      const row = cell.slice(1)
-      const rowObj = first(sheet).elements.find(e => e.name === 'sheetData').elements.find(e => e.name === 'row' && e.attributes.r === row)
-      const colObj = rowObj.elements.find(e => e.name === 'c' && e.attributes.r === cell)
-      let index = sharedStringsObj[data]
-      const f = first(sharedStrings)
-      f.attributes.count = `${parseInt(f.attributes.count) + 1}`
-      if (index === undefined) {
-        index = sharedStringsIndex++
-        sharedStringsObj[data] = index
-        f.attributes.uniqueCount = `${parseInt(f.attributes.uniqueCount) + 1}`
-        f.elements.push(xml2js(`<si><t>${data}</t></si>`).elements[0])
-      }
-      colObj.attributes.t = 's'
-      colObj.elements = xml2js(`<v>${index}</v>`).elements
+  const insert = (cell, data) => {
+    const row = cell.slice(1)
+    const rowObj = first(sheet).elements.find(e => e.name === 'sheetData').elements.find(e => e.name === 'row' && e.attributes.r === row)
+    const colObj = rowObj.elements.find(e => e.name === 'c' && e.attributes.r === cell)
+    let index = sharedStringsObj[data]
+    const f = first(sharedStrings)
+    f.attributes.count = `${parseInt(f.attributes.count) + 1}`
+    if (index === undefined) {
+      index = sharedStringsIndex++
+      sharedStringsObj[data] = index
+      f.attributes.uniqueCount = `${parseInt(f.attributes.uniqueCount) + 1}`
+      f.elements.push(xml2js(`<si><t>${data}</t></si>`).elements[0])
     }
-
-    const firstRowNum = 22
-    insert(`B${firstRowNum + 1}`, 'VISUAL')
-    for (const bloon of Object.values(bloons)) {
-      insert(`B${bloon.id + firstRowNum}`, bloon.measurement)
-      insert(`D${bloon.id + firstRowNum}`, bloon.content)
-      if (bloon.tolerance) {
-        insert(`E${bloon.id + firstRowNum}`, bloon.tolerance['+'])
-        insert(`F${bloon.id + firstRowNum}`, bloon.tolerance['-'])
-      }
-    }
-
-    writeXml('xl/sharedStrings.xml', sharedStrings)
-    writeXml(`xl/${sheetPath}`, sheet)
-    const blob = new Blob([await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })], { type: template.headers.get('Content-Type') })
-    console.log('request to download file accepted', blob)
-    saveAs(blob, 'דוח ביקורת.xlsm')
+    colObj.attributes.t = 's'
+    colObj.elements = xml2js(`<v>${index}</v>`).elements
   }
+
+  const firstRowNum = 22
+  insert(`B${firstRowNum + 1}`, 'VISUAL')
+  for (const bloon of Object.values(bloons)) {
+    insert(`B${bloon.id + firstRowNum}`, bloon.measurement)
+    insert(`D${bloon.id + firstRowNum}`, bloon.content)
+    if (bloon.tolerance) {
+      insert(`E${bloon.id + firstRowNum}`, bloon.tolerance['+'])
+      insert(`F${bloon.id + firstRowNum}`, bloon.tolerance['-'])
+    }
+  }
+
+  writeXml('xl/sharedStrings.xml', sharedStrings)
+  writeXml(`xl/${sheetPath}`, sheet)
+  const blob = new Blob([await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })], { type: template.headers.get('Content-Type') })
+  console.log('request to download file accepted', blob)
+  saveAs(blob, 'דוח ביקורת.xlsm')
 }
 
 async function download(fileData, modificationList, fontSize) {

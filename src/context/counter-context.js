@@ -13,8 +13,8 @@ export default ({ children }) => {
   const [initialCounter, setInitialCounter] = useState(2)
   const [counter, setCounter] = useState(initialCounter)
   const resetCounter = () => setCounter(initialCounter)
-  const incrementCounter = () => setCounter(counter => counter + 1)
-  const decrementCounter = () => setCounter(counter => counter - 1)
+  const incrementCounter = (i = 1) => setCounter(counter => counter + i)
+  const decrementCounter = (i = 1) => setCounter(counter => counter - i)
   return (
     <CounterContext.Provider
       value={{ counter, initialCounter, resetCounter, setInitialCounter, incrementCounter, decrementCounter }}
