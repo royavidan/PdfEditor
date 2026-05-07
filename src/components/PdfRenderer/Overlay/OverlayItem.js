@@ -100,7 +100,7 @@ function OverlayItem({
                   onClick={() => {
                     closeContextMenu()
                     const measurement = window.prompt('Enter custom measurement')
-                    measurement && onChangeMeasurement(measurement)
+                    measurement && onChangeMeasurement(measurement.toUpperCase())
                   }}>
                   CUSTOM
                 </div>
