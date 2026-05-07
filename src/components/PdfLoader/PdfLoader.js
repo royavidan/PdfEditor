@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import Files from 'react-files'
 
-import styles from './PdfLoader.module.css'
+import styles from './PdfLoader.module.scss'
 
 class PdfLoader extends Component {
   onFilesChange = async files => {

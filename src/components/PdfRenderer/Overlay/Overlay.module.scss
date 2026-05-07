@@ -1,0 +1,52 @@
+.overlay {
+  width: 100%;
+  height: 100%;
+
+  .item {
+    position: absolute;
+    user-select: none;
+    color: blue;
+    cursor: pointer;
+    font-family: 'Roboto';
+    outline-offset: 0.5em;
+
+    &.selected {
+      outline: 1px solid red;
+      cursor: grab;
+    }
+  }
+
+  .contextmenu {
+    position: fixed;
+    background-color: white;
+    border: 1px solid #ccc;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 00;
+    padding: 5px 0;
+    min-width: 160px;
+    color: black;
+    font-size: 10px;
+    cursor: default;
+  }
+
+  .contextbutton {
+    padding: 0.5em;
+    cursor: pointer;
+    position: relative;
+
+    &:hover {
+      background-color: #dfdfdf;
+    }
+  }
+
+  .contextsubmenu {
+    position: absolute;
+    top: -1px;
+    left: 100%;
+    background-color: white;
+    border: 1px solid #ccc;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    min-width: 120px;
+    padding: 5px 0;
+  }
+}

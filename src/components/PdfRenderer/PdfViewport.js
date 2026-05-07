@@ -6,7 +6,7 @@ import PdfPage from './PdfPage'
 import PdfCanvas from './PdfCanvas'
 import Overlay from './Overlay/Overlay'
 
-import styles from './PdfViewport.module.css'
+import styles from './PdfViewport.module.scss'
 
 function PdfViewport({
   data,

@@ -13,7 +13,7 @@ import ModificationProvider from '../../context/modification-context'
 import BloonsProvider from '../../context/bloons-context'
 import PDFProvider from '../../context/pdf-context'
 
-import styles from './PdfEditor.module.css'
+import styles from './PdfEditor.module.scss'
 
 function PdfEditor() {
   console.log('[PdfEditor] render')

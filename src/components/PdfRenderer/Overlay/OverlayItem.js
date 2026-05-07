@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 
-import styles from './Overlay.module.css'
+import styles from './Overlay.module.scss'
 
 function OverlayItem({
   position,

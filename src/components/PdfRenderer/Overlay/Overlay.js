@@ -4,7 +4,7 @@ import { ModificationContext } from '../../../context/modification-context'
 
 import OverlayItem from './OverlayItem'
 
-import styles from './Overlay.module.css'
+import styles from './Overlay.module.scss'
 
 function getRelativeMousePos(element, event) {
   const { left, top } = element.getBoundingClientRect()

@@ -1,5 +1,5 @@
 import React from 'react'
-import './App.css'
+import './App.scss'
 
 import FileProvider from '../context/file-context'
 import PdfEditor from '../components/PdfEditor/PdfEditor'
