@@ -12,7 +12,7 @@ import { translatePos } from '../../utils'
 function PdfViewportController({ children }) {
   const { data } = useContext(FileContext)
   const { scale, fontSize } = useContext(ViewportContext)
-  const pdfContext = useContext(PDFContext)
+  const { getText, getSymbols, getSize, getAngle, isLoaded } = useContext(PDFContext)
   const { counter, incrementCounter, decrementCounter } = useContext(
     CounterContext
   )
@@ -22,7 +22,8 @@ function PdfViewportController({ children }) {
   const { bloons, addBloon, insertBloon, removeBloon, fillBloon, modifyBloon } = useContext(BloonsContext)
   const { currentPage, nextPage, prevPage } = useContext(PageContext)
   const [markedPosition, setMarkedPosition] = useState(null)
-  const text = pdfContext.text[currentPage], symbols = pdfContext.symbols[currentPage], size = pdfContext.size[currentPage], angle = pdfContext.angle[currentPage]
+  const text = getText(currentPage), symbols = getSymbols(currentPage)
+  const size = getSize(currentPage), angle = getAngle(currentPage)
 
   const isMain = event => event.button === 0
   const onMouseDown = (event, position) => isMain(event) && setMarkedPosition(position)
@@ -78,7 +79,7 @@ function PdfViewportController({ children }) {
   const onMouseLeave = event => isMain(event) && setMarkedPosition(null)
 
   return children({
-    disabled: !pdfContext.isLoaded(),
+    disabled: !isLoaded(),
     data,
     pageNum: currentPage + 1,
     scale,

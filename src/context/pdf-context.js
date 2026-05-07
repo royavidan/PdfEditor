@@ -18,10 +18,10 @@ const isCircle = path => path.length >= 10 && arrayIsEqual(path[0], path[path.le
 const isLine = path => path.length === 2
 
 export const PDFContext = createContext({
-    text: [],
-    symbols: {},
-    size: { width: 0, height: 0 },
-    angle: 0,
+    getText: page => {},
+    getSymbols: page => {},
+    getSize: page => {},
+    getAngle: page => {},
     isLoaded: () => false
 })
 
@@ -417,33 +417,28 @@ async function getDocumentInfo(data) {
 
 export default ({ children }) => {
     const { data: fileData, isFileLoaded } = useContext(FileContext)
-    const [text, setText] = useState([null])
-    const [symbols, setSymbols] = useState([null])
-    const [size, setSize] = useState([{ width: 0, height: 0 }])
-    const [angle, setAngle] = useState([0])
+    const [data, setData] = useState([null])
+    const [info, setInfo] = useState([{ size: { width: 0, height: 0 }, angle: 0 }])
 
-    const isLoaded = () => text[0] !== null && symbols[0] !== null
+    const isLoaded = () => data[0] !== null
 
     useEffect(() => {
-        setText([null])
-        setSymbols([null])
-        setSize([{ width: 0, height: 0 }])
-        setAngle([0])
+        setData([null])
+        setInfo([{ size: { width: 0, height: 0 }, angle: 0 }])
         if (isFileLoaded()) {
-            extractPDFData(fileData).then(data => {
-                setText(data.map(d => d.text))
-                setSymbols(data.map(d => d.symbols))
-            })
-            getDocumentInfo(fileData).then(info => {
-                setSize(info.map(i => i.size))
-                setAngle(info.map(i => i.angle))
-            })
+            extractPDFData(fileData).then(setData)
+            getDocumentInfo(fileData).then(setInfo)
         }
     }, [fileData, isFileLoaded])
 
+    const getText = page => data[page].text
+    const getSymbols = page => data[page].symbols
+    const getSize = page => info[page].size
+    const getAngle = page => info[page].angle
+
     return (
         <PDFContext.Provider
-            value={{ text, symbols, size, angle, isLoaded }}
+            value={{ getText, getSymbols, getSize, getAngle, isLoaded }}
         >
             {children}
         </PDFContext.Provider>
