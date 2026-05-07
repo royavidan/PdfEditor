@@ -1,4 +1,6 @@
-import React from 'react'
+import React, { useContext } from 'react'
+
+import { PageContext } from '../../context/page-context'
 
 import styles from './Toolbar.module.css'
 
@@ -15,8 +17,10 @@ function Toolbar({
   onExport,
   onSave,
   fontSize,
-  setFontSize
+  setFontSize,
+  onChangePageNum
 }) {
+  const { pages, currentPage } = useContext(PageContext)
   const runningLabelText = disabled ? null : (
     <div className={styles.text}>
       Place next running label: {`(${counter})`}
@@ -98,6 +102,22 @@ function Toolbar({
           disabled={!disabled}
         />
         {runningLabelText}
+      </div>
+
+      <div className={styles.group}>
+        <div className={styles.text}>Page: </div>
+        <input
+          style={{ width: '2em' }}
+          type="number"
+          title="Page Number"
+          value={currentPage + 1}
+          step="1"
+          onChange={onChangePageNum}
+          min={1}
+          max={pages}
+          disabled={disabled}
+        />
+        <div className={styles.text}>{` / ${pages}`}</div>
       </div>
     </div>
   )
