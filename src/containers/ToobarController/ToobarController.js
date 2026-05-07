@@ -13,7 +13,7 @@ import { BloonsContext } from '../../context/bloons-context'
 import { translatePos, getPositiveAngle } from '../../utils'
 
 async function exportBloons(bloons) {
-  const template = await fetch(process.env.PUBLIC_URL + '/template.xlsm')
+  const template = await fetch('https://raw.githubusercontent.com/royavidan/PdfEditor/refs/heads/resources/template.xlsm')
   const zip = await JSZip.loadAsync(await template.blob())
   const readXml = async path => xml2js(await zip.file(path).async('string'), { trim: false, compact: false, captureSpacesBetweenElements: true })
   const writeXml = (path, data) => zip.file(path, js2xml(data))
@@ -63,7 +63,7 @@ async function exportBloons(bloons) {
 
   writeXml('xl/sharedStrings.xml', sharedStrings)
   writeXml(`xl/${sheetPath}`, sheet)
-  const blob = new Blob([await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })], { type: template.headers.get('Content-Type') })
+  const blob = new Blob([await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })], { type: 'application/vnd.ms-excel.sheet.macroEnabled.12' })
   console.log('request to download file accepted', blob)
   saveAs(blob, 'דוח ביקורת.xlsm')
 }
