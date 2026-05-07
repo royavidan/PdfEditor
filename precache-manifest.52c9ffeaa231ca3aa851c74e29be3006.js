@@ -1,10 +1,10 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "8107fdb8943448ed952fba20be95c6be",
+    "revision": "8406ef6b4804dccc0352815ad3f00dd1",
     "url": "/PdfEditor/index.html"
   },
   {
-    "revision": "b9d7dd84b8091539060b",
+    "revision": "fc174df7ae5fda4b23f0",
     "url": "/PdfEditor/static/css/main.3a39f4cc.chunk.css"
   },
   {
@@ -16,8 +16,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/PdfEditor/static/js/2.281ef578.chunk.js.LICENSE.txt"
   },
   {
-    "revision": "b9d7dd84b8091539060b",
-    "url": "/PdfEditor/static/js/main.36d58bba.chunk.js"
+    "revision": "fc174df7ae5fda4b23f0",
+    "url": "/PdfEditor/static/js/main.e25788c7.chunk.js"
   },
   {
     "revision": "2262068b3fcea06d5250",
