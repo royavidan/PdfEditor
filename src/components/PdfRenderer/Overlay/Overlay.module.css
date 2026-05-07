@@ -26,12 +26,12 @@
   padding: 5px 0;
   min-width: 160px;
   color: black;
-  font-size: 14px;
+  font-size: 10px;
   cursor: default;
 }
 
 .overlay .contextbutton {
-  padding: 8px 15px;
+  padding: 0.5em;
   cursor: pointer;
   position: relative;
 }

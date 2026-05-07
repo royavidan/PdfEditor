@@ -37,6 +37,7 @@ function PdfEditor() {
                           {toolbarCtrl => (
                             <Toolbar
                               onLoad={loadDialogCtrl.openDialog}
+                              onSave={loadDialogCtrl.onSave}
                               {...toolbarCtrl}
                             />
                           )}
@@ -47,7 +48,7 @@ function PdfEditor() {
                           ) : null}
 
                           <PdfViewportController>
-                            {viewportCtrl => <PdfViewport {...viewportCtrl} />}
+                            {viewportCtrl => <PdfViewport {...viewportCtrl} onSave={loadDialogCtrl.onSave} />}
                           </PdfViewportController>
                         </div>
                       </React.Fragment>

@@ -83,7 +83,7 @@ function OverlayItem({
             Change Measurement {String.fromCharCode(showSubMenu ? 9654 : 9660)}
             {showSubMenu && (
               <div className={styles.contextsubmenu} ref={ref => ref && (ref.style.top = `${Math.min(0, window.innerHeight - ref.getBoundingClientRect().bottom) - 1}px`)}>
-                {['TAP', 'MATERIAL', 'COATING', 'PAINTING', 'HEAT', 'TREATMENT', 'MARKING', 'SURFACE', 'TEXTURE', 'REMOVE BURRS'].map(measurement => (
+                {['TAP', 'MATERIAL', 'COATING', 'PAINTING', 'HEAT TREATMENT', 'MARKING', 'SURFACE TEXTURE', 'REMOVE BURRS'].map(measurement => (
                   <div
                     key={measurement}
                     className={styles.contextbutton}
@@ -94,6 +94,16 @@ function OverlayItem({
                     {measurement}
                   </div>
                 ))}
+                <div
+                  key='CUSTOM'
+                  className={styles.contextbutton}
+                  onClick={() => {
+                    closeContextMenu()
+                    const measurement = window.prompt('Enter custom measurement')
+                    measurement && onChangeMeasurement(measurement)
+                  }}>
+                  CUSTOM
+                </div>
               </div>
             )}
           </div>

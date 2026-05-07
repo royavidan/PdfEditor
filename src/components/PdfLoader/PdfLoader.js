@@ -23,7 +23,7 @@ class PdfLoader extends Component {
           className={styles.inner}
           onChange={this.onFilesChange}
           onError={this.onFilesError}
-          accepts={['.pdf']}
+          accepts={['.pdf', '.bloons']}
           clickable
           maxFiles={1}
         >

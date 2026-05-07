@@ -52,9 +52,10 @@ export default ({ children }) => {
   }
 
   const removeMod = id => {
+    const originalMod = modList.find(mod => mod.id === id)
     setModList(modList => modList
       .filter(mod => mod.id !== id)
-      .map(mod => (mod.value < modList[id].value ? mod : { ...mod, value: mod.value - 1 })))
+      .map(mod => (mod.value < originalMod.value ? mod : { ...mod, value: mod.value - 1 })))
   }
 
   return (
