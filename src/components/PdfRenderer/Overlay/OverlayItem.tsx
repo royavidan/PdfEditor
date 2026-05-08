@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
+import PropTypes from 'prop-types'
 
 import styles from './Overlay.module.scss'
-import type { Position } from '../../../types'
+import { Position } from '../../../types'
 
 interface OverlayItemsProps {
   position: Position
@@ -125,6 +126,19 @@ function OverlayItem({
       )}
     </>
   )
+}
+
+OverlayItem.propTypes = {
+  position: Position.isRequired,
+  size: PropTypes.number.isRequired,
+  title: PropTypes.string.isRequired,
+  value: PropTypes.number.isRequired,
+  scale: PropTypes.number.isRequired,
+  template: PropTypes.func.isRequired,
+  isSelected: PropTypes.bool.isRequired,
+  hasContextMenu: PropTypes.bool.isRequired,
+  onDelete: PropTypes.func.isRequired,
+  onChangeMeasurement: PropTypes.func.isRequired
 }
 
 export default React.memo(OverlayItem)

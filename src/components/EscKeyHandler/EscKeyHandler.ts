@@ -1,4 +1,5 @@
 import { Component } from 'react'
+import PropTypes from 'prop-types'
 
 interface EscKeyHandlerProps {
   onClick(): void
@@ -21,6 +22,10 @@ class EscKeyHandler extends Component<EscKeyHandlerProps> {
 
   render() {
     return null
+  }
+
+  static readonly propTypes = {
+    onClick: PropTypes.func.isRequired
   }
 }
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import KeyboardEventHandler from 'react-keyboard-event-handler'
+import PropTypes from 'prop-types'
 
 import PdfDoc from './PdfDoc'
 import PdfPage from './PdfPage'
@@ -8,7 +9,8 @@ import Overlay from './Overlay/Overlay'
 
 import styles from './PdfViewport.module.scss'
 import { FileData } from '../../context/file-context'
-import type { Position } from '../../types'
+import { Modification } from '../../context/modification-context'
+import { Position, Null } from '../../types'
 
 interface PdfViewportProps {
   data: FileData
@@ -94,6 +96,24 @@ function PdfViewport({
       </div>
     </div>
   )
+}
+
+PdfViewport.propTypes = {
+  data: FileData.isRequired,
+  pageNum: PropTypes.number.isRequired,
+  scale: PropTypes.number.isRequired,
+  overlayItems: PropTypes.arrayOf(Modification).isRequired,
+  className: PropTypes.string,
+  style: PropTypes.object,
+  onMouseDown: PropTypes.func,
+  onMouseUp: PropTypes.func,
+  onMouseLeave: PropTypes.func,
+  onItemMove: PropTypes.func,
+  onItemDelete: PropTypes.func,
+  fontSize: PropTypes.number.isRequired,
+  markedPosition: PropTypes.oneOfType([Null, Position]),
+  onChangeMeasurement: PropTypes.func,
+  onSave: PropTypes.func
 }
 
 export default PdfViewport

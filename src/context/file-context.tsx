@@ -1,7 +1,11 @@
 import React, { useState, createContext } from 'react'
+import PropTypes from 'prop-types'
+
 import type { ContextProvider } from '../types'
 
 export type FileData = ArrayBuffer
+
+export const FileData = PropTypes.instanceOf(ArrayBuffer)
 
 export interface FileContext<T> {
   data: T | null

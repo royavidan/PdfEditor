@@ -1,6 +1,7 @@
 import { Component } from 'react'
-import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist'
+import PropTypes from 'prop-types'
 
+import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist'
 
 function loadPage(doc: PDFDocumentProxy, pageNum: number) {
   return doc.getPage(pageNum)
@@ -46,6 +47,12 @@ class PdfPage extends Component<PdfPageProps, PdfPageState> {
   render() {
     const { children } = this.props
     return this.state.pageObj !== null ? children(this.state.pageObj) : null
+  }
+
+  static readonly propTypes = {
+    document: PropTypes.object.isRequired,
+    pageNum: PropTypes.number.isRequired,
+    children: PropTypes.func.isRequired
   }
 }
 

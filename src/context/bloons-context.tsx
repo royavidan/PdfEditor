@@ -3,24 +3,22 @@ import { crossIntervals, floatIsEqual, mostCommon } from '../utils'
 import type { ContextProvider, Position } from '../types'
 import type { Text, Symbol, SymbolType } from './pdf-context'
 
-declare global {
-    export interface BasicBloon {
-        id: number
-        left: number
-        right: number
-        top: number
-        bottom: number
-        text: Text[]
-        symbols: Record<SymbolType, Symbol | undefined>
-    }
+export interface BasicBloon {
+    id: number
+    left: number
+    right: number
+    top: number
+    bottom: number
+    text: Text[]
+    symbols: Record<SymbolType, Symbol | undefined>
+}
 
-    export interface Bloon extends Omit<BasicBloon, 'text' | 'symbols'> {
-        content: string
-        measurement: string
-        tolerance?: {
-            '+': number | string
-            '-': number | string
-        }
+export interface Bloon extends Omit<BasicBloon, 'text' | 'symbols'> {
+    content: string
+    measurement: string
+    tolerance?: {
+        '+': number | string
+        '-': number | string
     }
 }
 
@@ -85,7 +83,7 @@ function fillBloon(bloon: BasicBloon) {
                 text = text.filter((_, index) => !indexes.includes(index))
                 break
             }
-            
+
             let left = text[i], right = text[j]
             if (left.x > right.x) [left, right] = [right, left]
             if (!floatIsEqual(angleBetween(left, right), left.angle, 0.1) && !Number.isNaN(Number(left.str)) && !Number.isNaN(Number(right.str)) && crossIntervals([left.y, left.y + left.height], [right.y, right.y + right.height])) {
@@ -163,10 +161,12 @@ export default (({ children }) => {
         if (e[1].id > bloons[id].id) e[1].id--
         return e
     })))
-    const insertBloon: BloonsContext['insertBloon'] = (id, bloon) => setBloons(bloons => ({ ...Object.fromEntries(Object.entries(bloons).map(e => {
-        if (e[1].id >= bloon.id) e[1].id++
-        return e
-    })), [id]: bloon }))
+    const insertBloon: BloonsContext['insertBloon'] = (id, bloon) => setBloons(bloons => ({
+        ...Object.fromEntries(Object.entries(bloons).map(e => {
+            if (e[1].id >= bloon.id) e[1].id++
+            return e
+        })), [id]: bloon
+    }))
     const modifyBloon: BloonsContext['modifyBloon'] = (id, mod) => setBloons(bloons => ({ ...bloons, [id]: { ...bloons[id], ...mod } }))
     const resetBloons: BloonsContext['resetBloons'] = () => setBloons({})
 

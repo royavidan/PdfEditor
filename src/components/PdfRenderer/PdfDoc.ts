@@ -1,7 +1,9 @@
 import { Component } from 'react'
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.js'
-import type { FileData } from '../../context/file-context'
+import PropTypes from 'prop-types'
+
 import type { PDFDocumentProxy } from 'pdfjs-dist'
+import { FileData } from '../../context/file-context'
 
 function loadDocument(data: FileData) {
   return pdfjs.getDocument(data).promise
@@ -49,6 +51,11 @@ class PdfDoc extends Component<PdfDocProps, PdfDocState> {
   render() {
     const { children } = this.props
     return this.state.docObj !== null ? children(this.state.docObj) : null
+  }
+
+  static readonly propTypes = {
+    data: FileData.isRequired,
+    children: PropTypes.func.isRequired
   }
 }
 

@@ -5,8 +5,8 @@ import { saveAs } from 'file-saver'
 import { FileContext, FileData } from '../../context/file-context'
 import { ViewportContext } from '../../context/viewport-context'
 import { CounterContext } from '../../context/counter-context'
-import { ModificationContext } from '../../context/modification-context'
-import { BloonsContext } from '../../context/bloons-context'
+import { ModificationContext, Modification } from '../../context/modification-context'
+import { BloonsContext, Bloon } from '../../context/bloons-context'
 import type { ControllerProps } from '../../types'
 
 interface LoadDialogControllerData {

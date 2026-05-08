@@ -1,12 +1,24 @@
 import React, { useState, createContext } from 'react'
-import type { ContextProvider, Permutation } from '../types'
+import PropTypes from 'prop-types'
+import { ContextProvider, Permutation, Position } from '../types'
 
-declare global {
-  export interface Modification {
-    readonly id: number
-    value: number
-  }
+export interface Modification {
+  readonly id: number
+  value: number
+  position: Position
+  title: string
+  template(value: number): string
+  disabled?: boolean
 }
+
+export const Modification = PropTypes.shape({
+  id: PropTypes.number.isRequired,
+  value: PropTypes.number.isRequired,
+  position: Position.isRequired,
+  title: PropTypes.string.isRequired,
+  template: PropTypes.func.isRequired,
+  disabled: PropTypes.bool
+})
 
 type ModificationInput = Omit<Modification, 'id'>
 

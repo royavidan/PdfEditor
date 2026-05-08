@@ -1,5 +1,7 @@
 import React, { Component } from 'react'
 import Files, { FileData, FilesErrorHandler } from 'react-files'
+import PropTypes from 'prop-types'
+
 import type { FileData as PDFFileData } from '../../context/file-context'
 
 import styles from './PdfLoader.module.scss'
@@ -36,6 +38,10 @@ class PdfLoader extends Component<PdfLoaderProps> {
         </Files>
       </div>
     )
+  }
+
+  static readonly propTypes = {
+    onLoad: PropTypes.func.isRequired
   }
 }
 

@@ -3,22 +3,12 @@ import { useContext, useState } from 'react'
 import { FileContext, FileData } from '../../context/file-context'
 import { ViewportContext } from '../../context/viewport-context'
 import { CounterContext } from '../../context/counter-context'
-import { ModificationContext } from '../../context/modification-context'
-import { BloonsContext } from '../../context/bloons-context'
+import { ModificationContext, Modification } from '../../context/modification-context'
+import { BloonsContext, BasicBloon } from '../../context/bloons-context'
 import { PDFContext } from '../../context/pdf-context'
 import { translatePos } from '../../utils'
 import type { Border, ControllerProps, Position } from '../../types'
 import type { PdfMouseEventHandler } from '../../components/PdfRenderer/PdfCanvas'
-
-declare global {
-  export interface Modification {
-    position: { x: number; y: number }
-    value: number
-    title: string
-    template(value: number): string
-    disabled?: boolean
-  }
-}
 
 interface PdfViewportControllerData {
   data: FileData
@@ -64,7 +54,7 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
       top: Math.min(...Y),
       bottom: Math.max(...Y)
     } as BasicBloon
-    const isInside = (border: Border) => border.left >= bloon.left && border.right <= bloon.right && border.top >= bloon.top && border.bottom <= bloon.bottom
+    const isInside = (border: Border) => border.left >= bloonInput.left && border.right <= bloonInput.right && border.top >= bloonInput.top && border.bottom <= bloonInput.bottom
     bloonInput.text = text!.filter(t => isInside(t.border))
     bloonInput.symbols = Object.fromEntries(Object.entries(symbols!).map(e => [e[0], e[1].find(isInside)]).filter(e => e[1]))
 

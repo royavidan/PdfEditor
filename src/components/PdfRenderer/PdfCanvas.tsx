@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
-import type { Position } from '../../types'
+import PropTypes from 'prop-types'
 import type { PDFPageProxy } from 'pdfjs-dist'
+
+import type { Position } from '../../types'
 
 export type PdfMouseEventHandler = (event: React.MouseEvent, position: Position) => void
 
@@ -80,6 +82,17 @@ class PdfCanvas extends Component<PdfCanvasProps> {
         style={{ cursor: 'crosshair' }}
       />
     )
+  }
+
+  static readonly propTypes = {
+    page: PropTypes.object.isRequired,
+    scale: PropTypes.number.isRequired,
+
+    onClick: PropTypes.func,
+    onMouseDown: PropTypes.func,
+    onMouseUp: PropTypes.func,
+    onMouseLeave: PropTypes.func,
+    onMouseMove: PropTypes.func
   }
 }
 
