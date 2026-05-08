@@ -22,14 +22,15 @@ function PdfViewportController({ children }) {
   const { bloons, addBloon, insertBloon, removeBloon, fillBloon, modifyBloon } = useContext(BloonsContext)
   const { currentPage, nextPage, prevPage } = useContext(PageContext)
   const [markedPosition, setMarkedPosition] = useState(null)
-  const text = getText(currentPage), symbols = getSymbols(currentPage)
-  const size = getSize(currentPage), angle = getAngle(currentPage)
 
   const isMain = event => event.button === 0
   const onMouseDown = (event, position) => isMain(event) && setMarkedPosition(position)
   const template = value => `(${value})`
   const onMouseUp = (event, position) => {
     if (!isMain(event) || !markedPosition) return
+
+    const text = getText(currentPage), symbols = getSymbols(currentPage)
+    const size = getSize(currentPage), angle = getAngle(currentPage)
 
     const id = nextId
     const positions = [markedPosition, position].map(p => translatePos(angle, p.x, p.y, size.width, size.height))
