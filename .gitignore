@@ -25,3 +25,4 @@ yarn-error.log*
 TODO
 local-tests
 .vscode
+src/react-app-env.d.ts

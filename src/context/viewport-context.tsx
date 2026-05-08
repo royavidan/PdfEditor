@@ -1,7 +1,16 @@
 import React, { useState, createContext } from 'react'
+import type { ContextProvider } from '../types'
 
 const initialScale = 1 // = 100%
 const initialFontSize = 12
+
+export interface ViewportContext {
+  scale: number
+  setScale(scale: number): void
+  resetScale(): void
+  fontSize: number
+  setFontSize(fontSize: number): void
+}
 
 export const ViewportContext = createContext({
   scale: initialScale,
@@ -9,9 +18,9 @@ export const ViewportContext = createContext({
   resetScale: () => {},
   fontSize: initialFontSize,
   setFontSize: () => {}
-})
+} as ViewportContext)
 
-export default ({ children }) => {
+export default (({ children }) => {
   const [scale, setScale] = useState(initialScale)
   const [fontSize, setFontSize] = useState(initialFontSize)
   const resetScale = () => setScale(initialScale)
@@ -23,4 +32,4 @@ export default ({ children }) => {
       {children}
     </ViewportContext.Provider>
   )
-}
+}) as ContextProvider

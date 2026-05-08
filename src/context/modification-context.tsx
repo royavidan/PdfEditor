@@ -1,19 +1,37 @@
 import React, { useState, createContext } from 'react'
+import type { ContextProvider, Permutation } from '../types'
 
-const initialModList = []
+declare global {
+  export interface Modification {
+    id: number
+    value: number
+  }
+}
+
+export interface ModificationContext {
+  modList: Modification[]
+  nextId: number
+  resetModList(): void
+  addMod(mod: Modification, imm?: number): void
+  changeMod(id: number, mod: Permutation<Modification>): void
+  insertMod(mod: Modification): void
+  removeMod(id: number): void
+}
+
+const initialModList: Modification[] = []
 const initialId = 0
 
 export const ModificationContext = createContext({
   modList: initialModList,
   nextId: initialId,
-  resetModList: () => {},
-  addMod: () => {},
-  changeMod: (id, changeFunc) => {},
-  insertMod: (mod) => {},
-  removeMod: id => {}
-})
+  resetModList: () => { },
+  addMod: () => { },
+  changeMod: () => { },
+  insertMod: () => { },
+  removeMod: () => { }
+} as ModificationContext)
 
-export default ({ children }) => {
+export default (({ children }) => {
   const [modList, setModList] = useState(initialModList)
   const [nextId, setNextId] = useState(initialId)
   const resetModList = () => {
@@ -21,7 +39,7 @@ export default ({ children }) => {
     setNextId(initialId)
   }
 
-  const addMod = (mod, imm = 0) => {
+  const addMod: ModificationContext['addMod'] = (mod, imm = 0) => {
     setNextId(id => id + 1)
     return setModList(modList => [
       ...modList.map(m => m.value < mod.value ? m : { ...m, value: m.value + 1 }),
@@ -32,7 +50,7 @@ export default ({ children }) => {
     ])
   }
 
-  const changeMod = (id, changeFunc) => {
+  const changeMod: ModificationContext['changeMod'] = (id, changeFunc) => {
     const changedModList = modList.map(mod =>
       mod.id !== id ? mod : changeFunc(mod)
     )
@@ -40,7 +58,7 @@ export default ({ children }) => {
     setModList(changedModList)
   }
 
-  const insertMod = (mod) => {
+  const insertMod: ModificationContext['insertMod'] = (mod) => {
     setNextId(id => id + 1)
     return setModList(modList => [
       ...modList.map(m => m.value < mod.value ? m : { ...m, value: m.value + 1 }),
@@ -51,8 +69,8 @@ export default ({ children }) => {
     ])
   }
 
-  const removeMod = id => {
-    const originalMod = modList.find(mod => mod.id === id)
+  const removeMod: ModificationContext['removeMod'] = id => {
+    const originalMod = modList.find(mod => mod.id === id)!
     setModList(modList => modList
       .filter(mod => mod.id !== id)
       .map(mod => (mod.value < originalMod.value ? mod : { ...mod, value: mod.value - 1 })))
@@ -73,4 +91,4 @@ export default ({ children }) => {
       {children}
     </ModificationContext.Provider>
   )
-}
+}) as ContextProvider

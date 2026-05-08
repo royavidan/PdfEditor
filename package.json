@@ -42,8 +42,10 @@
   },
   "devDependencies": {
     "@types/file-saver": "^2.0.1",
+    "@types/react": "^16.8.6",
     "gh-pages": "^2.1.1",
     "np": "^6.2.0",
-    "sass": "^1.78.0"
+    "sass": "^1.78.0",
+    "typescript": "^3.9.10"
   }
 }

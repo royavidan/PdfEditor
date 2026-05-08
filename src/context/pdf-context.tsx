@@ -4,96 +4,166 @@ import { PDFDocument } from 'pdf-lib'
 
 import { FileContext } from './file-context'
 import { arrayIsEqual, floatIsEqual, findOne } from '../utils'
+import type { ContextProvider } from '../types'
+import type { TextItem } from 'pdfjs-dist/types/src/display/api'
 
-const Point = point => {
-    point.x = point[0]
-    point.y = point[1]
-    return point
+type Point = { x: number, y: number } & [number, number]
+
+type Transform = [number, number, number, number, number, number]
+
+export type SymbolType = 'dia' | 'depth' | 'straightness' | 'flatness' | 'circlarity' | 'cylindricity' | 'surface profile' | 'perpendicularity' | 'angularity' | 'parallelism' | 'symmetry' | 'true position' | 'concentricity' | 'run out'
+
+type Border = {
+    left: number
+    top: number
+    right: number
+    bottom: number
 }
 
-const diff = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
-const middle = (a, b) => Point([(a.x + b.x) / 2, (a.y + b.y) / 2])
+export interface Symbol extends Border {
+    width: number
+    height: number
+}
 
-const isCircle = path => path.length >= 10 && arrayIsEqual(path[0], path[path.length - 1])
-const isLine = path => path.length === 2
+export interface Text extends Border {
+    str: string
+    width: number
+    height: number
+    transform: Transform
+    angle: number
+    border: Border
+    plusminus?: boolean
+}
+
+interface Shape extends Array<Point>, Border {
+    width: number
+    height: number
+    center: Point
+    transform: Transform
+}
+
+interface Circle extends Shape {
+    radius: number
+    isInside(point: Point): boolean
+}
+
+interface HalfCircle extends Shape {
+    radius: number
+    full: boolean
+    realCenter: Point
+    isInside(point: Point): boolean
+}
+
+interface Line extends Shape {
+    slope: number
+    angle: number
+    len: number
+    cross(point: Point): boolean
+    distance(point: Point): number
+    perpendicular(line: Line, epsilon?: number): boolean
+}
+
+const Point = (point: [number, number]): Point => {
+    const p = point as Point
+    p.x = point[0]
+    p.y = point[1]
+    return p
+}
+
+const diff = (a: Point, b: Point) => Math.hypot(a.x - b.x, a.y - b.y)
+const middle = (a: Point, b: Point) => Point([(a.x + b.x) / 2, (a.y + b.y) / 2])
+
+const isCircle = (path: Point[]) => path.length >= 10 && arrayIsEqual(path[0], path[path.length - 1])
+const isLine = (path: Point[]) => path.length === 2
+
+export interface PDFContext {
+    text: any[] | null
+    symbols: Record<SymbolType, Symbol[]> | null
+    size: { width: number, height: number }
+    angle: number
+    isLoaded: () => boolean
+}
 
 export const PDFContext = createContext({
     text: [],
-    symbols: {},
+    symbols: {} as unknown,
     size: { width: 0, height: 0 },
     angle: 0,
     isLoaded: () => false
-})
+} as PDFContext)
 
-const parseShapes = (fn, args, pageHeight) => {
-    const flipY = y => pageHeight - y
+const parseShapes = (fn: number[], args: any[], pageHeight: number) => {
+    const flipY = (y: number) => pageHeight - y
 
     const shapes = {
-        circles: [],
-        lines: [],
-        halfCircles: [],
-        trapezoids: []
+        circles: [] as Circle[],
+        lines: [] as Line[],
+        halfCircles: [] as HalfCircle[],
+        trapezoids: [] as Shape[]
     }
 
-    const Shape = (path, transform) => {
-        path = path.map(p => [p[0] * transform[0] + p[1] * transform[2] + transform[4], p[0] * transform[1] + p[1] * transform[3] + transform[5]])
+    const Shape = (path: Point[], transform: Transform) => {
+        const p = path.map(p => [p[0] * transform[0] + p[1] * transform[2] + transform[4], p[0] * transform[1] + p[1] * transform[3] + transform[5]]) as unknown as Shape
         const X = path.map(p => p[0]), Y = path.map(p => p[1])
 
-        path.left = Math.min(...X)
-        path.bottom = flipY(Math.min(...Y))
-        path.right = Math.max(...X)
-        path.top = flipY(Math.max(...Y))
-        path.width = path.right - path.left
-        path.height = path.bottom - path.top
-        path.center = middle(Point([path.left, path.bottom]), Point([path.right, path.top]))
-        path.transform = transform
-        for (let i = 0; i < path.length; i++) path[i] = Point([path[i][0], flipY(path[i][1])])
-        return path
+        p.left = Math.min(...X)
+        p.bottom = flipY(Math.min(...Y))
+        p.right = Math.max(...X)
+        p.top = flipY(Math.max(...Y))
+        p.width = p.right - p.left
+        p.height = p.bottom - p.top
+        p.center = middle(Point([p.left, p.bottom]), Point([p.right, p.top]))
+        p.transform = transform
+        for (let i = 0; i < p.length; i++) p[i] = Point([p[i][0], flipY(p[i][1])])
+        return p
     }
 
-    const Circle = path => {
-        path.radius = ((path.bottom - path.top) + (path.right - path.left)) / 2
-        path.isInside = point => diff(point, path.center) <= path.radius
-        return path
+    const Circle = (path: Shape) => {
+        const p = path as Circle
+        p.radius = ((p.bottom - p.top) + (p.right - p.left)) / 2
+        p.isInside = point => diff(point, p.center) <= p.radius
+        return p
     }
 
     //Top Only
-    const HalfCircle = path => {
-        path.radius = (path.right - path.left) / 2
-        path.full = arrayIsEqual(path[0], path[path.length - 1])
-        path.realCenter = Point([path.center.x, path.bottom])
-        path.isInside = point => diff(point, path.realCenter) <= path.radius && point.y <= path.bottom
-        return path
+    const HalfCircle = (path: Shape) => {
+        const p = path as HalfCircle
+        p.radius = (p.right - p.left) / 2
+        p.full = arrayIsEqual(p[0], p[p.length - 1])
+        p.realCenter = Point([p.center.x, p.bottom])
+        p.isInside = point => diff(point, p.realCenter) <= p.radius && point.y <= p.bottom
+        return p
     }
 
-    const Line = path => {
-        path.slope = (path[1].y - path[0].y) / (path[1].x - path[0].x)
-        path.angle = -Math.atan2(path[1].y - path[0].y, path[1].x - path[0].x)
-        if (path.angle < 0) path.angle += Math.PI
-        path.len = diff(path[0], path[1])
-        path.cross = point => floatIsEqual((point.x - path[0].x) / (point.y - path[0].y), (path[1].x - point.x) / (path[1].y - point.y))
-        path.distance = point => {
-            if (path.slope === 0) {
-                if (point.x >= path.left && point.x <= path.right) return Math.abs(point.y - path[0].y)
-                return Math.min(diff(point, path[0]), diff(point, path[1]))
+    const Line = (path: Shape) => {
+        const p = path as Line
+        p.slope = (p[1].y - p[0].y) / (p[1].x - p[0].x)
+        p.angle = -Math.atan2(p[1].y - p[0].y, p[1].x - p[0].x)
+        if (p.angle < 0) p.angle += Math.PI
+        p.len = diff(p[0], p[1])
+        p.cross = point => floatIsEqual((point.x - p[0].x) / (point.y - p[0].y), (p[1].x - point.x) / (p[1].y - point.y))
+        p.distance = point => {
+            if (p.slope === 0) {
+                if (point.x >= p.left && point.x <= p.right) return Math.abs(point.y - p[0].y)
+                return Math.min(diff(point, p[0]), diff(point, p[1]))
             }
-            if (!Number.isFinite(path.slope)) {
-                if (point.y >= path.top && point.y <= path.bottom) return Math.abs(point.x - path[0].x)
-                return Math.min(diff(point, path[0]), diff(point, path[1]))
+            if (!Number.isFinite(p.slope)) {
+                if (point.y >= p.top && point.y <= p.bottom) return Math.abs(point.x - p[0].x)
+                return Math.min(diff(point, p[0]), diff(point, p[1]))
             }
-            const x = (point.x / path.slope + point.y + path.slope * path[0].x - path[0].y) / (path.slope + 1 / path.slope)
-            if (x < path.left || x > path.right) return Math.min(diff(point, path[0]), diff(point, path[1]))
-            const y = path.slope * (x - path[0].x) + path[0].y
+            const x = (point.x / p.slope + point.y + p.slope * p[0].x - p[0].y) / (p.slope + 1 / p.slope)
+            if (x < p.left || x > p.right) return Math.min(diff(point, p[0]), diff(point, p[1]))
+            const y = p.slope * (x - p[0].x) + p[0].y
             return diff(point, Point([x, y]))
         }
-        // path.perpendicular = line => ((!Number.isFinite(path.slope) && line.slope === 0) || (!Number.isFinite(line.slope) && path.slope === 0) || floatIsEqual(path.slope * line.slope, -1))
-        path.perpendicular = (line, epsilon) => floatIsEqual(Math.abs(path.angle - line.angle), Math.PI / 2, epsilon)
-        return path
+        // p.perpendicular = line => ((!Number.isFinite(p.slope) && line.slope === 0) || (!Number.isFinite(line.slope) && p.slope === 0) || floatIsEqual(p.slope * line.slope, -1))
+        p.perpendicular = (line, epsilon) => floatIsEqual(Math.abs(p.angle - line.angle), Math.PI / 2, epsilon)
+        return p
     }
 
     //STEP 1: read paths
-    const paths = []
-    let transforms = [[1, 0, 0, 1, 0, 0]]
+    const paths: Shape[] = []
+    let transforms: Transform[] = [[1, 0, 0, 1, 0, 0]]
 
     for (let i = 0; i < fn.length; i++) {
         switch (fn[i]) {
@@ -110,7 +180,7 @@ const parseShapes = (fn, args, pageHeight) => {
                 break
 
             case pdfjs.OPS.constructPath: {
-                let path = []
+                let path: Point[] = []
                 let index = 0, hasCurves = false
                 for (let j = 0; j < args[i][0].length; j++) {
                     switch (args[i][0][j]) {
@@ -150,7 +220,7 @@ const parseShapes = (fn, args, pageHeight) => {
 
     //STEP 2: Identify shapes
     for (const path of paths) {
-        const slope = (p1, p2) => (p2.y - p1.y) / (p2.x - p1.x)
+        const slope = (p1: Point, p2: Point) => (p2.y - p1.y) / (p2.x - p1.x)
         const edge = arrayIsEqual(path[0], path[path.length - 1]) ? path[path.length - 2] : path[path.length - 1]
         if (path.length >= 7 && floatIsEqual(path[0].x, path.left) && floatIsEqual(edge.x, path.right) && floatIsEqual(path[0].y, edge.y))
             shapes.halfCircles.push(HalfCircle(path))
@@ -167,21 +237,24 @@ const parseShapes = (fn, args, pageHeight) => {
     return shapes
 }
 
-function fixPlusMinus(lines, text) {
+type Plus = { h: Line, v: Line }
+function fixPlusMinus(lines: Line[], text: any[]) {
+    //@ts-ignore
     lines.forEach((line, index) => line.index = index)
     const linesToRemove = new Set()
     const horizontal = lines.filter(l => l.len < 20 && l.slope === 0), vertical = lines.filter(l => l.len < 20 && !Number.isFinite(l.slope))
 
     //STEP 1: find plus signs
-    const plus = []
+    const plus: Plus[] = []
     for (const h of horizontal) {
         const v = vertical.find(l => floatIsEqual(diff(l.center, h.center), 0) && floatIsEqual(l.len, h.len))
         if (v) plus.push({ h, v })
     }
 
     //STEP 2: find plusminus
-    const addPlusMinus = (plus, minus, angle) => {
+    const addPlusMinus = (plus: Plus, minus: Line, angle: number) => {
         const shapes = [plus.h, plus.v, minus]
+    //@ts-ignore
         shapes.forEach(s => linesToRemove.add(s.index))
         const r = {
             left: Math.min(...shapes.map(s => s.left)),
@@ -191,7 +264,7 @@ function fixPlusMinus(lines, text) {
             str: '±',
             transform: [1, 0, 0, 1, 0, 0],
             angle
-        }
+        } as Text
         r.width = r.right - r.left
         r.height = r.bottom - r.top
         if (angle) {
@@ -210,11 +283,12 @@ function fixPlusMinus(lines, text) {
             || (diff(l.center, h[0].x < h[1].x ? h[1] : h[0]) < l.len && floatIsEqual(l.top, v.top))))
         if (vminus) addPlusMinus({ h, v }, vminus, -Math.PI / 2)
     }
+    //@ts-ignore
     lines.forEach(l => delete l.index)
     return linesToRemove
 }
 
-async function extractPDFData(fileData) {
+async function extractPDFData(fileData: ArrayBuffer) {
     console.log('Loading PDF context')
     const loadingTask = pdfjs.getDocument({ data: fileData })
     const pdfDocument = await loadingTask.promise
@@ -224,7 +298,7 @@ async function extractPDFData(fileData) {
     const rotation = viewport.rotation * Math.PI / 180
     const textContent = await page.getTextContent()
     let { circles, lines, halfCircles, trapezoids } = parseShapes(opList.fnArray, opList.argsArray, viewport.height)
-    const text = textContent.items.filter(item => item.str.trim()).map(item => ({
+    const text = (textContent.items as TextItem[]).filter(item => item.str.trim()).map(item => ({
         str: item.str,
         top: viewport.height - (item.transform[5] + item.height),
         left: item.transform[4],
@@ -234,7 +308,7 @@ async function extractPDFData(fileData) {
         bottom: viewport.height - item.transform[5],
         transform: item.transform,
         angle: -rotation - Math.atan2(item.transform[1], item.transform[0])
-    }))
+    } as Text))
     const linesToRemove = fixPlusMinus(lines, text)
     lines = lines.filter((_, i) => !linesToRemove.has(i))
     text.forEach(t => {
@@ -259,7 +333,7 @@ async function extractPDFData(fileData) {
         }
     })
 
-    const symbols = {
+    const symbols: Record<SymbolType, Symbol[]> = {
         dia: [],
         depth: [],
 
@@ -276,20 +350,20 @@ async function extractPDFData(fileData) {
         concentricity: [],
         'run out': []
     }
-    const addRects = (...shapes) => {
+    const addRects = (...shapes: Shape[]) => {
         const base = {
             left: Math.min(...shapes.map(s => s.left)),
             right: Math.max(...shapes.map(s => s.right)),
             top: Math.min(...shapes.map(s => s.top)),
             bottom: Math.max(...shapes.map(s => s.bottom))
-        }
+        } as Symbol
         base.width = base.right - base.left
         base.height = base.bottom - base.top
         return base
     }
 
-    const touchOne = (l, p) => floatIsEqual(Math.min(diff(l[0], p), diff(l[1], p)), 0, 0.1)
-    const betweenAngles = (val, limits) => (val >= limits[0] && val <= limits[1]) || (Math.PI - val >= limits[0] && Math.PI - val <= limits[1])
+    const touchOne = (l: Line, p: Point) => floatIsEqual(Math.min(diff(l[0], p), diff(l[1], p)), 0, 0.1)
+    const betweenAngles = (val: number, limits: [number, number]) => (val >= limits[0] && val <= limits[1]) || (Math.PI - val >= limits[0] && Math.PI - val <= limits[1])
 
     for (const circle of circles) {
         if (circle.width > 15) continue
@@ -340,20 +414,20 @@ async function extractPDFData(fileData) {
 
             //RUN OUT:
             const topPoint = line[0].y < line[1].y ? line[0] : line[1]
-            const betweenAngles = (val, limits) => (val >= limits[0] && val <= limits[1]) || (Math.PI - val >= limits[0] && Math.PI - val <= limits[1])
-            const limitAngles = [5, 25].map(a => a * Math.PI / 180)
+            const betweenAngles = (val: number, limits: [number, number]) => (val >= limits[0] && val <= limits[1]) || (Math.PI - val >= limits[0] && Math.PI - val <= limits[1])
+            const limitAngles = [5, 25].map(a => a * Math.PI / 180) as [number, number]
             const right = findOne(lines, l => l.len < line.len && touchOne(l, topPoint) && betweenAngles(l.angle - line.angle, limitAngles))
             const left = findOne(lines, l => l.len < line.len && touchOne(l, topPoint) && betweenAngles(line.angle - l.angle, limitAngles))
             if (right && left) symbols['run out'].push(addRects(line, left, right))
         }
 
         //PERPENDICULARITY (and depth):
-        const isInsideRect = (rect, point) => point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom
+        const isInsideRect = (rect: Border, point: Point) => point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom
         if (!floatIsEqual(line.left, line.right) || text.every(t => !isInsideRect(t.border, line[0].y < line[1].y ? line[0] : line[1]))) {
             const perpendicularLine = findOne(lines, l => touchOne(line, l.center) && line.perpendicular(l))
             if (perpendicularLine) {
                 const untouchedPoint = floatIsEqual(diff(perpendicularLine.center, line[0]), 0, 0.1) ? line[1] : line[0]
-                const limitAngles = [30, 75].map(a => a * Math.PI / 180)
+                const limitAngles = [30, 75].map(a => a * Math.PI / 180) as [number, number]
                 const right = findOne(lines, l => l.len < line.len && touchOne(l, untouchedPoint) && betweenAngles(l.angle - line.angle, limitAngles))
                 const left = findOne(lines, l => l.len < line.len && touchOne(l, untouchedPoint) && betweenAngles(line.angle - l.angle, limitAngles))
                 if (right && left) symbols.depth.push(addRects(line, perpendicularLine, left, right))
@@ -402,7 +476,7 @@ async function extractPDFData(fileData) {
     return { text, symbols }
 }
 
-async function getDocumentInfo(data) {
+async function getDocumentInfo(data: ArrayBuffer) {
   const pdfDoc = await PDFDocument.load(data)
   const [firstPage] = pdfDoc.getPages()
   const size = firstPage.getSize()
@@ -410,18 +484,18 @@ async function getDocumentInfo(data) {
   return { size, angle }
 }
 
-export default ({ children }) => {
+export default (({ children }) => {
     const { data: fileData, isFileLoaded } = useContext(FileContext)
-    const [text, setText] = useState(null)
-    const [symbols, setSymbols] = useState(null)
-    const [size, setSize] = useState({ width: 0, height: 0 })
-    const [angle, setAngle] = useState(0)
+    const [text, setText] = useState<PDFContext['text'] | null>(null)
+    const [symbols, setSymbols] = useState<PDFContext['symbols'] | null>(null)
+    const [size, setSize] = useState<PDFContext['size']>({ width: 0, height: 0 })
+    const [angle, setAngle] = useState<PDFContext['angle']>(0)
 
     const isLoaded = () => text !== null && symbols !== null
 
     useEffect(() => {
         if (isFileLoaded()) {
-            Promise.all([extractPDFData(fileData), getDocumentInfo(fileData)]).then(([{ text, symbols }, { size, angle }]) => {
+            Promise.all([extractPDFData(fileData!), getDocumentInfo(fileData!)]).then(([{ text, symbols }, { size, angle }]) => {
                 setText(text)
                 setSymbols(symbols)
                 console.log(`Loaded ${text.length} texts and ${Object.values(symbols).map(s => s.length).reduce((a, b) => a + b, 0)} symbols.`)
@@ -441,4 +515,4 @@ export default ({ children }) => {
             {children}
         </PDFContext.Provider>
     )
-}
+}) as ContextProvider
