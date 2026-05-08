@@ -9,6 +9,7 @@ import Overlay from './Overlay/Overlay'
 import styles from './PdfViewport.module.css'
 
 function PdfViewport({
+  disabled,
   data,
   pageNum,
   scale,
@@ -23,9 +24,14 @@ function PdfViewport({
   fontSize,
   markedPosition,
   onChangeMeasurement,
-  onSave
+  onSave,
+  onPageUp,
+  onPageDown
 }) {
   const [currentMousePos, setCurrentMousePos] = useState(null)
+  if (disabled) {
+    onMouseUp = onMouseDown = onMouseLeave = () => {}
+  }
   const onMouseMove = (event, position) => setCurrentMousePos(position)
   return (
     <div className={`${className} ${styles.viewport}`} style={style}>
@@ -44,6 +50,16 @@ function PdfViewport({
                       e.preventDefault()
                       onSave()
                     }}
+                  />
+                  <KeyboardEventHandler
+                    handleKeys={['pageup']}
+                    handleEventType="keydown"
+                    onKeyEvent={onPageUp}
+                  />
+                  <KeyboardEventHandler
+                    handleKeys={['pagedown']}
+                    handleEventType="keydown"
+                    onKeyEvent={onPageDown}
                   />
                     <Overlay
                       items={overlayItems}

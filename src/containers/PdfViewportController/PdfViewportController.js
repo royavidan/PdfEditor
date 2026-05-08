@@ -6,12 +6,13 @@ import { CounterContext } from '../../context/counter-context'
 import { ModificationContext } from '../../context/modification-context'
 import { BloonsContext } from '../../context/bloons-context'
 import { PDFContext } from '../../context/pdf-context'
+import { PageContext } from '../../context/page-context'
 import { translatePos } from '../../utils'
 
 function PdfViewportController({ children }) {
   const { data } = useContext(FileContext)
   const { scale, fontSize } = useContext(ViewportContext)
-  const { text, symbols, size, angle } = useContext(PDFContext)
+  const { getText, getSymbols, getSize, getAngle, isLoaded } = useContext(PDFContext)
   const { counter, incrementCounter, decrementCounter } = useContext(
     CounterContext
   )
@@ -19,6 +20,7 @@ function PdfViewportController({ children }) {
     ModificationContext
   )
   const { bloons, addBloon, insertBloon, removeBloon, fillBloon, modifyBloon } = useContext(BloonsContext)
+  const { currentPage, nextPage, prevPage } = useContext(PageContext)
   const [markedPosition, setMarkedPosition] = useState(null)
 
   const isMain = event => event.button === 0
@@ -26,6 +28,9 @@ function PdfViewportController({ children }) {
   const template = value => `(${value})`
   const onMouseUp = (event, position) => {
     if (!isMain(event) || !markedPosition) return
+
+    const text = getText(currentPage), symbols = getSymbols(currentPage)
+    const size = getSize(currentPage), angle = getAngle(currentPage)
 
     const id = nextId
     const positions = [markedPosition, position].map(p => translatePos(angle, p.x, p.y, size.width, size.height))
@@ -48,6 +53,7 @@ function PdfViewportController({ children }) {
         x: (position.x + scale) / scale,
         y: position.y / scale
       },
+      page: currentPage,
       value: counter,
       title: `${bloon.measurement}: ${bloon.content}${bloon.tolerance ? ` (${bloon.tolerance['+']}/${bloon.tolerance['-']})` : ''}`,
       template
@@ -62,6 +68,7 @@ function PdfViewportController({ children }) {
           x: (position.x + scale) / scale + 25,
           y: position.y / scale
         },
+        page: currentPage,
         value: counter + 1,
         disabled: true,
         title: `${newBloon.measurement}: ${newBloon.content}${newBloon.tolerance ? ` (${newBloon.tolerance['+']}/${newBloon.tolerance['-']})` : ''}`,
@@ -73,10 +80,11 @@ function PdfViewportController({ children }) {
   const onMouseLeave = event => isMain(event) && setMarkedPosition(null)
 
   return children({
+    disabled: !isLoaded(),
     data,
-    pageNum: 1,
+    pageNum: currentPage + 1,
     scale,
-    overlayItems: modList,
+    overlayItems: modList.filter(mod => mod.page === currentPage),
     onMouseDown,
     onMouseUp,
     onMouseLeave,
@@ -123,6 +131,7 @@ function PdfViewportController({ children }) {
             y: modList.find(mod => mod.id === id).position.y
           },
           value,
+          page: currentPage,
           disabled: true,
           title: `${newBloon.measurement}: ${newBloon.content}${newBloon.tolerance ? ` (${newBloon.tolerance['+']}/${newBloon.tolerance['-']})` : ''}`,
           template
@@ -134,7 +143,9 @@ function PdfViewportController({ children }) {
         removeBloon(idToRemove)
         decrementCounter()
       }
-    }
+    },
+    onPageUp: () => prevPage(),
+    onPageDown: () => nextPage()
   })
 }
 
