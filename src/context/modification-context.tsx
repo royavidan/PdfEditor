@@ -7,6 +7,7 @@ export interface Modification {
   value: number
   position: Position
   title: string
+  page: number
   template(value: number): string
   disabled?: boolean
 }
@@ -16,6 +17,7 @@ export const Modification = PropTypes.shape({
   value: PropTypes.number.isRequired,
   position: Position.isRequired,
   title: PropTypes.string.isRequired,
+  page: PropTypes.number.isRequired,
   template: PropTypes.func.isRequired,
   disabled: PropTypes.bool
 })

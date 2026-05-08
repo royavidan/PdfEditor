@@ -6,11 +6,13 @@ import { CounterContext } from '../../context/counter-context'
 import { ModificationContext, Modification } from '../../context/modification-context'
 import { BloonsContext, BasicBloon } from '../../context/bloons-context'
 import { PDFContext } from '../../context/pdf-context'
+import { PageContext } from '../../context/page-context'
 import { translatePos } from '../../utils'
 import type { Border, ControllerProps, Position } from '../../types'
 import type { PdfMouseEventHandler } from '../../components/PdfRenderer/PdfCanvas'
 
 interface PdfViewportControllerData {
+  disabled: boolean
   data: FileData
   pageNum: number
   scale: number
@@ -23,12 +25,14 @@ interface PdfViewportControllerData {
   fontSize: number
   markedPosition: Position | null
   onChangeMeasurement(id: number, measurement: string): void
+  onPageUp(): void
+  onPageDown(): void
 }
 
 function PdfViewportController({ children }: ControllerProps<PdfViewportControllerData>) {
   const { data } = useContext(FileContext)
   const { scale, fontSize } = useContext(ViewportContext)
-  const { text, symbols, size, angle } = useContext(PDFContext)
+  const { getText, getSymbols, getSize, getAngle, isLoaded } = useContext(PDFContext)
   const { counter, incrementCounter, decrementCounter } = useContext(
     CounterContext
   )
@@ -37,12 +41,16 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
   )
   const { bloons, addBloon, insertBloon, removeBloon, fillBloon, modifyBloon } = useContext(BloonsContext)
   const [markedPosition, setMarkedPosition] = useState<Position | null>(null)
+  const { currentPage, nextPage, prevPage } = useContext(PageContext)
 
   const isMain = (event: React.MouseEvent) => event.button === 0
   const onMouseDown: PdfMouseEventHandler = (event, position) => isMain(event) && setMarkedPosition(position)
   const template = (value: number) => `(${value})`
   const onMouseUp: PdfMouseEventHandler = (event, position) => {
     if (!isMain(event) || !markedPosition) return
+
+    const text = getText(currentPage), symbols = getSymbols(currentPage)
+    const size = getSize(currentPage), angle = getAngle(currentPage)
 
     const id = nextId
     const positions = [markedPosition, position].map(p => translatePos(angle, p.x, p.y, size.width, size.height))
@@ -65,6 +73,7 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
         x: (position.x + scale) / scale,
         y: position.y / scale
       },
+      page: currentPage,
       value: counter,
       title: `${bloon.measurement}: ${bloon.content}${bloon.tolerance ? ` (${bloon.tolerance['+']}/${bloon.tolerance['-']})` : ''}`,
       template
@@ -79,6 +88,7 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
           x: (position.x + scale) / scale + 25,
           y: position.y / scale
         },
+        page: currentPage,
         value: counter + 1,
         disabled: true,
         title: `${newBloon.measurement}: ${newBloon.content}${newBloon.tolerance ? ` (${newBloon.tolerance['+']}/${newBloon.tolerance['-']})` : ''}`,
@@ -90,10 +100,11 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
   const onMouseLeave: PdfMouseEventHandler = event => isMain(event) && setMarkedPosition(null)
 
   return children({
+    disabled: !isLoaded(),
     data: data!,
-    pageNum: 1,
+    pageNum: currentPage + 1,
     scale,
-    overlayItems: modList,
+    overlayItems: modList.filter(mod => mod.page === currentPage),
     onMouseDown,
     onMouseUp,
     onMouseLeave,
@@ -140,6 +151,7 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
             y: modList.find(mod => mod.id === id)!.position.y
           },
           value,
+          page: currentPage,
           disabled: true,
           title: `${newBloon.measurement}: ${newBloon.content}${newBloon.tolerance ? ` (${newBloon.tolerance['+']}/${newBloon.tolerance['-']})` : ''}`,
           template
@@ -151,7 +163,9 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
         removeBloon(idToRemove)
         decrementCounter()
       }
-    }
+    },
+    onPageUp: () => prevPage(),
+    onPageDown: () => nextPage()
   })
 }
 

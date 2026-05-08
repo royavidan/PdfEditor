@@ -1,5 +1,7 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import PropTypes from 'prop-types'
+
+import { PageContext } from '../../context/page-context'
 
 import styles from './Toolbar.module.scss'
 
@@ -17,6 +19,7 @@ interface ToolbarProps {
   onSave(): void
   fontSize: number
   setFontSize: React.Dispatch<React.SetStateAction<number>>
+  onChangePageNum: React.ChangeEventHandler<HTMLInputElement>
 }
 
 function Toolbar({
@@ -32,8 +35,10 @@ function Toolbar({
   onExport,
   onSave,
   fontSize,
-  setFontSize
+  setFontSize,
+  onChangePageNum
 }: ToolbarProps) {
+  const { pages, currentPage } = useContext(PageContext)
   const runningLabelText = disabled ? null : (
     <div className={styles.text}>
       Place next running label: {`(${counter})`}
@@ -115,6 +120,22 @@ function Toolbar({
         />
         {runningLabelText}
       </div>
+
+      <div className={styles.group}>
+        <div className={styles.text}>Page: </div>
+        <input
+          style={{ width: '2em' }}
+          type="number"
+          title="Page Number"
+          value={currentPage + 1}
+          step="1"
+          onChange={onChangePageNum}
+          min={1}
+          max={pages}
+          disabled={disabled}
+        />
+        <div className={styles.text}>{` / ${pages}`}</div>
+      </div>
     </div>
   )
 }
@@ -132,7 +153,8 @@ Toolbar.propTypes = {
   onExport: PropTypes.func,
   onSave: PropTypes.func,
   fontSize: PropTypes.number,
-  setFontSize: PropTypes.func
+  setFontSize: PropTypes.func,
+  onChangePageNum: PropTypes.func
 }
 
 export default Toolbar

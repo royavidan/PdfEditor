@@ -4,8 +4,9 @@ import { PDFDocument } from 'pdf-lib'
 
 import { FileContext, FileData } from './file-context'
 import { arrayIsEqual, floatIsEqual, findOne } from '../utils'
-import type { ContextProvider, Position, Border } from '../types'
+import type { PDFDocumentProxy } from 'pdfjs-dist'
 import type { TextItem } from 'pdfjs-dist/types/src/display/api'
+import type { ContextProvider, Position, Border } from '../types'
 
 type Point = Position & [number, number]
 
@@ -70,18 +71,18 @@ const isCircle = (path: Point[]) => path.length >= 10 && arrayIsEqual(path[0], p
 const isLine = (path: Point[]) => path.length === 2
 
 export interface PDFContext {
-    text: Text[] | null
-    symbols: Record<SymbolType, Symbol[]> | null
-    size: { width: number, height: number }
-    angle: number
+    getText(page: number): Text[] | undefined
+    getSymbols(page: number): Record<SymbolType, Symbol[]> | undefined
+    getSize(page: number): { width: number, height: number }
+    getAngle(page: number): number
     isLoaded: () => boolean
 }
 
 export const PDFContext = createContext({
-    text: [],
-    symbols: {} as unknown,
-    size: { width: 0, height: 0 },
-    angle: 0,
+    getText: page => {},
+    getSymbols: page => {},
+    getSize: page => {},
+    getAngle: page => {},
     isLoaded: () => false
 } as PDFContext)
 
@@ -281,11 +282,8 @@ function fixPlusMinus(lines: Line[], text: any[]) {
     return linesToRemove
 }
 
-async function extractPDFData(fileData: FileData) {
-    console.log('Loading PDF context')
-    const loadingTask = pdfjs.getDocument({ data: fileData })
-    const pdfDocument = await loadingTask.promise
-    const page = await pdfDocument.getPage(1)
+async function extractPDFPageData(pdfDoc: PDFDocumentProxy, i: number) {
+    const page = await pdfDoc.getPage(i)
     const opList = await page.getOperatorList()
     const viewport = page.getViewport({ scale: 1 })
     const rotation = viewport.rotation * Math.PI / 180
@@ -469,41 +467,46 @@ async function extractPDFData(fileData: FileData) {
     return { text, symbols }
 }
 
+async function extractPDFData(fileData: FileData) {
+    console.log('Loading PDF context')
+    const loadingTask = pdfjs.getDocument({ data: fileData })
+    const pdfDocument = await loadingTask.promise
+    const p = []
+    for (let i = 1; i <= pdfDocument.numPages; i++) {
+        p.push(extractPDFPageData(pdfDocument, i))
+    }
+    return await Promise.all(p)
+}
+
 async function getDocumentInfo(data: FileData) {
   const pdfDoc = await PDFDocument.load(data)
-  const [firstPage] = pdfDoc.getPages()
-  const size = firstPage.getSize()
-  const angle = firstPage.getRotation().angle
-  return { size, angle }
+  return pdfDoc.getPages().map(page => ({ size: page.getSize(), angle: page.getRotation().angle }))
 }
 
 export default (({ children }) => {
     const { data: fileData, isFileLoaded } = useContext(FileContext)
-    const [text, setText] = useState<PDFContext['text'] | null>(null)
-    const [symbols, setSymbols] = useState<PDFContext['symbols'] | null>(null)
-    const [size, setSize] = useState<PDFContext['size']>({ width: 0, height: 0 })
-    const [angle, setAngle] = useState<PDFContext['angle']>(0)
+    const [data, setData] = useState<({ text: Text[], symbols: Record<SymbolType, Symbol[]> } | null)[]>([null])
+    const [info, setInfo] = useState<({ size: { width: number, height: number }, angle: number })[]>([{ size: { width: 0, height: 0 }, angle: 0 }])
 
-    const isLoaded = () => text !== null && symbols !== null
+    const isLoaded = () => data[0] !== null
 
     useEffect(() => {
+        setData([null])
+        setInfo([{ size: { width: 0, height: 0 }, angle: 0 }])
         if (isFileLoaded()) {
-            Promise.all([extractPDFData(fileData!), getDocumentInfo(fileData!)]).then(([{ text, symbols }, { size, angle }]) => {
-                setText(text)
-                setSymbols(symbols)
-                console.log(`Loaded ${text.length} texts and ${Object.values(symbols).map(s => s.length).reduce((a, b) => a + b, 0)} symbols.`)
-                setSize(size)
-                setAngle(angle)
-            })
-        } else {
-            setText(null)
-            setSymbols(null)
+            extractPDFData(fileData!).then(setData)
+            getDocumentInfo(fileData!).then(setInfo)
         }
     }, [fileData, isFileLoaded])
 
+    const getText = (page: number) => data[page]?.text
+    const getSymbols = (page: number) => data[page]?.symbols
+    const getSize = (page: number) => info[page].size
+    const getAngle = (page: number) => info[page].angle
+
     return (
         <PDFContext.Provider
-            value={{ text, symbols, size, angle, isLoaded }}
+            value={{ getText, getSymbols, getSize, getAngle, isLoaded }}
         >
             {children}
         </PDFContext.Provider>

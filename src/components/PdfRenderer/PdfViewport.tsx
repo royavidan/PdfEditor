@@ -13,6 +13,7 @@ import { Modification } from '../../context/modification-context'
 import { Position, Null } from '../../types'
 
 interface PdfViewportProps {
+  disabled: boolean
   data: FileData
   pageNum: number
   scale: number
@@ -28,9 +29,12 @@ interface PdfViewportProps {
   markedPosition: Position | null
   onChangeMeasurement(id: number, measurement: string): void
   onSave(): void
+  onPageUp(): void
+  onPageDown(): void
 }
 
 function PdfViewport({
+  disabled,
   data,
   pageNum,
   scale,
@@ -45,9 +49,14 @@ function PdfViewport({
   fontSize,
   markedPosition,
   onChangeMeasurement,
-  onSave
+  onSave,
+  onPageUp,
+  onPageDown
 }: PdfViewportProps) {
   const [currentMousePos, setCurrentMousePos] = useState<Position | null>(null)
+  if (disabled) {
+    onMouseUp = onMouseDown = onMouseLeave = () => {}
+  }
   const onMouseMove: PdfMouseEventHandler = (event, position) => setCurrentMousePos(position)
   return (
     <div className={`${className} ${styles.viewport}`} style={style}>
@@ -66,6 +75,16 @@ function PdfViewport({
                       e.preventDefault()
                       onSave()
                     }}
+                  />
+                  <KeyboardEventHandler
+                    handleKeys={['pageup']}
+                    handleEventType="keydown"
+                    onKeyEvent={onPageUp}
+                  />
+                  <KeyboardEventHandler
+                    handleKeys={['pagedown']}
+                    handleEventType="keydown"
+                    onKeyEvent={onPageDown}
                   />
                     <Overlay
                       items={overlayItems}
@@ -99,6 +118,7 @@ function PdfViewport({
 }
 
 PdfViewport.propTypes = {
+  disabled: PropTypes.bool.isRequired,
   data: FileData.isRequired,
   pageNum: PropTypes.number.isRequired,
   scale: PropTypes.number.isRequired,

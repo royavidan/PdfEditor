@@ -12,6 +12,8 @@ import { ModificationContext, Modification } from '../../context/modification-co
 import { BloonsContext, Bloon } from '../../context/bloons-context'
 import { translatePos, getPositiveAngle } from '../../utils'
 import { ControllerProps } from '../../types'
+import { PageContext } from '../../context/page-context'
+import { PDFContext } from '../../context/pdf-context'
 
 async function exportBloons(bloons: Record<number, Bloon>) {
   const template = await fetch('https://raw.githubusercontent.com/royavidan/PdfEditor/refs/heads/resources/template.xlsm')
@@ -76,28 +78,31 @@ async function download(fileData: FileData, modificationList: Modification[], fo
   const fontBytes = await fetch(fontUrl).then(res => res.arrayBuffer())
   console.log('font loaded: ', fontBytes)
   const font = await pdfDoc.embedFont(fontBytes)
-  const [firstPage] = pdfDoc.getPages()
-  const { width, height } = firstPage.getSize()
-  const originalAngle = firstPage.getRotation().angle
-  const angle = getPositiveAngle(originalAngle)
+  await Promise.all(pdfDoc.getPages().map(async (page, index) => {
+    const { width, height } = page.getSize()
+    const originalAngle = page.getRotation().angle
+    const angle = getPositiveAngle(originalAngle)
 
-  modificationList.forEach(item => {
-    const position = translatePos(
-      angle,
-      item.position.x - fontSize / 2,
-      item.position.y + fontSize / 2,
-      width,
-      height
-    )
-    firstPage.drawText(item.template(item.value), {
-      x: position.x,
-      y: height - position.y,
-      rotate: degrees(angle),
-      size: fontSize,
-      font,
-      color: rgb(0, 0, 1)
+    modificationList.forEach(item => {
+      if (item.page !== index) return
+      const position = translatePos(
+        angle,
+        item.position.x - fontSize / 2,
+        item.position.y + fontSize / 2,
+        width,
+        height
+      )
+      page.drawText(item.template(item.value), {
+        x: position.x,
+        y: height - position.y,
+        rotate: degrees(angle),
+        size: fontSize,
+        font,
+        color: rgb(0, 0, 1)
+      })
     })
-  })
+  }))
+  
   const modifiedData = await pdfDoc.save()
 
   const blob = new Blob([modifiedData.buffer as FileData], { type: 'application/pdf' })
@@ -105,11 +110,11 @@ async function download(fileData: FileData, modificationList: Modification[], fo
   saveAs(blob, 'output.pdf')
 }
 
-async function rotate(fileData: FileData, setFileData: (data: FileData) => void, angle: number) {
+async function rotate(fileData: FileData, setFileData: (data: FileData) => void, angle: number, currentPage: number) {
   const pdfDoc = await PDFDocument.load(fileData)
-  const [firstPage] = pdfDoc.getPages()
-  const currAngle = firstPage.getRotation().angle
-  firstPage.setRotation(degrees(currAngle + angle))
+  const page = pdfDoc.getPages()[currentPage]
+  const currAngle = page.getRotation().angle
+  page.setRotation(degrees(currAngle + angle))
   const modifiedData = await pdfDoc.save()
   setFileData(modifiedData.buffer as FileData)
 }
@@ -124,6 +129,7 @@ interface ToolbarControllerData {
   counter: number
   onDownload(): void
   onExport(): void
+  onChangePageNum: React.ChangeEventHandler<HTMLInputElement>
   fontSize: number
   setFontSize: React.Dispatch<React.SetStateAction<number>>
 }
@@ -136,10 +142,17 @@ function ToolbarController({ children }: ControllerProps<ToolbarControllerData>)
   const { initialCounter, setInitialCounter, counter, resetCounter } = useContext(CounterContext)
   const { modList, resetModList } = useContext(ModificationContext)
   const { bloons, resetBloons } = useContext(BloonsContext)
+  const { currentPage, setPage, pages } = useContext(PageContext)
+  const { isLoaded } = useContext(PDFContext)
   const onZoomChange = (amount: number) => setScale(scale => scale + amount)
 
+  const onChangePageNum: React.ChangeEventHandler<HTMLInputElement> = event => {
+    const pageNum = parseInt(event.target.value)
+    if (pageNum >= 1 && pageNum <= pages) setPage(pageNum - 1)
+  }
+
   return children({
-    disabled: isFileLoaded() === false,
+    disabled: !isFileLoaded() || !isLoaded(),
     scale,
     onZoomChange,
     onRotate: angle => {
@@ -149,7 +162,7 @@ function ToolbarController({ children }: ControllerProps<ToolbarControllerData>)
           return // cancel rotation
         }
       }
-      rotate(fileData!, setFileData, angle)
+      rotate(fileData!, setFileData, angle, currentPage)
       resetModList()
       resetBloons()
       resetCounter()
@@ -159,6 +172,7 @@ function ToolbarController({ children }: ControllerProps<ToolbarControllerData>)
     counter,
     onDownload: () => download(fileData!, modList, fontSize),
     onExport: () => exportBloons(bloons),
+    onChangePageNum,
     fontSize,
     setFontSize
   })
