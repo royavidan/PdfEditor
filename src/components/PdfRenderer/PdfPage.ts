@@ -1,11 +1,23 @@
 import { Component } from 'react'
+import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist'
 
-function loadPage(doc, pageNum) {
+
+function loadPage(doc: PDFDocumentProxy, pageNum: number) {
   return doc.getPage(pageNum)
 }
 
-class PdfPage extends Component {
-  constructor(props) {
+interface PdfPageProps {
+  document: PDFDocumentProxy
+  pageNum: number
+  children(pageObj: PDFPageProxy): JSX.Element
+}
+
+interface PdfPageState {
+  pageObj: PDFPageProxy | null
+}
+
+class PdfPage extends Component<PdfPageProps, PdfPageState> {
+  constructor(props: PdfPageProps) {
     super(props)
     this.state = {
       pageObj: null
@@ -20,7 +32,7 @@ class PdfPage extends Component {
     })
   }
 
-  async componentDidUpdate(prevProps, prevState) {
+  async componentDidUpdate(prevProps: PdfPageProps, prevState: PdfPageState) {
     const { document, pageNum } = this.props
     // will update state only when one of the props changes
     if (document !== prevProps.document || pageNum !== prevProps.pageNum) {

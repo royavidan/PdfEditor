@@ -1,6 +1,20 @@
 import React, { useState, useEffect } from 'react'
 
 import styles from './Overlay.module.scss'
+import type { Position } from '../../../types'
+
+interface OverlayItemsProps {
+  position: Position
+  size: number
+  title: string
+  value: number
+  scale: number
+  template(value: number): string
+  isSelected: boolean
+  hasContextMenu: boolean
+  onDelete(): void
+  onChangeMeasurement(measurement: string): void
+}
 
 function OverlayItem({
   position,
@@ -14,8 +28,8 @@ function OverlayItem({
   onDelete,
   onChangeMeasurement,
   ...otherProps
-}) {
-  const [contextMenu, setContextMenu] = useState(null)
+}: OverlayItemsProps & React.HTMLAttributes<HTMLDivElement>) {
+  const [contextMenu, setContextMenu] = useState<Position | null>(null)
   const [showSubMenu, setShowSubMenu] = useState(false)
 
   const closeContextMenu = () => {
@@ -34,7 +48,7 @@ function OverlayItem({
     }
   }, [contextMenu])
 
-  const handleContextMenu = (e) => {
+  const handleContextMenu: React.MouseEventHandler = e => {
     e.preventDefault()
     e.stopPropagation()
     hasContextMenu && setContextMenu({ x: e.clientX, y: e.clientY })
@@ -50,7 +64,7 @@ function OverlayItem({
           fontSize: `${size * scale}px`
         }}
         draggable={isSelected}
-        title={isSelected ? title : null}
+        title={isSelected ? title : undefined}
         onContextMenu={handleContextMenu}
         {...otherProps}
       >

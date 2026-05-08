@@ -1,14 +1,41 @@
 import { useContext, useState } from 'react'
 
-import { FileContext } from '../../context/file-context'
+import { FileContext, FileData } from '../../context/file-context'
 import { ViewportContext } from '../../context/viewport-context'
 import { CounterContext } from '../../context/counter-context'
 import { ModificationContext } from '../../context/modification-context'
 import { BloonsContext } from '../../context/bloons-context'
 import { PDFContext } from '../../context/pdf-context'
 import { translatePos } from '../../utils'
+import type { Border, ControllerProps, Position } from '../../types'
+import type { PdfMouseEventHandler } from '../../components/PdfRenderer/PdfCanvas'
 
-function PdfViewportController({ children }) {
+declare global {
+  export interface Modification {
+    position: { x: number; y: number }
+    value: number
+    title: string
+    template(value: number): string
+    disabled?: boolean
+  }
+}
+
+interface PdfViewportControllerData {
+  data: FileData
+  pageNum: number
+  scale: number
+  overlayItems: Modification[]
+  onMouseUp: PdfMouseEventHandler
+  onMouseDown: PdfMouseEventHandler
+  onMouseLeave: PdfMouseEventHandler
+  onItemMove(position: Position, id: number): void
+  onItemDelete(id: number): void
+  fontSize: number
+  markedPosition: Position | null
+  onChangeMeasurement(id: number, measurement: string): void
+}
+
+function PdfViewportController({ children }: ControllerProps<PdfViewportControllerData>) {
   const { data } = useContext(FileContext)
   const { scale, fontSize } = useContext(ViewportContext)
   const { text, symbols, size, angle } = useContext(PDFContext)
@@ -19,29 +46,29 @@ function PdfViewportController({ children }) {
     ModificationContext
   )
   const { bloons, addBloon, insertBloon, removeBloon, fillBloon, modifyBloon } = useContext(BloonsContext)
-  const [markedPosition, setMarkedPosition] = useState(null)
+  const [markedPosition, setMarkedPosition] = useState<Position | null>(null)
 
-  const isMain = event => event.button === 0
-  const onMouseDown = (event, position) => isMain(event) && setMarkedPosition(position)
-  const template = value => `(${value})`
-  const onMouseUp = (event, position) => {
+  const isMain = (event: React.MouseEvent) => event.button === 0
+  const onMouseDown: PdfMouseEventHandler = (event, position) => isMain(event) && setMarkedPosition(position)
+  const template = (value: number) => `(${value})`
+  const onMouseUp: PdfMouseEventHandler = (event, position) => {
     if (!isMain(event) || !markedPosition) return
 
     const id = nextId
     const positions = [markedPosition, position].map(p => translatePos(angle, p.x, p.y, size.width, size.height))
     const X = positions.map(p => p.x / scale), Y = positions.map(p => p.y / scale)
-    const bloon = {
+    const bloonInput = {
       id: counter,
       left: Math.min(...X),
       right: Math.max(...X),
       top: Math.min(...Y),
       bottom: Math.max(...Y)
-    }
-    const isInside = border => border.left >= bloon.left && border.right <= bloon.right && border.top >= bloon.top && border.bottom <= bloon.bottom
-    bloon.text = text.filter(t => isInside(t.border))
-    bloon.symbols = Object.fromEntries(Object.entries(symbols).map(e => [e[0], e[1].find(isInside)]).filter(e => e[1]))
+    } as BasicBloon
+    const isInside = (border: Border) => border.left >= bloon.left && border.right <= bloon.right && border.top >= bloon.top && border.bottom <= bloon.bottom
+    bloonInput.text = text!.filter(t => isInside(t.border))
+    bloonInput.symbols = Object.fromEntries(Object.entries(symbols!).map(e => [e[0], e[1].find(isInside)]).filter(e => e[1]))
 
-    fillBloon(bloon)
+    const bloon = fillBloon(bloonInput)
     addBloon(id, bloon)
     addModification({
       position: {
@@ -70,17 +97,17 @@ function PdfViewportController({ children }) {
       incrementCounter()
     }
   }
-  const onMouseLeave = event => isMain(event) && setMarkedPosition(null)
+  const onMouseLeave: PdfMouseEventHandler = event => isMain(event) && setMarkedPosition(null)
 
   return children({
-    data,
+    data: data!,
     pageNum: 1,
     scale,
     overlayItems: modList,
     onMouseDown,
     onMouseUp,
     onMouseLeave,
-    onItemMove: (event, position, id) => {
+    onItemMove: (position, id) => {
       changeMod(id, mod => ({
         ...mod,
         position: {
@@ -90,7 +117,7 @@ function PdfViewportController({ children }) {
       }))
     },
     onItemDelete: id => {
-      if (modList.find(mod => mod.id === id).disabled) return
+      if (modList.find(mod => mod.id === id)!.disabled) return
       const originalBloon = bloons[id]
       const idToRemove = Number(Object.entries(bloons).find(e => e[1].id === originalBloon.id + 1)?.[0])
       removeMod(id)
@@ -119,8 +146,8 @@ function PdfViewportController({ children }) {
         insertBloon(nextId, newBloon)
         addModification({
           position: {
-            x: modList.find(mod => mod.id === id).position.x + 25,
-            y: modList.find(mod => mod.id === id).position.y
+            x: modList.find(mod => mod.id === id)!.position.x + 25,
+            y: modList.find(mod => mod.id === id)!.position.y
           },
           value,
           disabled: true,
@@ -129,7 +156,7 @@ function PdfViewportController({ children }) {
         })
         incrementCounter()
       } else if (originalMeasurement === 'TAP') {
-        const idToRemove = Number(Object.entries(bloons).find(e => e[1].id === bloons[id].id + 1)[0])
+        const idToRemove = Number(Object.entries(bloons).find(e => e[1].id === bloons[id].id + 1)![0])
         removeMod(idToRemove)
         removeBloon(idToRemove)
         decrementCounter()

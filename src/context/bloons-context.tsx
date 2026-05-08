@@ -1,6 +1,6 @@
 import React, { useState, createContext } from 'react'
 import { crossIntervals, floatIsEqual, mostCommon } from '../utils'
-import type { ContextProvider } from '../types'
+import type { ContextProvider, Position } from '../types'
 import type { Text, Symbol, SymbolType } from './pdf-context'
 
 declare global {
@@ -44,7 +44,7 @@ export const BloonsContext = createContext({
     resetBloons: () => { }
 } as BloonsContext)
 
-type FilledText = Text & { x: number, y: number }
+type FilledText = Text & Position
 
 function fillBloon(bloon: BasicBloon) {
     const b = bloon as unknown as Bloon

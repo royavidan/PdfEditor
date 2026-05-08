@@ -2,51 +2,52 @@ import { useContext } from 'react'
 import { saveAs } from 'file-saver'
 import { PDFDocument, rgb, degrees } from 'pdf-lib'
 import fontkit from '@pdf-lib/fontkit'
-import { xml2js, js2xml } from 'xml-js'
+import { xml2js, js2xml, Element } from 'xml-js'
 import JSZip from 'jszip'
 
-import { FileContext } from '../../context/file-context'
+import { FileContext, FileData } from '../../context/file-context'
 import { ViewportContext } from '../../context/viewport-context'
 import { CounterContext } from '../../context/counter-context'
 import { ModificationContext } from '../../context/modification-context'
 import { BloonsContext } from '../../context/bloons-context'
 import { translatePos, getPositiveAngle } from '../../utils'
+import { ControllerProps } from '../../types'
 
-async function exportBloons(bloons) {
+async function exportBloons(bloons: Record<number, Bloon>) {
   const template = await fetch('https://raw.githubusercontent.com/royavidan/PdfEditor/refs/heads/resources/template.xlsm')
   const zip = await JSZip.loadAsync(await template.blob())
-  const readXml = async path => xml2js(await zip.file(path).async('string'), { trim: false, compact: false, captureSpacesBetweenElements: true })
-  const writeXml = (path, data) => zip.file(path, js2xml(data))
-  const first = e => e.elements.find(elem => elem.type === 'element')
-  const only = (e, t) => { const f = e.elements.filter(elem => elem.type === 'element'); return f.length === 1 && f[0].name === t }
+  const readXml = async (path: string) => xml2js(await zip.file(path)!.async('string'), { trim: false, compact: false, captureSpacesBetweenElements: true })
+  const writeXml = (path: string, data: Element) => zip.file(path, js2xml(data))
+  const first = (e: Element) => e.elements?.find(elem => elem.type === 'element')
+  const only = (e: Element, t: string) => { const f = e.elements?.filter(elem => elem.type === 'element'); return Boolean(f && f.length === 1 && f[0].name === t) }
 
-  const sharedStrings = await readXml('xl/sharedStrings.xml')
-  const sharedStringsObj = Object.fromEntries(first(sharedStrings).elements.map((e, i) => [e, i]).filter(([e]) => e.name === 'si' && only(e, 't'))
-    .map(([e, i]) => [first(e), i]).filter(([e]) => e.elements.length === 1 && e.elements[0].type === 'text').map(([e, i]) => [e.elements[0].text, i]))
-  let sharedStringsIndex = first(sharedStrings).elements.filter(e => e.type === 'element').length
+  const sharedStrings = await readXml('xl/sharedStrings.xml') as Element
+  const sharedStringsObj = Object.fromEntries(first(sharedStrings)!.elements!.map((e, i) => [e, i] as const).filter(([e]) => e.name === 'si' && only(e, 't'))
+    .map(([e, i]) => [first(e)!, i] as const).filter(([e]) => e.elements!.length === 1 && e.elements![0].type === 'text').map(([e, i]) => [e.elements![0].text, i]))
+  let sharedStringsIndex = first(sharedStrings)!.elements!.filter(e => e.type === 'element').length
 
-  const workbook = await readXml('xl/workbook.xml')
-  const sheetId = first(workbook).elements.find(e => e.name === 'sheets').elements.find(e => e.name === 'sheet' && e.attributes.name === 'דוח ביקורת').attributes['r:id']
+  const workbook = await readXml('xl/workbook.xml') as Element
+  const sheetId = first(workbook)!.elements!.find(e => e.name === 'sheets')!.elements!.find(e => e.name === 'sheet' && e.attributes!.name === 'דוח ביקורת')!.attributes!['r:id']
 
-  const workbookRel = await readXml('xl/_rels/workbook.xml.rels')
-  const sheetPath = first(workbookRel).elements.find(e => e.name === 'Relationship' && e.attributes.Id === sheetId).attributes.Target
+  const workbookRel = await readXml('xl/_rels/workbook.xml.rels') as Element
+  const sheetPath = first(workbookRel)!.elements!.find(e => e.name === 'Relationship' && e.attributes!.Id === sheetId)!.attributes!.Target
 
-  const sheet = await readXml(`xl/${sheetPath}`)
+  const sheet = await readXml(`xl/${sheetPath}`) as Element
 
-  const insert = (cell, data) => {
+  const insert = (cell: string, data: string | number) => {
     const row = cell.slice(1)
-    const rowObj = first(sheet).elements.find(e => e.name === 'sheetData').elements.find(e => e.name === 'row' && e.attributes.r === row)
-    const colObj = rowObj.elements.find(e => e.name === 'c' && e.attributes.r === cell)
+    const rowObj = first(sheet)!.elements!.find(e => e.name === 'sheetData')!.elements!.find(e => e.name === 'row' && e.attributes!.r === row)!
+    const colObj = rowObj.elements!.find(e => e.name === 'c' && e.attributes!.r === cell)!
     let index = sharedStringsObj[data]
-    const f = first(sharedStrings)
-    f.attributes.count = `${parseInt(f.attributes.count) + 1}`
+    const f = first(sharedStrings)!
+    f.attributes!.count = `${parseInt(f.attributes!.count as string) + 1}`
     if (index === undefined) {
       index = sharedStringsIndex++
       sharedStringsObj[data] = index
-      f.attributes.uniqueCount = `${parseInt(f.attributes.uniqueCount) + 1}`
-      f.elements.push(xml2js(`<si><t>${data}</t></si>`).elements[0])
+      f.attributes!.uniqueCount = `${parseInt(f.attributes!.uniqueCount as string) + 1}`
+      f.elements!.push(xml2js(`<si><t>${data}</t></si>`).elements[0])
     }
-    colObj.attributes.t = 's'
+    colObj.attributes!.t = 's'
     colObj.elements = xml2js(`<v>${index}</v>`).elements
   }
 
@@ -68,7 +69,7 @@ async function exportBloons(bloons) {
   saveAs(blob, 'דוח ביקורת.xlsm')
 }
 
-async function download(fileData, modificationList, fontSize) {
+async function download(fileData: FileData, modificationList: Modification[], fontSize: number) {
   const pdfDoc = await PDFDocument.load(fileData)
   const fontUrl = `${process.env.PUBLIC_URL}/fonts/Roboto/Roboto-Regular.ttf`
   pdfDoc.registerFontkit(fontkit)
@@ -99,21 +100,35 @@ async function download(fileData, modificationList, fontSize) {
   })
   const modifiedData = await pdfDoc.save()
 
-  const blob = new Blob([modifiedData], { type: 'application/pdf' })
+  const blob = new Blob([modifiedData.buffer as FileData], { type: 'application/pdf' })
   console.log('request to download file accepted', blob)
   saveAs(blob, 'output.pdf')
 }
 
-async function rotate(fileData, setFileData, angle) {
+async function rotate(fileData: FileData, setFileData: (data: FileData) => void, angle: number) {
   const pdfDoc = await PDFDocument.load(fileData)
   const [firstPage] = pdfDoc.getPages()
   const currAngle = firstPage.getRotation().angle
   firstPage.setRotation(degrees(currAngle + angle))
   const modifiedData = await pdfDoc.save()
-  setFileData(modifiedData)
+  setFileData(modifiedData.buffer as FileData)
 }
 
-function ToolbarController({ children }) {
+interface ToolbarControllerData {
+  disabled: boolean
+  scale: number
+  onZoomChange(amount: number): void
+  onRotate(angle: number): void
+  initialCounter: number
+  setInitialCounter: React.Dispatch<React.SetStateAction<number>>
+  counter: number
+  onDownload(): void
+  onExport(): void
+  fontSize: number
+  setFontSize: React.Dispatch<React.SetStateAction<number>>
+}
+
+function ToolbarController({ children }: ControllerProps<ToolbarControllerData>) {
   const { data: fileData, isFileLoaded, setData: setFileData } = useContext(
     FileContext
   )
@@ -121,7 +136,7 @@ function ToolbarController({ children }) {
   const { initialCounter, setInitialCounter, counter, resetCounter } = useContext(CounterContext)
   const { modList, resetModList } = useContext(ModificationContext)
   const { bloons, resetBloons } = useContext(BloonsContext)
-  const onZoomChange = amount => setScale(scale => scale + amount)
+  const onZoomChange = (amount: number) => setScale(scale => scale + amount)
 
   return children({
     disabled: isFileLoaded() === false,
@@ -134,7 +149,7 @@ function ToolbarController({ children }) {
           return // cancel rotation
         }
       }
-      rotate(fileData, setFileData, angle)
+      rotate(fileData!, setFileData, angle)
       resetModList()
       resetBloons()
       resetCounter()
@@ -142,7 +157,7 @@ function ToolbarController({ children }) {
     initialCounter,
     setInitialCounter,
     counter,
-    onDownload: () => download(fileData, modList, fontSize),
+    onDownload: () => download(fileData!, modList, fontSize),
     onExport: () => exportBloons(bloons),
     fontSize,
     setFontSize

@@ -1,10 +1,15 @@
 import React, { Component } from 'react'
-import Files from 'react-files'
+import Files, { FileData, FilesErrorHandler } from 'react-files'
+import type { FileData as PDFFileData } from '../../context/file-context'
 
 import styles from './PdfLoader.module.scss'
 
-class PdfLoader extends Component {
-  onFilesChange = async files => {
+interface PdfLoaderProps {
+  onLoad(data: PDFFileData): void
+}
+
+class PdfLoader extends Component<PdfLoaderProps> {
+  onFilesChange = async (files: FileData[]) => {
     console.log('got request to load files:', files)
     const file = files[0]
     const data = await file.arrayBuffer()
@@ -12,7 +17,7 @@ class PdfLoader extends Component {
     this.props.onLoad(data)
   }
 
-  onFilesError = (error, files) => {
+  onFilesError: FilesErrorHandler = (error, files) => {
     console.warn(`error loading files ${files}. error:`, error)
   }
 

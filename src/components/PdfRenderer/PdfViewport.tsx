@@ -3,10 +3,30 @@ import KeyboardEventHandler from 'react-keyboard-event-handler'
 
 import PdfDoc from './PdfDoc'
 import PdfPage from './PdfPage'
-import PdfCanvas from './PdfCanvas'
+import PdfCanvas, { PdfMouseEventHandler } from './PdfCanvas'
 import Overlay from './Overlay/Overlay'
 
 import styles from './PdfViewport.module.scss'
+import { FileData } from '../../context/file-context'
+import type { Position } from '../../types'
+
+interface PdfViewportProps {
+  data: FileData
+  pageNum: number
+  scale: number
+  overlayItems: Modification[]
+  className?: string
+  style?: React.CSSProperties
+  onMouseDown?: PdfMouseEventHandler
+  onMouseUp?: PdfMouseEventHandler
+  onMouseLeave?: PdfMouseEventHandler
+  onItemMove(position: Position, id: number): void
+  onItemDelete(id: number): void
+  fontSize: number
+  markedPosition: Position | null
+  onChangeMeasurement(id: number, measurement: string): void
+  onSave(): void
+}
 
 function PdfViewport({
   data,
@@ -24,9 +44,9 @@ function PdfViewport({
   markedPosition,
   onChangeMeasurement,
   onSave
-}) {
-  const [currentMousePos, setCurrentMousePos] = useState(null)
-  const onMouseMove = (event, position) => setCurrentMousePos(position)
+}: PdfViewportProps) {
+  const [currentMousePos, setCurrentMousePos] = useState<Position | null>(null)
+  const onMouseMove: PdfMouseEventHandler = (event, position) => setCurrentMousePos(position)
   return (
     <div className={`${className} ${styles.viewport}`} style={style}>
       <div className={styles.page}>

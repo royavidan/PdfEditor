@@ -5,7 +5,7 @@ export interface CounterContext {
   counter: number
   initialCounter: number
   resetCounter(): void
-  setInitialCounter: (counter: number) => void
+  setInitialCounter: React.Dispatch<React.SetStateAction<number>>
   incrementCounter: (i?: number) => void
   decrementCounter: (i?: number) => void
 }

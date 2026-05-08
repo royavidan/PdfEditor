@@ -2,13 +2,23 @@ import { useState, useContext } from 'react'
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
 
-import { FileContext } from '../../context/file-context'
+import { FileContext, FileData } from '../../context/file-context'
 import { ViewportContext } from '../../context/viewport-context'
 import { CounterContext } from '../../context/counter-context'
 import { ModificationContext } from '../../context/modification-context'
 import { BloonsContext } from '../../context/bloons-context'
+import type { ControllerProps } from '../../types'
 
-function LoadDialogController({ children }) {
+interface LoadDialogControllerData {
+  showDialog: boolean
+  openDialog(): void
+  closeDialog(): void
+  onLoad(data: FileData): void
+  onSave(): void
+  isAtReload(): boolean
+}
+
+function LoadDialogController({ children }: ControllerProps<LoadDialogControllerData>) {
   const [showDialog, setShowDialog] = useState(true)
   const { data: fileData, isFileLoaded, setData: setFileData } = useContext(FileContext)
   const { resetScale } = useContext(ViewportContext)
@@ -16,13 +26,13 @@ function LoadDialogController({ children }) {
   const { resetModList, addMod, modList } = useContext(ModificationContext)
   const { resetBloons, addBloon, bloons } = useContext(BloonsContext)
 
-  const onLoad = async data => {
+  const onLoad = async (data: FileData) => {
     setShowDialog(false)
     try {
       const zip = await JSZip.loadAsync(data)
-      const pdfData = await zip.file('input.pdf').async('arraybuffer')
-      const modList = JSON.parse(await zip.file('modifications.json').async('string'))
-      const bloons = JSON.parse(await zip.file('bloons.json').async('string'))
+      const pdfData = await zip.file('input.pdf')!.async('arraybuffer')
+      const modList: Modification[] = JSON.parse(await zip.file('modifications.json')!.async('string'))
+      const bloons: Record<number, Bloon> = JSON.parse(await zip.file('bloons.json')!.async('string'))
 
       setFileData(pdfData)
       resetScale()
@@ -46,7 +56,7 @@ function LoadDialogController({ children }) {
 
   const onSave = async () => {
     const zip = new JSZip()
-    zip.file('input.pdf', fileData)
+    zip.file('input.pdf', fileData!)
     zip.file('modifications.json', JSON.stringify(modList))
     zip.file('bloons.json', JSON.stringify(bloons))
     const blob = new Blob([await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })], { type: 'application/zip' })

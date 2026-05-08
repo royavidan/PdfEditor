@@ -2,6 +2,22 @@ import React from 'react'
 
 import styles from './Toolbar.module.scss'
 
+interface ToolbarProps {
+  disabled: boolean
+  scale: number
+  initialCounter: number
+  setInitialCounter: React.Dispatch<React.SetStateAction<number>>
+  counter: number
+  onZoomChange(amount: number): void
+  onRotate(angle: number): void
+  onDownload(): void
+  onLoad(): void
+  onExport(): void
+  onSave(): void
+  fontSize: number
+  setFontSize: React.Dispatch<React.SetStateAction<number>>
+}
+
 function Toolbar({
   disabled,
   scale,
@@ -16,25 +32,24 @@ function Toolbar({
   onSave,
   fontSize,
   setFontSize
-}) {
+}: ToolbarProps) {
   const runningLabelText = disabled ? null : (
     <div className={styles.text}>
       Place next running label: {`(${counter})`}
     </div>
   )
 
-  const onFontSizeChange = event => {
+  const onFontSizeChange: React.ChangeEventHandler<HTMLInputElement> = event => {
     const input = event.target.value
     const isValidFormat = /^\d+(\.\d)?$/.test(input)
 
     if (event.target.validity.valid && isValidFormat) {
       const value = parseFloat(input)
-      const roundByHalf = value => Math.round(value * 2) / 2
-      setFontSize(roundByHalf(value))
+      setFontSize(Math.round(value * 2) / 2)
     }
   }
 
-  const onInitialCounterChange = event => {
+  const onInitialCounterChange: React.ChangeEventHandler<HTMLInputElement> = event => {
     const input = event.target.value
     const value = parseInt(input)
     setInitialCounter(value)

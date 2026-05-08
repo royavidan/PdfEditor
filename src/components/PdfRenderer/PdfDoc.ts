@@ -1,12 +1,24 @@
 import { Component } from 'react'
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.js'
+import type { FileData } from '../../context/file-context'
+import type { PDFDocumentProxy } from 'pdfjs-dist'
 
-function loadDocument(data) {
+function loadDocument(data: FileData) {
   return pdfjs.getDocument(data).promise
 }
 
-class PdfDoc extends Component {
-  constructor(props) {
+interface PdfDocProps {
+  data: FileData
+  children(docObj: PDFDocumentProxy): JSX.Element
+}
+
+interface PdfDocState {
+  docObj: PDFDocumentProxy | null
+  data: FileData
+}
+
+class PdfDoc extends Component<PdfDocProps, PdfDocState> {
+  constructor(props: PdfDocProps) {
     super(props)
     this.state = {
       docObj: null,
@@ -21,7 +33,7 @@ class PdfDoc extends Component {
     })
   }
 
-  async componentDidUpdate(prevProps, prevState) {
+  async componentDidUpdate(prevProps: PdfDocProps, prevState: PdfDocState) {
     // will update state only when 'props.data' changes
     if (this.props.data !== prevProps.data) {
       console.log('[PdfDoc] updating doc object')

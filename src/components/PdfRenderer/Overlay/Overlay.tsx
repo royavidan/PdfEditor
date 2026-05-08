@@ -5,8 +5,9 @@ import { ModificationContext } from '../../../context/modification-context'
 import OverlayItem from './OverlayItem'
 
 import styles from './Overlay.module.scss'
+import type { Position } from '../../../types'
 
-function getRelativeMousePos(element, event) {
+function getRelativeMousePos(element: HTMLElement, event: React.MouseEvent) {
   const { left, top } = element.getBoundingClientRect()
   return {
     x: event.clientX - left,
@@ -14,10 +15,19 @@ function getRelativeMousePos(element, event) {
   }
 }
 
-function Overlay({ items, scale, onItemMove, onItemDelete, onChangeMeasurement, fontSize }) {
-  const overlayRef = useRef(null)
+interface OverlayProps {
+  items: Modification[]
+  scale: number
+  onItemMove(position: Position, id: number): void
+  onItemDelete(id: number): void
+  onChangeMeasurement(id: number, measurement: string): void
+  fontSize: number
+}
+
+function Overlay({ items, scale, onItemMove, onItemDelete, onChangeMeasurement, fontSize }: OverlayProps) {
+  const overlayRef = useRef<HTMLDivElement>(null)
   const { nextId } = useContext(ModificationContext)
-  const [selectedItemId, setSelectedItemId] = useState(null)
+  const [selectedItemId, setSelectedItemId] = useState<number | null>(null)
   useEffect(() => setSelectedItemId(nextId - 1), [nextId])
 
   useEffect(() => {
@@ -31,7 +41,7 @@ function Overlay({ items, scale, onItemMove, onItemDelete, onChangeMeasurement, 
       ref={overlayRef}
       className={styles.overlay}
       style={{
-        position: selectedItemId !== null ? 'absolute' : null
+        position: selectedItemId !== null ? 'absolute' : undefined
       }}
       onClick={() => {
         setSelectedItemId(null)
@@ -59,8 +69,7 @@ function Overlay({ items, scale, onItemMove, onItemDelete, onChangeMeasurement, 
           hasContextMenu={!item.disabled}
           onDragEnd={event =>
             onItemMove(
-              event,
-              getRelativeMousePos(overlayRef.current, event),
+              getRelativeMousePos(overlayRef.current!, event),
               item.id
             )
           }

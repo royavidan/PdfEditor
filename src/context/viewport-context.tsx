@@ -6,10 +6,10 @@ const initialFontSize = 12
 
 export interface ViewportContext {
   scale: number
-  setScale(scale: number): void
+  setScale: React.Dispatch<React.SetStateAction<number>>
   resetScale(): void
   fontSize: number
-  setFontSize(fontSize: number): void
+  setFontSize: React.Dispatch<React.SetStateAction<number>>
 }
 
 export const ViewportContext = createContext({

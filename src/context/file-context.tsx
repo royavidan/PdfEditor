@@ -1,9 +1,11 @@
 import React, { useState, createContext } from 'react'
 import type { ContextProvider } from '../types'
 
+export type FileData = ArrayBuffer
+
 export interface FileContext<T> {
   data: T | null
-  setData: (data: T) => void
+  setData: React.Dispatch<React.SetStateAction<T | null>>
   isFileLoaded: () => boolean
 }
 
@@ -13,10 +15,10 @@ export const FileContext = createContext({
   data: NO_FILE_DATA,
   setData: () => {},
   isFileLoaded: () => false
-} as FileContext<ArrayBuffer>)
+} as FileContext<FileData>)
 
 export default (({ children }) => {
-  const [data, setData] = useState<ArrayBuffer | null>(NO_FILE_DATA)
+  const [data, setData] = useState<FileData | null>(NO_FILE_DATA)
   console.log('[file-context] file data:', data)
   const isFileLoaded = () => data !== NO_FILE_DATA
 

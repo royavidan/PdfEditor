@@ -3,18 +3,20 @@ import type { ContextProvider, Permutation } from '../types'
 
 declare global {
   export interface Modification {
-    id: number
+    readonly id: number
     value: number
   }
 }
+
+type ModificationInput = Omit<Modification, 'id'>
 
 export interface ModificationContext {
   modList: Modification[]
   nextId: number
   resetModList(): void
-  addMod(mod: Modification, imm?: number): void
+  addMod(mod: ModificationInput, imm?: number): void
   changeMod(id: number, mod: Permutation<Modification>): void
-  insertMod(mod: Modification): void
+  insertMod(mod: ModificationInput): void
   removeMod(id: number): void
 }
 

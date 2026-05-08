@@ -1,6 +1,10 @@
 import { Component } from 'react'
 
-class EscKeyHandler extends Component {
+interface EscKeyHandlerProps {
+  onClick(): void
+}
+
+class EscKeyHandler extends Component<EscKeyHandlerProps> {
   componentDidMount() {
     document.addEventListener('keyup', this.onKeyup, false)
   }
@@ -9,7 +13,7 @@ class EscKeyHandler extends Component {
     document.removeEventListener('keyup', this.onKeyup, false)
   }
 
-  onKeyup = event => {
+  onKeyup = (event: KeyboardEvent) => {
     if (['Escape', 'Esc'].includes(event.key)) {
       this.props.onClick()
     }

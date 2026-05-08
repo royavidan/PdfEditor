@@ -2,23 +2,16 @@ import React, { useState, useEffect, createContext, useContext } from 'react'
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.js'
 import { PDFDocument } from 'pdf-lib'
 
-import { FileContext } from './file-context'
+import { FileContext, FileData } from './file-context'
 import { arrayIsEqual, floatIsEqual, findOne } from '../utils'
-import type { ContextProvider } from '../types'
+import type { ContextProvider, Position, Border } from '../types'
 import type { TextItem } from 'pdfjs-dist/types/src/display/api'
 
-type Point = { x: number, y: number } & [number, number]
+type Point = Position & [number, number]
 
 type Transform = [number, number, number, number, number, number]
 
 export type SymbolType = 'dia' | 'depth' | 'straightness' | 'flatness' | 'circlarity' | 'cylindricity' | 'surface profile' | 'perpendicularity' | 'angularity' | 'parallelism' | 'symmetry' | 'true position' | 'concentricity' | 'run out'
-
-type Border = {
-    left: number
-    top: number
-    right: number
-    bottom: number
-}
 
 export interface Symbol extends Border {
     width: number
@@ -77,7 +70,7 @@ const isCircle = (path: Point[]) => path.length >= 10 && arrayIsEqual(path[0], p
 const isLine = (path: Point[]) => path.length === 2
 
 export interface PDFContext {
-    text: any[] | null
+    text: Text[] | null
     symbols: Record<SymbolType, Symbol[]> | null
     size: { width: number, height: number }
     angle: number
@@ -288,7 +281,7 @@ function fixPlusMinus(lines: Line[], text: any[]) {
     return linesToRemove
 }
 
-async function extractPDFData(fileData: ArrayBuffer) {
+async function extractPDFData(fileData: FileData) {
     console.log('Loading PDF context')
     const loadingTask = pdfjs.getDocument({ data: fileData })
     const pdfDocument = await loadingTask.promise
@@ -476,7 +469,7 @@ async function extractPDFData(fileData: ArrayBuffer) {
     return { text, symbols }
 }
 
-async function getDocumentInfo(data: ArrayBuffer) {
+async function getDocumentInfo(data: FileData) {
   const pdfDoc = await PDFDocument.load(data)
   const [firstPage] = pdfDoc.getPages()
   const size = firstPage.getSize()
