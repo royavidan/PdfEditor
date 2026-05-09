@@ -2,8 +2,8 @@ import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.js'
 
 import { arrayIsEqual, floatIsEqual, findOne } from '../utils'
 import type { TextItem, PDFOperatorList } from 'pdfjs-dist/types/src/display/api'
-import type { Position, Border } from '../types'
-import type { Text, Symbol, SymbolType, Transform } from '../context/pdf-context'
+import type { Position, Border, WorkerUsage, SimpleWorker } from '../types'
+import type { Text, Symbol, SymbolType, Transform, Data } from '../context/pdf-context'
 
 type Point = Position & [number, number]
 
@@ -424,7 +424,9 @@ function extractPDFPageData(opList: PDFOperatorList, rotation: number, pageHeigh
     return { text, symbols }
 }
 
-declare const self: Worker
+export type WorkerType = WorkerUsage<PdfWorkerData[], Data>
+
+declare const self: SimpleWorker<PdfWorkerData[], Data>
 
 export interface PdfWorkerData {
     opList: PDFOperatorList
@@ -433,25 +435,13 @@ export interface PdfWorkerData {
     textItems: TextItem[]
 }
 
-export interface PdfWorkerSuccess {
-    success: true
-    data: { text: Text[], symbols: Record<SymbolType, Symbol[]> }
-}
-
-interface PdfWorkerError {
-    success: false
-    error: Error
-}
-
-export type PdfWorkerResult = PdfWorkerSuccess | PdfWorkerError
-
-self.onmessage = (event: MessageEvent) => {
-    for (const { opList, rotation, pageHeight, textItems } of event.data as PdfWorkerData[]) {
+self.onmessage = (event) => {
+    for (const { opList, rotation, pageHeight, textItems } of event.data) {
         try {
             const data = extractPDFPageData(opList, rotation, pageHeight, textItems)
-            self.postMessage({ success: true, data } as PdfWorkerSuccess)
+            self.postMessage({ success: true, data })
         } catch(e) {
-            self.postMessage({ success: false, error: e } as PdfWorkerError)
+            self.postMessage({ success: false, error: e as Error })
         }
     }
 }

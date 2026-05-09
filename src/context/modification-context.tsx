@@ -1,14 +1,22 @@
 import React, { useState, createContext } from 'react'
 import PropTypes from 'prop-types'
-import { ContextProvider, Permutation, Position } from '../types'
+import { ContextProvider, Permutation, Position, Null, Border } from '../types'
+
+export interface Bloon extends Border {
+    content: string
+    measurement: string
+    tolerance?: {
+        '+': number | string
+        '-': number | string
+    }
+}
 
 export interface Modification {
   readonly id: number
   value: number
   position: Position
-  title: string
   page: number
-  template(value: number): string
+  bloon: Bloon
   disabled?: boolean
 }
 
@@ -16,9 +24,8 @@ export const Modification = PropTypes.shape({
   id: PropTypes.number.isRequired,
   value: PropTypes.number.isRequired,
   position: Position.isRequired,
-  title: PropTypes.string.isRequired,
   page: PropTypes.number.isRequired,
-  template: PropTypes.func.isRequired,
+  bloon: PropTypes.oneOf([Null, PropTypes.object]), //TODO: make PropType
   disabled: PropTypes.bool
 })
 
@@ -30,7 +37,6 @@ export interface ModificationContext {
   resetModList(): void
   addMod(mod: ModificationInput, imm?: number): void
   changeMod(id: number, mod: Permutation<Modification>): void
-  insertMod(mod: ModificationInput): void
   removeMod(id: number): void
 }
 
@@ -43,13 +49,13 @@ export const ModificationContext = createContext({
   resetModList: () => { },
   addMod: () => { },
   changeMod: () => { },
-  insertMod: () => { },
   removeMod: () => { }
 } as ModificationContext)
 
 export default (({ children }) => {
   const [modList, setModList] = useState(initialModList)
   const [nextId, setNextId] = useState(initialId)
+  
   const resetModList = () => {
     setModList(initialModList)
     setNextId(initialId)
@@ -57,12 +63,9 @@ export default (({ children }) => {
 
   const addMod: ModificationContext['addMod'] = (mod, imm = 0) => {
     setNextId(id => id + 1)
-    return setModList(modList => [
+    setModList(modList => [
       ...modList.map(m => m.value < mod.value ? m : { ...m, value: m.value + 1 }),
-      {
-        ...mod,
-        id: nextId + imm
-      }
+      { ...mod, id: nextId + imm }
     ])
   }
 
@@ -72,17 +75,6 @@ export default (({ children }) => {
     )
 
     setModList(changedModList)
-  }
-
-  const insertMod: ModificationContext['insertMod'] = (mod) => {
-    setNextId(id => id + 1)
-    return setModList(modList => [
-      ...modList.map(m => m.value < mod.value ? m : { ...m, value: m.value + 1 }),
-      {
-        ...mod,
-        id: nextId
-      }
-    ])
   }
 
   const removeMod: ModificationContext['removeMod'] = id => {
@@ -100,7 +92,6 @@ export default (({ children }) => {
         resetModList,
         addMod,
         changeMod,
-        insertMod,
         removeMod
       }}
     >

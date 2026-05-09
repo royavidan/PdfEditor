@@ -4,13 +4,17 @@ import PropTypes from 'prop-types'
 import styles from './Overlay.module.scss'
 import { Position } from '../../../types'
 
+export interface OverlayProperties {
+  title: string
+  content: string
+}
+
 interface OverlayItemsProps {
   position: Position
   size: number
-  title: string
   value: number
   scale: number
-  template(value: number): string
+  template: OverlayProperties
   isSelected: boolean
   hasContextMenu: boolean
   onDelete(): void
@@ -20,7 +24,6 @@ interface OverlayItemsProps {
 function OverlayItem({
   position,
   size,
-  title,
   value,
   scale,
   template,
@@ -65,11 +68,11 @@ function OverlayItem({
           fontSize: `${size * scale}px`
         }}
         draggable={isSelected}
-        title={isSelected ? title : undefined}
+        title={isSelected ? template.title : undefined}
         onContextMenu={handleContextMenu}
         {...otherProps}
       >
-        {template(value)}
+        {template.content}
       </div>
       {contextMenu && (
         <div className={styles.contextmenu}
@@ -131,10 +134,12 @@ function OverlayItem({
 OverlayItem.propTypes = {
   position: Position.isRequired,
   size: PropTypes.number.isRequired,
-  title: PropTypes.string.isRequired,
   value: PropTypes.number.isRequired,
   scale: PropTypes.number.isRequired,
-  template: PropTypes.func.isRequired,
+  template: PropTypes.shape({
+    title: PropTypes.string.isRequired,
+    content: PropTypes.string.isRequired
+  }),
   isSelected: PropTypes.bool.isRequired,
   hasContextMenu: PropTypes.bool.isRequired,
   onDelete: PropTypes.func.isRequired,

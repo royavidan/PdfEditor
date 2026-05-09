@@ -7,6 +7,9 @@ import OverlayItem from './OverlayItem'
 
 import styles from './Overlay.module.scss'
 import type { Position } from '../../../types'
+import type { OverlayProperties } from './OverlayItem'
+
+export type OverlayTemplate = (mod: Modification) => OverlayProperties
 
 function getRelativeMousePos(element: HTMLElement, event: React.MouseEvent) {
   const { left, top } = element.getBoundingClientRect()
@@ -19,13 +22,14 @@ function getRelativeMousePos(element: HTMLElement, event: React.MouseEvent) {
 interface OverlayProps {
   items: Modification[]
   scale: number
+  template: OverlayTemplate
   onItemMove(position: Position, id: number): void
   onItemDelete(id: number): void
   onChangeMeasurement(id: number, measurement: string): void
   fontSize: number
 }
 
-function Overlay({ items, scale, onItemMove, onItemDelete, onChangeMeasurement, fontSize }: OverlayProps) {
+function Overlay({ items, scale, template, onItemMove, onItemDelete, onChangeMeasurement, fontSize }: OverlayProps) {
   const overlayRef = useRef<HTMLDivElement>(null)
   const { nextId } = useContext(ModificationContext)
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null)
@@ -63,10 +67,9 @@ function Overlay({ items, scale, onItemMove, onItemDelete, onChangeMeasurement, 
           key={item.id}
           position={item.position}
           size={fontSize}
-          title={item.title}
           value={item.value}
           scale={scale}
-          template={item.template}
+          template={template(item)}
           hasContextMenu={!item.disabled}
           onDragEnd={event =>
             onItemMove(
@@ -90,6 +93,7 @@ function Overlay({ items, scale, onItemMove, onItemDelete, onChangeMeasurement, 
 Overlay.propTypes = {
   items: PropTypes.arrayOf(Modification).isRequired,
   scale: PropTypes.number.isRequired,
+  template: PropTypes.func.isRequired,
   onItemMove: PropTypes.func.isRequired,
   onItemDelete: PropTypes.func.isRequired,
   onChangeMeasurement: PropTypes.func.isRequired,

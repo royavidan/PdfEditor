@@ -11,6 +11,7 @@ import styles from './PdfViewport.module.scss'
 import { FileData } from '../../context/file-context'
 import { Modification } from '../../context/modification-context'
 import { Position, Null } from '../../types'
+import type { OverlayTemplate } from './Overlay/Overlay'
 
 interface PdfViewportProps {
   disabled: boolean
@@ -18,6 +19,7 @@ interface PdfViewportProps {
   pageNum: number
   scale: number
   overlayItems: Modification[]
+  overlayTemplate: OverlayTemplate
   className?: string
   style?: React.CSSProperties
   onMouseDown?: PdfMouseEventHandler
@@ -39,6 +41,7 @@ function PdfViewport({
   pageNum,
   scale,
   overlayItems,
+  overlayTemplate,
   className = '',
   style,
   onMouseDown,
@@ -89,6 +92,7 @@ function PdfViewport({
                     <Overlay
                       items={overlayItems}
                       scale={scale}
+                      template={overlayTemplate}
                       onItemMove={onItemMove}
                       onItemDelete={onItemDelete}
                       onChangeMeasurement={onChangeMeasurement}

@@ -9,13 +9,12 @@ import { FileContext, FileData } from '../../context/file-context'
 import { ViewportContext } from '../../context/viewport-context'
 import { CounterContext } from '../../context/counter-context'
 import { ModificationContext, Modification } from '../../context/modification-context'
-import { BloonsContext, Bloon } from '../../context/bloons-context'
 import { translatePos, getPositiveAngle } from '../../utils'
 import { ControllerProps } from '../../types'
 import { PageContext } from '../../context/page-context'
 import { PDFContext } from '../../context/pdf-context'
 
-async function exportBloons(bloons: Record<number, Bloon>) {
+async function exportBloons(modList: Modification[]) {
   const template = await fetch('https://raw.githubusercontent.com/royavidan/PdfEditor/refs/heads/resources/template.xlsm')
   const zip = await JSZip.loadAsync(await template.blob())
   const readXml = async (path: string) => xml2js(await zip.file(path)!.async('string'), { trim: false, compact: false, captureSpacesBetweenElements: true })
@@ -55,12 +54,13 @@ async function exportBloons(bloons: Record<number, Bloon>) {
 
   const firstRowNum = 22
   insert(`B${firstRowNum + 1}`, 'VISUAL')
-  for (const bloon of Object.values(bloons)) {
-    insert(`B${bloon.id + firstRowNum}`, bloon.measurement)
-    insert(`D${bloon.id + firstRowNum}`, bloon.content)
+  for (const mod of modList) {
+    const bloon = mod.bloon!, row = mod.value + firstRowNum
+    insert(`B${row}`, bloon.measurement)
+    insert(`D${row}`, bloon.content)
     if (bloon.tolerance) {
-      insert(`E${bloon.id + firstRowNum}`, bloon.tolerance['+'])
-      insert(`F${bloon.id + firstRowNum}`, bloon.tolerance['-'])
+      insert(`E${row}`, bloon.tolerance['+'])
+      insert(`F${row}`, bloon.tolerance['-'])
     }
   }
 
@@ -92,7 +92,7 @@ async function download(fileData: FileData, modificationList: Modification[], fo
         width,
         height
       )
-      page.drawText(item.template(item.value), {
+      page.drawText(`(${item.value})`, {
         x: position.x,
         y: height - position.y,
         rotate: degrees(angle),
@@ -141,7 +141,6 @@ function ToolbarController({ children }: ControllerProps<ToolbarControllerData>)
   const { scale, setScale, fontSize, setFontSize } = useContext(ViewportContext)
   const { initialCounter, setInitialCounter, counter, resetCounter } = useContext(CounterContext)
   const { modList, resetModList } = useContext(ModificationContext)
-  const { bloons, resetBloons } = useContext(BloonsContext)
   const { currentPage, setPage, pages } = useContext(PageContext)
   const { getLoadedPages } = useContext(PDFContext)
   const onZoomChange = (amount: number) => setScale(scale => scale + amount)
@@ -164,14 +163,13 @@ function ToolbarController({ children }: ControllerProps<ToolbarControllerData>)
       }
       rotate(fileData!, setFileData, angle, currentPage)
       resetModList()
-      resetBloons()
       resetCounter()
     },
     initialCounter,
     setInitialCounter,
     counter,
     onDownload: () => download(fileData!, modList, fontSize),
-    onExport: () => exportBloons(bloons),
+    onExport: () => exportBloons(modList),
     onChangePageNum,
     fontSize,
     setFontSize

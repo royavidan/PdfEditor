@@ -7,7 +7,7 @@ import PDFWorker from 'worker-loader!../workers/pdf-worker.ts'
 import { FileContext, FileData } from './file-context'
 import type { TextItem } from 'pdfjs-dist/types/src/display/api'
 import type { ContextProvider, Border } from '../types'
-import type { PdfWorkerData, PdfWorkerResult } from '../workers/pdf-worker'
+import type { WorkerType, PdfWorkerData } from '../workers/pdf-worker'
 
 export type Transform = [number, number, number, number, number, number]
 
@@ -28,7 +28,7 @@ export interface Text extends Border {
     plusminus?: boolean
 }
 
-interface Data {
+export interface Data {
     text: Text[]
     symbols: Record<SymbolType, Symbol[]>
 }
@@ -51,11 +51,11 @@ async function extractPDFData(fileData: FileData, setData: React.Dispatch<React.
         const textContent = await page.getTextContent()
         p.push({ opList, rotation, pageHeight: viewport.height, textItems: textContent.items as TextItem[] })
     }
-    const worker: Worker = new PDFWorker()
+    const worker = new PDFWorker() as WorkerType
     const promise = new Promise<void>((resolve, reject) => {
         let counter = 0
-        worker.onmessage = (e: MessageEvent) => {
-            const result = e.data as PdfWorkerResult
+        worker.onmessage = e => {
+            const result = e.data
             if (result.success) {
                 setData(data => data[0] === null ? [result.data] : [...data, result.data])
             } else {
@@ -68,7 +68,7 @@ async function extractPDFData(fileData: FileData, setData: React.Dispatch<React.
         }
     })
     worker.postMessage(p)
-    return await promise
+    return await promise.finally(() => worker.terminate())
 }
 
 async function getDocumentInfo(data: FileData) {

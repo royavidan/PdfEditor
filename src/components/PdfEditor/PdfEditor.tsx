@@ -10,7 +10,6 @@ import PdfViewport from '../PdfRenderer/PdfViewport'
 import PdfViewportController from '../../containers/PdfViewportController/PdfViewportController'
 import EscKeyHandler from '../EscKeyHandler/EscKeyHandler'
 import ModificationProvider from '../../context/modification-context'
-import BloonsProvider from '../../context/bloons-context'
 import PDFProvider from '../../context/pdf-context'
 import PageProvider from '../../context/page-context'
 
@@ -24,42 +23,40 @@ function PdfEditor() {
       <ViewportStateProvider>
         <CounterProvider>
           <ModificationProvider>
-            <BloonsProvider>
-              <PDFProvider>
-                <PageProvider>
-                  <div className={styles.editorArea}>
-                    <LoadDialogController>
-                      {loadDialogCtrl => (
-                        <React.Fragment>
-                          {loadDialogCtrl.isAtReload() ? (
-                            <EscKeyHandler onClick={loadDialogCtrl.closeDialog} />
+            <PDFProvider>
+              <PageProvider>
+                <div className={styles.editorArea}>
+                  <LoadDialogController>
+                    {loadDialogCtrl => (
+                      <React.Fragment>
+                        {loadDialogCtrl.isAtReload() ? (
+                          <EscKeyHandler onClick={loadDialogCtrl.closeDialog} />
+                        ) : null}
+
+                        <ToolbarController>
+                          {toolbarCtrl => (
+                            <Toolbar
+                              onLoad={loadDialogCtrl.openDialog}
+                              onSave={loadDialogCtrl.onSave}
+                              {...toolbarCtrl}
+                            />
+                          )}
+                        </ToolbarController>
+                        <div className={styles.pdfViewportArea}>
+                          {loadDialogCtrl.showDialog ? (
+                            <PdfLoader onLoad={loadDialogCtrl.onLoad} />
                           ) : null}
 
-                          <ToolbarController>
-                            {toolbarCtrl => (
-                              <Toolbar
-                                onLoad={loadDialogCtrl.openDialog}
-                                onSave={loadDialogCtrl.onSave}
-                                {...toolbarCtrl}
-                              />
-                            )}
-                          </ToolbarController>
-                          <div className={styles.pdfViewportArea}>
-                            {loadDialogCtrl.showDialog ? (
-                              <PdfLoader onLoad={loadDialogCtrl.onLoad} />
-                            ) : null}
-
-                            <PdfViewportController>
-                              {viewportCtrl => <PdfViewport {...viewportCtrl} onSave={loadDialogCtrl.onSave} />}
-                            </PdfViewportController>
-                          </div>
-                        </React.Fragment>
-                      )}
-                    </LoadDialogController>
-                  </div>
-                </PageProvider>
-              </PDFProvider>
-            </BloonsProvider>
+                          <PdfViewportController>
+                            {viewportCtrl => <PdfViewport {...viewportCtrl} onSave={loadDialogCtrl.onSave} />}
+                          </PdfViewportController>
+                        </div>
+                      </React.Fragment>
+                    )}
+                  </LoadDialogController>
+                </div>
+              </PageProvider>
+            </PDFProvider>
           </ModificationProvider>
         </CounterProvider>
       </ViewportStateProvider>

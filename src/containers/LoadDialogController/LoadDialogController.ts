@@ -1,13 +1,15 @@
 import { useState, useContext } from 'react'
-import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
+import PropTypes from 'prop-types'
 
+import { arrayIsEqual } from '../../utils'
 import { FileContext, FileData } from '../../context/file-context'
 import { ViewportContext } from '../../context/viewport-context'
 import { CounterContext } from '../../context/counter-context'
 import { ModificationContext, Modification } from '../../context/modification-context'
-import { BloonsContext, Bloon } from '../../context/bloons-context'
 import type { ControllerProps } from '../../types'
+
+const EOF = [...'%%EOF'].map(c => c.charCodeAt(0))
 
 interface LoadDialogControllerData {
   showDialog: boolean
@@ -24,43 +26,35 @@ function LoadDialogController({ children }: ControllerProps<LoadDialogController
   const { resetScale } = useContext(ViewportContext)
   const { resetCounter, incrementCounter } = useContext(CounterContext)
   const { resetModList, addMod, modList } = useContext(ModificationContext)
-  const { resetBloons, addBloon, bloons } = useContext(BloonsContext)
 
   const onLoad = async (data: FileData) => {
     setShowDialog(false)
-    try {
-      const zip = await JSZip.loadAsync(data)
-      const pdfData = await zip.file('input.pdf')!.async('arraybuffer')
-      const modList: Modification[] = JSON.parse(await zip.file('modifications.json')!.async('string'))
-      const bloons: Record<number, Bloon> = JSON.parse(await zip.file('bloons.json')!.async('string'))
-
-      setFileData(pdfData)
-      resetScale()
-      resetCounter()
-      resetModList()
-      resetBloons()
-      modList.forEach((m, i) => {
-        m.template = value => `(${value})`
-        addMod(m, i)
-      })
-      Object.entries(bloons).forEach(([id, bloon]) => addBloon(Number(id), bloon))
-      incrementCounter(modList.length)
-    } catch {
-      setFileData(data)
-      resetScale()
-      resetCounter()
-      resetModList()
-      resetBloons()
+    let pdfData: FileData = data, newModList: Modification[] | null = null
+    const arrData = new Uint8Array(data)
+    let eofIndex = arrData.length - EOF.length
+    while (!arrayIsEqual(arrData.slice(eofIndex, eofIndex + EOF.length), EOF)) eofIndex--
+    eofIndex += EOF.length
+    if (eofIndex < arrData.length) {
+      pdfData = arrData.slice(0, eofIndex).buffer
+      try {
+        newModList = JSON.parse(atob(String.fromCharCode(...arrData.slice(eofIndex))))
+        PropTypes.checkPropTypes(Modification, newModList, '<load>', 'LoadDialogController')
+      } catch {}
+    }
+    setFileData(pdfData)
+    resetScale()
+    resetCounter()
+    resetModList()
+    
+    if (newModList) {
+      newModList.forEach((m, i) => addMod(m, i))
+      incrementCounter(newModList.length)
     }
   }
 
   const onSave = async () => {
-    const zip = new JSZip()
-    zip.file('input.pdf', fileData!)
-    zip.file('modifications.json', JSON.stringify(modList))
-    zip.file('bloons.json', JSON.stringify(bloons))
-    const blob = new Blob([await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })], { type: 'application/zip' })
-    saveAs(blob, 'output.bloons')
+    const blob = new Blob([fileData!, btoa(JSON.stringify(modList))], { type: 'application/pdf' })
+    saveAs(blob, 'דוח ביקורת - עם בלונים.pdf')
   }
 
   return children({
