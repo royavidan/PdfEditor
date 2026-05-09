@@ -143,7 +143,7 @@ function ToolbarController({ children }: ControllerProps<ToolbarControllerData>)
   const { modList, resetModList } = useContext(ModificationContext)
   const { bloons, resetBloons } = useContext(BloonsContext)
   const { currentPage, setPage, pages } = useContext(PageContext)
-  const { isLoaded } = useContext(PDFContext)
+  const { getLoadedPages } = useContext(PDFContext)
   const onZoomChange = (amount: number) => setScale(scale => scale + amount)
 
   const onChangePageNum: React.ChangeEventHandler<HTMLInputElement> = event => {
@@ -152,7 +152,7 @@ function ToolbarController({ children }: ControllerProps<ToolbarControllerData>)
   }
 
   return children({
-    disabled: !isFileLoaded() || !isLoaded(),
+    disabled: !isFileLoaded() || getLoadedPages() <= currentPage,
     scale,
     onZoomChange,
     onRotate: angle => {

@@ -15,6 +15,7 @@
     "react-files": "^2.4.8",
     "react-keyboard-event-handler": "^1.5.1",
     "react-scripts": "^3.4.1",
+    "worker-loader": "^3.0.8",
     "xml-js": "^1.6.11"
   },
   "scripts": {

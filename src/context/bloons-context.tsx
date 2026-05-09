@@ -118,7 +118,7 @@ function fillBloon(bloon: BasicBloon) {
     //STEP 2: find measurement
     b.measurement = (function () {
         const txt = b.content.replaceAll(' ', '')
-        const words = b.content.split(' ')
+        const words = b.content.split(/[- ]/)
         let symbol = Object.keys(bloon.symbols).find(sym => sym !== 'dia')
         if (symbol) return symbol.toUpperCase()
 

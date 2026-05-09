@@ -14,7 +14,7 @@ import { Position, Null } from '../../types'
 
 interface PdfViewportProps {
   disabled: boolean
-  data: FileData
+  data: FileData | null
   pageNum: number
   scale: number
   overlayItems: Modification[]
@@ -119,7 +119,7 @@ function PdfViewport({
 
 PdfViewport.propTypes = {
   disabled: PropTypes.bool.isRequired,
-  data: FileData.isRequired,
+  data: PropTypes.oneOfType([Null, FileData]),
   pageNum: PropTypes.number.isRequired,
   scale: PropTypes.number.isRequired,
   overlayItems: PropTypes.arrayOf(Modification).isRequired,

@@ -32,7 +32,7 @@ interface PdfViewportControllerData {
 function PdfViewportController({ children }: ControllerProps<PdfViewportControllerData>) {
   const { data } = useContext(FileContext)
   const { scale, fontSize } = useContext(ViewportContext)
-  const { getText, getSymbols, getSize, getAngle, isLoaded } = useContext(PDFContext)
+  const { getText, getSymbols, getSize, getAngle, getLoadedPages } = useContext(PDFContext)
   const { counter, incrementCounter, decrementCounter } = useContext(
     CounterContext
   )
@@ -49,7 +49,7 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
   const onMouseUp: PdfMouseEventHandler = (event, position) => {
     if (!isMain(event) || !markedPosition) return
 
-    const text = getText(currentPage), symbols = getSymbols(currentPage)
+    const text = getText(currentPage)!, symbols = getSymbols(currentPage)!
     const size = getSize(currentPage), angle = getAngle(currentPage)
 
     const id = nextId
@@ -63,8 +63,8 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
       bottom: Math.max(...Y)
     } as BasicBloon
     const isInside = (border: Border) => border.left >= bloonInput.left && border.right <= bloonInput.right && border.top >= bloonInput.top && border.bottom <= bloonInput.bottom
-    bloonInput.text = text!.filter(t => isInside(t.border))
-    bloonInput.symbols = Object.fromEntries(Object.entries(symbols!).map(e => [e[0], e[1].find(isInside)]).filter(e => e[1]))
+    bloonInput.text = text.filter(t => isInside(t.border))
+    bloonInput.symbols = Object.fromEntries(Object.entries(symbols).map(e => [e[0], e[1].find(isInside)]).filter(e => e[1]))
 
     const bloon = fillBloon(bloonInput)
     addBloon(id, bloon)
@@ -100,7 +100,7 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
   const onMouseLeave: PdfMouseEventHandler = event => isMain(event) && setMarkedPosition(null)
 
   return children({
-    disabled: !isLoaded(),
+    disabled: getLoadedPages() <= currentPage,
     data: data!,
     pageNum: currentPage + 1,
     scale,
