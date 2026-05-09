@@ -28,7 +28,17 @@ export interface Text extends Border {
     plusminus?: boolean
 }
 
-async function extractPDFData(fileData: FileData, setData: React.Dispatch<React.SetStateAction<({ text: Text[], symbols: Record<SymbolType, Symbol[]> } | null)[]>>) {
+interface Data {
+    text: Text[]
+    symbols: Record<SymbolType, Symbol[]>
+}
+
+interface Info {
+    size: { width: number, height: number }
+    angle: number
+}
+
+async function extractPDFData(fileData: FileData, setData: React.Dispatch<React.SetStateAction<(Data | null)[]>>) {
     console.log('Loading PDF context')
     const loadingTask = pdfjs.getDocument({ data: fileData })
     const pdfDocument = await loadingTask.promise
@@ -84,8 +94,8 @@ export const PDFContext = createContext({
 
 export default (({ children }) => {
     const { data: fileData, isFileLoaded } = useContext(FileContext)
-    const [data, setData] = useState<({ text: Text[], symbols: Record<SymbolType, Symbol[]> } | null)[]>([null])
-    const [info, setInfo] = useState<({ size: { width: number, height: number }, angle: number })[]>([{ size: { width: 0, height: 0 }, angle: 0 }])
+    const [data, setData] = useState<(Data | null)[]>([null])
+    const [info, setInfo] = useState<(Info)[]>([{ size: { width: 0, height: 0 }, angle: 0 }])
 
     const getLoadedPages = () => info[0].size.width ? (data[0] === null ? 0 : data.length) : 0
 

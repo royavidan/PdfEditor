@@ -1,6 +1,6 @@
 import React, { useState, createContext } from 'react'
 import { crossIntervals, floatIsEqual, mostCommon } from '../utils'
-import type { ContextProvider, Position } from '../types'
+import type { ContextProvider, Position, Permutation } from '../types'
 import type { Text, Symbol, SymbolType } from './pdf-context'
 
 export interface BasicBloon {
@@ -28,7 +28,7 @@ export interface BloonsContext {
     addBloon(id: number, bloon: Bloon): void
     removeBloon(id: number): void
     insertBloon(id: number, bloon: Bloon): void
-    modifyBloon(id: number, mod: Partial<Bloon>): void
+    modifyBloon(id: number, mod: Permutation<Bloon>): void
     resetBloons(): void
 }
 
@@ -167,7 +167,7 @@ export default (({ children }) => {
             return e
         })), [id]: bloon
     }))
-    const modifyBloon: BloonsContext['modifyBloon'] = (id, mod) => setBloons(bloons => ({ ...bloons, [id]: { ...bloons[id], ...mod } }))
+    const modifyBloon: BloonsContext['modifyBloon'] = (id, mod) => setBloons(bloons => ({ ...bloons, [id]: mod(bloons[id]) }))
     const resetBloons: BloonsContext['resetBloons'] = () => setBloons({})
 
     return (

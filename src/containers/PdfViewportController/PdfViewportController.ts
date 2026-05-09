@@ -135,7 +135,7 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
     onChangeMeasurement: (id, measurement) => {
       const originalMeasurement = bloons[id].measurement
       if (measurement === originalMeasurement) return
-      modifyBloon(id, { measurement })
+      modifyBloon(id, bloon => { bloon.measurement = measurement; return bloon })
       changeMod(id, mod => {
         mod.title = measurement + mod.title.slice(mod.title.indexOf(':'))
         return mod
