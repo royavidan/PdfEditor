@@ -24,7 +24,7 @@ function fillBloon(bloon: BasicBloon) {
     const b = bloon as unknown as Bloon
     //STEP 1: read text and find tolerances
     const mainAngle = mostCommon(bloon.text.map(s => s.angle)) ?? 0
-    let text = bloon.text.filter(t => floatIsEqual(t.angle, mainAngle) || t.plusminus) as FilledText[]
+    let text = bloon.text.filter(t => floatIsEqual(t.angle, mainAngle, 0.1) || t.plusminus) as FilledText[]
     // text.sort(floatIsEqual(mainAngle, -Math.PI / 2) ? ((a, b) => b.top - a.top) : ((a, b) => a.left - b.left))
 
     const cosA = Math.cos(mainAngle), sinA = Math.sin(mainAngle)
@@ -35,14 +35,12 @@ function fillBloon(bloon: BasicBloon) {
         t.y = -x * sinA + y * cosA
     })
 
-    const angleBetween = (a: Text, b: Text) => Math.atan2((a.bottom + a.top - b.bottom - b.top) / 2, (a.right - a.left + b.right - b.left) / 2)
-
     for (let i = 0; !b.tolerance && i < text.length; i++) {
         for (let j = i + 1; j < text.length; j++) {
             let top = text[i], bottom = text[j]
             if (top.y > bottom.y) [top, bottom] = [bottom, top]
 
-            if (!floatIsEqual(angleBetween(top, bottom), top.angle, 0.1) && !Number.isNaN(Number(top.str)) && !Number.isNaN(Number(bottom.str)) && crossIntervals([top.x, top.x + top.width], [bottom.x, bottom.x + bottom.width])) {
+            if (!Number.isNaN(Number(top.str)) && !Number.isNaN(Number(bottom.str)) && crossIntervals([top.x, top.x + top.width], [bottom.x, bottom.x + bottom.width])) {
                 const currentText = text
                 const indexes = [i, j], plusminus = currentText.map((_, i) => i).filter(i => '+-'.includes(currentText[i].str))
                 let topText = top.str, bottomText = bottom.str, match
@@ -56,26 +54,6 @@ function fillBloon(bloon: BasicBloon) {
                     indexes.push(match)
                 }
                 b.tolerance = { '+': topText, '-': bottomText }
-                text = text.filter((_, index) => !indexes.includes(index))
-                break
-            }
-
-            let left = text[i], right = text[j]
-            if (left.x > right.x) [left, right] = [right, left]
-            if (!floatIsEqual(angleBetween(left, right), left.angle, 0.1) && !Number.isNaN(Number(left.str)) && !Number.isNaN(Number(right.str)) && crossIntervals([left.y, left.y + left.height], [right.y, right.y + right.height])) {
-                const currentText = text
-                const indexes = [i, j], plusminus = currentText.map((_, i) => i).filter(i => '+-'.includes(currentText[i].str))
-                let leftText = left.str, rightText = right.str, match
-                const matching = (base: FilledText, t: FilledText) => (base.y - t.y - t.height) < 5 && Math.abs(base.x - t.x) < 5
-                if (!'+-'.includes(leftText[0]) && leftText !== '0' && undefined !== (match = plusminus.find(t => matching(left, currentText[t])))) {
-                    if (currentText[match].str === '-') leftText = currentText[match].str + leftText
-                    indexes.push(match)
-                }
-                if (!'+-'.includes(rightText[0]) && rightText !== '0' && undefined !== (match = plusminus.find(t => matching(right, currentText[t])))) {
-                    if (currentText[match].str === '-') rightText = currentText[match].str + rightText
-                    indexes.push(match)
-                }
-                b.tolerance = { '+': leftText, '-': rightText }
                 text = text.filter((_, index) => !indexes.includes(index))
                 break
             }
@@ -94,7 +72,7 @@ function fillBloon(bloon: BasicBloon) {
     //STEP 2: find measurement
     b.measurement = (function () {
         const txt = b.content.replaceAll(' ', '')
-        const words = b.content.split(/[- ]/)
+        const words = b.content.split(/[-\d\s]/)
         let symbol = Object.keys(bloon.symbols).find(sym => sym !== 'dia')
         if (symbol) return symbol.toUpperCase()
 

@@ -23,7 +23,7 @@ export const mostCommon = <T,>(arr: readonly T[]) => {
 type Interval<T = number> = [T, T]
 
 export const crossIntervals = (i1: Interval, i2: Interval) => {
-    return (i1[0] >= i2[0] && i1[0] <= i2[1]) || (i1[1] >= i2[0] && i1[1] <= i2[1]) || (i1[0] <= i2[0] && i1[1] >= i2[1])
+    return Math.max(i1[0], i2[0]) <= Math.min(i1[1], i2[1])
 }
 
 export const findOne = <T,>(arr: readonly T[], pred: ((value: T, index: number, obj: readonly T[]) => boolean)) => {
