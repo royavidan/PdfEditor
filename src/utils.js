@@ -40,7 +40,7 @@ export const mostCommon = arr => {
  * @returns {boolean} Whether the intervals intersect.
  */
 export const crossIntervals = (i1, i2) => {
-    return (i1[0] >= i2[0] && i1[0] <= i2[1]) || (i1[1] >= i2[0] && i1[1] <= i2[1]) || (i1[0] <= i2[0] && i1[1] >= i2[1])
+    return Math.max(i1[0], i2[0]) <= Math.min(i1[1], i2[1])
 }
 
 /**

@@ -14,7 +14,7 @@ const Point = point => {
 const diff = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
 const middle = (a, b) => Point([(a.x + b.x) / 2, (a.y + b.y) / 2])
 
-const isCircle = path => path.length >= 10 && arrayIsEqual(path[0], path[path.length - 1])
+const isCircle = path => path.length >= 10 && arrayIsEqual(path[0], path[path.length - 1]) && floatIsEqual(path.width, path.height, 1)
 const isLine = path => path.length === 2
 
 export const PDFContext = createContext({
@@ -152,7 +152,7 @@ const parseShapes = (fn, args, pageHeight) => {
     for (const path of paths) {
         const slope = (p1, p2) => (p2.y - p1.y) / (p2.x - p1.x)
         const edge = arrayIsEqual(path[0], path[path.length - 1]) ? path[path.length - 2] : path[path.length - 1]
-        if (path.length >= 7 && floatIsEqual(path[0].x, path.left) && floatIsEqual(edge.x, path.right) && floatIsEqual(path[0].y, edge.y))
+        if (path.length >= 7 && floatIsEqual(path[0].x, path.left) && floatIsEqual(edge.x, path.right) && floatIsEqual(path[0].y, edge.y) && floatIsEqual(path.width, path.height * 2, 1))
             shapes.halfCircles.push(HalfCircle(path))
         else if (path.length === 5 && arrayIsEqual(path[0], path[path.length - 1])
             && floatIsEqual(slope(path[0], path[1]), slope(path[2], path[3]))
@@ -371,7 +371,7 @@ async function extractPDFPageData(pdfDoc, i) {
         }
 
         //FLATNESS:
-        const flatTopLine = findOne(lines, l => floatIsEqual(l.angle, line.angle) && floatIsEqual(l.len, line.len) && l.left > line.left && l.top < line.top && diff(l.center, line.center) < l.len)
+        const flatTopLine = findOne(lines, l => floatIsEqual(l.angle, line.angle) && floatIsEqual(l.len, line.len) && l.left > line.left && l.top < line.top && diff(l.center, line.center) < l.len * 1.5)
         if (flatTopLine) {
             const l1 = line[0].x < line[1].x ? [line[0], line[1]] : [line[1], line[0]]
             const l2 = flatTopLine[0].x < flatTopLine[1].x ? [flatTopLine[0], flatTopLine[1]] : [flatTopLine[1], flatTopLine[0]]
