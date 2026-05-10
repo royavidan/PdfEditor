@@ -244,7 +244,7 @@ function fixPlusMinus(lines: Line[], text: any[]) {
     return linesToRemove
 }
 
-function extractPDFPageData(opList: PDFOperatorList, rotation: number, pageHeight: number, textItems: TextItem[]) {
+export function extractPDFPageData(opList: PDFOperatorList, rotation: number, pageHeight: number, textItems: TextItem[]) {
     let { circles, lines, halfCircles, trapezoids } = parseShapes(opList.fnArray, opList.argsArray, pageHeight)
     const text = textItems.filter(item => item.str.trim()).map(item => ({
         str: item.str,

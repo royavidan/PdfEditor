@@ -5,7 +5,6 @@ import { PDFDocument } from 'pdf-lib'
 import PDFWorker from 'worker-loader!../workers/pdf-worker.ts'
 
 import { FileContext, FileData } from './file-context'
-import type { TextItem } from 'pdfjs-dist/types/src/display/api'
 import type { ContextProvider, Border } from '../types'
 import type { WorkerType, PdfWorkerData } from '../workers/pdf-worker'
 
@@ -49,7 +48,7 @@ async function extractPDFData(fileData: FileData, setData: React.Dispatch<React.
         const viewport = page.getViewport({ scale: 1 })
         const rotation = viewport.rotation * Math.PI / 180
         const textContent = await page.getTextContent()
-        p.push({ opList, rotation, pageHeight: viewport.height, textItems: textContent.items as TextItem[] })
+        p.push({ opList, rotation, pageHeight: viewport.height, textItems: textContent.items } as PdfWorkerData)
     }
     const worker = new PDFWorker() as WorkerType
     const promise = new Promise<void>((resolve, reject) => {
