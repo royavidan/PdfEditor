@@ -203,7 +203,7 @@ function fixPlusMinus(lines: Line[], text: any[]) {
     //STEP 1: find plus signs
     const plus: Plus[] = []
     for (const h of horizontal) {
-        const v = vertical.find(l => floatIsEqual(diff(l.center, h.center), 0) && floatIsEqual(l.len, h.len))
+        const v = vertical.find(l => floatIsEqual(diff(l.center, h.center), 0, 0.01) && floatIsEqual(l.len, h.len, 0.01))
         if (v) plus.push({ h, v })
     }
 
@@ -261,7 +261,7 @@ export function extractPDFPageData(opList: PDFOperatorList, rotation: number, pa
     lines = lines.filter((_, i) => !linesToRemove.has(i))
     text.forEach(t => {
         if (t.angle) {
-            const x = t.transform[4], y = pageHeight - t.transform[5], a = -t.angle, w = t.width, h = t.height
+            const x = t.left, y = t.bottom, a = -t.angle, w = t.width, h = t.height
             const cos = Math.cos(a), sin = Math.sin(a)
             const points = [
                 [x, y],

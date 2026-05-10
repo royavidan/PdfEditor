@@ -1,4 +1,4 @@
-import { isInside, mostCommon, floatIsEqual, crossIntervals } from '../../utils'
+import { isInside, mostCommon, floatIsEqual, crossIntervals, findOne } from '../../utils'
 import type { Data, Text } from '../../context/pdf-context'
 import type { Border, Position } from '../../types'
 import type { Bloon } from '../../context/modification-context'
@@ -48,9 +48,22 @@ export function fillBloon(border: Border, data: Data) {
         }
     }
 
-    text.sort((a, b) => floatIsEqual(a.x, b.x) ? (b.y - a.y) : (a.x - b.x))
+    while (!bloon.tolerance) {
+        const pmText = findOne(text, t => t.plusminus as boolean)
+        if (!pmText) break
+        const str = findOne(text, t => t.x < pmText.x && t.x + t.width > pmText.x && floatIsEqual(t.y, pmText.y, 1))
+        if (!str) break
+        const lastSpaceIndex = str.str.lastIndexOf(' ')
+        if (lastSpaceIndex === -1) break
+        const tolerance = Number(str.str.slice(lastSpaceIndex + 1))
+        if (Number.isNaN(tolerance)) break
+        bloon.tolerance = { '+': tolerance, '-': tolerance }
+        text = [...text.filter(t => !t.plusminus)]
+        text.find(t => t.str === str.str)!.str = str.str.slice(0, lastSpaceIndex)
+    }
+    text.sort((a, b) => a.x - b.x)
     bloon.content = text.map(t => t.str).reduce((a, b) => a + (a.endsWith('R') || (/[a-zA-Z-]/.test(b[0]) && b !== 'x') ? ' ' : '') + b, '').trim()
-    bloon.content = bloon.content.replaceAll('*', '')
+    bloon.content = bloon.content.replaceAll(/[()*]/g, '')
     let plusminus = /±([\d.]+)/.exec(bloon.content)
     if (plusminus) {
         bloon.tolerance = { '+': plusminus[1], '-': plusminus[1] }
