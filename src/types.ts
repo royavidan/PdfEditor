@@ -42,3 +42,7 @@ export interface WorkerUsage<I, O, E = Error> {
     postMessage(message: I): void
     onmessage(event: Omit<MessageEvent, 'data'> & { data: FullResult<O, E> }): void
 }
+
+export type OneOf<T extends Record<string, Record<any, any>>, S extends string = 'type'> = keyof T extends infer K ? K extends keyof T ? {
+    [P in S | keyof T[K]]: P extends S ? K : T[K][P]
+} : never : never

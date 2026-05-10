@@ -60,7 +60,7 @@ const parseShapes = (fn: number[], args: any[], pageHeight: number) => {
 
     const Shape = (path: Point[], transform: Transform) => {
         const p = path.map(p => [p[0] * transform[0] + p[1] * transform[2] + transform[4], p[0] * transform[1] + p[1] * transform[3] + transform[5]]) as unknown as Shape
-        const X = path.map(p => p[0]), Y = path.map(p => p[1])
+        const X = p.map(p => p[0]), Y = p.map(p => p[1])
 
         p.left = Math.min(...X)
         p.bottom = flipY(Math.min(...Y))
@@ -277,7 +277,12 @@ export function extractPDFPageData(opList: PDFOperatorList, rotation: number, pa
                 bottom: Math.max(...Y)
             }
         } else {
-            t.border = t
+            t.border = {
+                left: t.left,
+                right: t.right,
+                top: t.top,
+                bottom: t.bottom
+            }
         }
     })
 

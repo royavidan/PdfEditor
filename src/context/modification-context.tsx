@@ -1,6 +1,6 @@
 import React, { useState, createContext } from 'react'
 import PropTypes from 'prop-types'
-import { ContextProvider, Permutation, Position, Null, Border } from '../types'
+import { ContextProvider, Permutation, Position, Border } from '../types'
 
 export interface Bloon extends Border {
     content: string
@@ -10,6 +10,19 @@ export interface Bloon extends Border {
         '-': number | string
     }
 }
+
+export const Bloon = PropTypes.shape({
+  left: PropTypes.number.isRequired,
+  top: PropTypes.number.isRequired,
+  right: PropTypes.number.isRequired,
+  bottom: PropTypes.number.isRequired,
+  content: PropTypes.string.isRequired,
+  measurement: PropTypes.string.isRequired,
+  tolerance: PropTypes.shape({
+    '+': PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+    '-': PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired
+  })
+})
 
 export interface Modification {
   readonly id: number
@@ -25,7 +38,7 @@ export const Modification = PropTypes.shape({
   value: PropTypes.number.isRequired,
   position: Position.isRequired,
   page: PropTypes.number.isRequired,
-  bloon: PropTypes.oneOf([Null, PropTypes.object]), //TODO: make PropType
+  bloon: Bloon,
   disabled: PropTypes.bool
 })
 

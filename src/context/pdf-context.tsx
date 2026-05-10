@@ -94,6 +94,8 @@ export const PDFContext = createContext({
 export default (({ children }) => {
     const { data: fileData, isFileLoaded } = useContext(FileContext)
     const [data, setData] = useState<(Data | null)[]>([null])
+    //@ts-ignore
+    global.data = data
     const [info, setInfo] = useState<(Info)[]>([{ size: { width: 0, height: 0 }, angle: 0 }])
 
     const getLoadedPages = () => info[0].size.width ? (data[0] === null ? 0 : data.length) : 0

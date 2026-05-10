@@ -1,3 +1,5 @@
+import type { Border } from './types'
+
 export const arrayIsEqual = <T,>(a: ArrayLike<T>, b: ArrayLike<T>) => {
     if (Array.isArray(a)) return a.length === b.length && a.every((e, i) => e === b[i])
     if (a.length !== b.length) return false
@@ -52,3 +54,5 @@ export const translatePos = (angle: number, x: number, y: number, width: number,
 }
 
 export const getPositiveAngle = (angle: number) => ((angle % 360) + 360) % 360
+
+export const isInside = (inner: Border, outer: Border) => inner.left >= outer.left && inner.right <= outer.right && inner.top >= outer.top && inner.bottom <= outer.bottom
