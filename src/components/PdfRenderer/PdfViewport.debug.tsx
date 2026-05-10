@@ -1,9 +1,10 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect } from 'react'
 import ReactDOM from 'react-dom'
 import OriginalPdfViewport from './PdfViewport'
 import { FileContext } from '../../context/file-context'
 import { PDFContext, Text, Symbol } from '../../context/pdf-context'
 import { PageContext } from '../../context/page-context'
+import { ModificationContext } from '../../context/modification-context'
 
 const colors: Record<string, string> = {
   dia: 'red',
@@ -55,10 +56,18 @@ const SymbolBox = ({ symbol, type }: { symbol: Symbol, type: string }) => {
     }} />
 }
 
+declare var global: any
+
 const PdfViewport: typeof OriginalPdfViewport = props => {
     const { getText, getSymbols, getLoadedPages } = useContext(PDFContext)
     const { currentPage } = useContext(PageContext)
     const { isFileLoaded } = useContext(FileContext)
+    const { modList } = useContext(ModificationContext)
+    useEffect(() => {
+        global.text = getText(currentPage)
+        global.symbols = getSymbols(currentPage)
+        global.modList = modList
+    }, [currentPage, getText, getSymbols, modList])
 
     const isLoaded = isFileLoaded() && getLoadedPages() > currentPage
     const text = getText(currentPage)!, symbols = getSymbols(currentPage)!
@@ -73,6 +82,16 @@ const PdfViewport: typeof OriginalPdfViewport = props => {
 
         const canvas = document.getElementsByTagName('canvas')[0]
         const base = canvas.parentElement!
+        document.body.addEventListener('keydown', e => {
+            if (e.key === 'c' && e.ctrlKey) {
+                navigator.clipboard.writeText(JSON.stringify({ text: global.text, symbols: global.symbols }, null, 4))
+                console.log('Copied data')
+            }
+            else if (e.key === 'c' && e.altKey) {
+                navigator.clipboard.writeText(JSON.stringify(modList, null, 4))
+                console.log('Copied mod list')
+            }
+        })
         const node = document.createElement('div')
         base.appendChild(node)
 
