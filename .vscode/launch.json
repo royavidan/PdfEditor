@@ -21,7 +21,7 @@
                 "${fileBasename}",
                 "--runInBand",
                 "--no-cache",
-                "--watchAll=false"
+                "--watchAll=false",
             ],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",

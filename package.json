@@ -24,11 +24,17 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "release": "np",
+    "jest": "jest",
     "predeploy": "npm run release && npm run build",
     "deploy": "gh-pages -d build && git push --follow-tags"
   },
   "eslintConfig": {
     "extends": "react-app"
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "^worker-loader!(?:.+[\\\/])*([^\\\/]+)$": "<rootDir>/src/test-utils/mocks/$1"
+    }
   },
   "browserslist": {
     "production": [

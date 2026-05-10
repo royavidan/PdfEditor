@@ -57,6 +57,7 @@ const SymbolBox = ({ symbol, type }: { symbol: Symbol, type: string }) => {
 }
 
 declare var global: any
+global.debugEnabled = true
 
 const PdfViewport: typeof OriginalPdfViewport = props => {
     const { getText, getSymbols, getLoadedPages } = useContext(PDFContext)
@@ -93,6 +94,7 @@ const PdfViewport: typeof OriginalPdfViewport = props => {
             }
         })
         const node = document.createElement('div')
+        node.className = 'debug cover'
         base.appendChild(node)
 
         ReactDOM.render(cover, node)
