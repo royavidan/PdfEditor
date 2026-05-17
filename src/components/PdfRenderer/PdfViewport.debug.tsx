@@ -5,8 +5,9 @@ import { FileContext } from '../../context/file-context'
 import { PDFContext, Text, Symbol } from '../../context/pdf-context'
 import { PageContext } from '../../context/page-context'
 import { ModificationContext } from '../../context/modification-context'
+import type { SymbolType } from '../../context/pdf-context'
 
-const colors: Record<string, string> = {
+const colors: Record<SymbolType, string> = {
   dia: 'red',
   depth: 'yellow',
 
@@ -46,7 +47,7 @@ const TextBox = ({ text }: { text: Text }) => {
     }} />
 }
 
-const SymbolBox = ({ symbol, type }: { symbol: Symbol, type: string }) => {
+const SymbolBox = ({ symbol, type }: { symbol: Symbol, type: SymbolType }) => {
     return <div title={'help'} style={{
         ...style,
         width: `${symbol.width}px`,
@@ -78,7 +79,7 @@ const PdfViewport: typeof OriginalPdfViewport = props => {
         
         const cover = <>
             {text.map((t, i) => <TextBox text={t} key={`text-${i}`}/>)}
-            {Object.entries(symbols).map(([symbol, matches]) => matches.map((s, i) => <SymbolBox symbol={s} type={symbol} key={`symbol-${symbol}-${i}`} />)).flat()}
+            {Object.entries(symbols).map(([symbol, matches]) => matches.map((s, i) => <SymbolBox symbol={s} type={symbol as SymbolType} key={`symbol-${symbol}-${i}`} />)).flat()}
         </>
 
         const canvas = document.getElementsByTagName('canvas')[0]

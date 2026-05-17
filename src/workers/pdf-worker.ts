@@ -3,7 +3,9 @@ import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.js'
 import { arrayIsEqual, floatIsEqual, findOne, replaceMany } from '../utils'
 import type { TextItem, PDFOperatorList } from 'pdfjs-dist/types/src/display/api'
 import type { Position, Border, WorkerUsage, SimpleWorker } from '../types'
-import type { Text, Symbol, SymbolType, Transform, Data } from '../context/pdf-context'
+import type { Text, Symbol, Transform, Data } from '../context/pdf-context'
+
+export const Symbols = ['dia', 'depth', 'straightness', 'flatness', 'circlarity', 'cylindricity', 'surface profile', 'perpendicularity', 'angularity', 'parallelism', 'symmetry', 'true position', 'concentricity', 'run out'] as const
 
 const TEXT_REPLACE_TABLE = {
     '\x01$\x02': '°',
@@ -53,7 +55,7 @@ const middle = (a: Point, b: Point) => Point([(a.x + b.x) / 2, (a.y + b.y) / 2])
 const isCircle = (path: Shape) => path.length >= 10 && arrayIsEqual(path[0], path[path.length - 1]) && floatIsEqual(path.width, path.height, 1)
 const isLine = (path: Shape) => path.length === 2
 
-const parseShapes = (fn: number[], args: any[], pageHeight: number) => {
+const parseShapes = (fn: number[], args: any[], pageHeight: number, _rotation: number) => {
     const flipY = (y: number) => pageHeight - y
 
     const shapes = {
@@ -199,10 +201,10 @@ const parseShapes = (fn: number[], args: any[], pageHeight: number) => {
 }
 
 type Plus = { h: Line, v: Line }
-function fixPlusMinus(lines: Line[], text: any[]) {
+function fixPlusMinus(lines: Line[], text: Text[]) {
     //@ts-ignore
     lines.forEach((line, index) => line.index = index)
-    const linesToRemove = new Set()
+    const linesToRemove = new Set<number>()
     const horizontal = lines.filter(l => l.len < 20 && l.slope === 0), vertical = lines.filter(l => l.len < 20 && !Number.isFinite(l.slope))
 
     //STEP 1: find plus signs
@@ -215,7 +217,7 @@ function fixPlusMinus(lines: Line[], text: any[]) {
     //STEP 2: find plusminus
     const addPlusMinus = (plus: Plus, minus: Line, angle: number) => {
         const shapes = [plus.h, plus.v, minus]
-    //@ts-ignore
+        //@ts-ignore
         shapes.forEach(s => linesToRemove.add(s.index))
         const r = {
             left: Math.min(...shapes.map(s => s.left)),
@@ -237,7 +239,7 @@ function fixPlusMinus(lines: Line[], text: any[]) {
     }
     for (const { h, v } of plus) {
         const hminus = horizontal.find(l => !floatIsEqual(l.top, h.top) && floatIsEqual(l.len, h.len) && (diff(l.center, v[0].y < v[1].y ? v[1] : v[0]) < l.len / 5
-            || (diff(l.center, v[0].y < v[1].y ? v[1] : v[0]) < l.len && floatIsEqual(l.left,h.left))))
+            || (diff(l.center, v[0].y < v[1].y ? v[1] : v[0]) < l.len && floatIsEqual(l.left, h.left))))
         if (hminus) addPlusMinus({ h, v }, hminus, 0)
 
         const vminus = vertical.find(l => !floatIsEqual(l.left, v.left) && floatIsEqual(l.len, v.len) && (diff(l.center, h[0].x < h[1].x ? h[1] : h[0]) < l.len / 5
@@ -249,8 +251,7 @@ function fixPlusMinus(lines: Line[], text: any[]) {
     return linesToRemove
 }
 
-export function extractPDFPageData(opList: PDFOperatorList, rotation: number, pageHeight: number, textItems: TextItem[]) {
-    let { circles, lines, halfCircles, trapezoids } = parseShapes(opList.fnArray, opList.argsArray, pageHeight)
+const convertTextItems = (textItems: TextItem[], lines: Line[], pageHeight: number, rotation: number) => {
     const text = textItems.filter(item => item.str.trim()).map(item => ({
         str: replaceMany(item.str, TEXT_REPLACE_TABLE),
         top: pageHeight - (item.transform[5] + item.height),
@@ -263,7 +264,7 @@ export function extractPDFPageData(opList: PDFOperatorList, rotation: number, pa
         angle: -rotation - Math.atan2(item.transform[1], item.transform[0])
     } as Text))
     const linesToRemove = fixPlusMinus(lines, text)
-    lines = lines.filter((_, i) => !linesToRemove.has(i))
+
     text.forEach(t => {
         if (t.angle) {
             const x = t.left, y = t.bottom, a = -t.angle, w = t.width, h = t.height
@@ -291,23 +292,11 @@ export function extractPDFPageData(opList: PDFOperatorList, rotation: number, pa
         }
     })
 
-    const symbols: Record<SymbolType, Symbol[]> = {
-        dia: [],
-        depth: [],
+    return { text, linesToRemove }
+}
 
-        straightness: [],
-        flatness: [],
-        circlarity: [],
-        cylindricity: [],
-        'surface profile': [],
-        perpendicularity: [],
-        angularity: [],
-        parallelism: [],
-        symmetry: [],
-        'true position': [],
-        concentricity: [],
-        'run out': []
-    }
+const parseSymbols = ({ circles, lines, halfCircles, trapezoids }: ReturnType<typeof parseShapes>, text: Text[]) => {
+    const symbols = Object.fromEntries(Symbols.map(s => [s, [] as Symbol[]])) as Data['symbols']
     const addRects = (...shapes: Shape[]) => {
         const base = {
             left: Math.min(...shapes.map(s => s.left)),
@@ -430,6 +419,14 @@ export function extractPDFPageData(opList: PDFOperatorList, rotation: number, pa
             symbols.flatness.push(addRects(trapezoid))
         }
     }
+    return symbols
+}
+
+export function extractPDFPageData(opList: PDFOperatorList, rotation: number, pageHeight: number, textItems: TextItem[]) {
+    const shapes = parseShapes(opList.fnArray, opList.argsArray, pageHeight, rotation)
+    const { text, linesToRemove } = convertTextItems(textItems, shapes.lines, pageHeight, rotation)
+    shapes.lines = shapes.lines.filter((_, i) => !linesToRemove.has(i))
+    const symbols = parseSymbols(shapes, text)
 
     return { text, symbols }
 }
@@ -450,7 +447,7 @@ self.onmessage = (event) => {
         try {
             const data = extractPDFPageData(opList, rotation, pageHeight, textItems)
             self.postMessage({ success: true, data })
-        } catch(e) {
+        } catch (e) {
             self.postMessage({ success: false, error: e as Error })
         }
     }

@@ -6,11 +6,11 @@ import PDFWorker from 'worker-loader!../workers/pdf-worker.ts'
 
 import { FileContext, FileData } from './file-context'
 import type { ContextProvider, Border } from '../types'
-import type { WorkerType, PdfWorkerData } from '../workers/pdf-worker'
+import type { WorkerType, PdfWorkerData, Symbols } from '../workers/pdf-worker'
 
 export type Transform = [number, number, number, number, number, number]
 
-export type SymbolType = 'dia' | 'depth' | 'straightness' | 'flatness' | 'circlarity' | 'cylindricity' | 'surface profile' | 'perpendicularity' | 'angularity' | 'parallelism' | 'symmetry' | 'true position' | 'concentricity' | 'run out'
+export type SymbolType = (typeof Symbols)[number]
 
 export interface Symbol extends Border {
     width: number
