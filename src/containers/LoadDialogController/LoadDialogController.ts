@@ -1,15 +1,12 @@
 import { useState, useContext } from 'react'
 import { saveAs } from 'file-saver'
-import PropTypes from 'prop-types'
 
-import { arrayIsEqual } from '../../utils'
+import { compactMods, tryLoadMods } from './file-logics'
 import { FileContext, FileData } from '../../context/file-context'
 import { ViewportContext } from '../../context/viewport-context'
 import { CounterContext } from '../../context/counter-context'
-import { ModificationContext, Modification } from '../../context/modification-context'
+import { ModificationContext } from '../../context/modification-context'
 import type { ControllerProps } from '../../types'
-
-const EOF = [...'%%EOF'].map(c => c.charCodeAt(0))
 
 interface LoadDialogControllerData {
   showDialog: boolean
@@ -27,34 +24,22 @@ function LoadDialogController({ children }: ControllerProps<LoadDialogController
   const { resetCounter, incrementCounter } = useContext(CounterContext)
   const { resetModList, addMod, modList } = useContext(ModificationContext)
 
-  const onLoad = async (data: FileData) => {
+  const onLoad = (data: FileData) => {
     setShowDialog(false)
-    let pdfData: FileData = data, newModList: Modification[] | null = null
-    const arrData = new Uint8Array(data)
-    let eofIndex = arrData.length - EOF.length
-    while (!arrayIsEqual(arrData.slice(eofIndex, eofIndex + EOF.length), EOF)) eofIndex--
-    eofIndex += EOF.length
-    if (eofIndex < arrData.length) {
-      pdfData = arrData.slice(0, eofIndex).buffer
-      try {
-        newModList = JSON.parse(atob(String.fromCharCode(...arrData.slice(eofIndex))))
-        PropTypes.checkPropTypes(Modification, newModList, '<load>', 'LoadDialogController')
-      } catch {}
-    }
-    setFileData(pdfData)
+    const loadedContent = tryLoadMods(data)
+    setFileData(loadedContent.data)
     resetScale()
     resetCounter()
     resetModList()
     
-    if (newModList) {
-      newModList.forEach((m, i) => addMod(m, i))
-      incrementCounter(newModList.length)
+    if (loadedContent.modList) {
+      loadedContent.modList.forEach((m, i) => addMod(m, i))
+      incrementCounter(loadedContent.modList.length)
     }
   }
 
   const onSave = async () => {
-    const blob = new Blob([fileData!, btoa(JSON.stringify(modList))], { type: 'application/pdf' })
-    saveAs(blob, 'דוח ביקורת - עם בלונים.pdf')
+    saveAs(compactMods(fileData!, modList), 'דוח ביקורת - עם בלונים.pdf')
   }
 
   return children({

@@ -1,5 +1,4 @@
 import type React from 'react'
-import PropTypes from 'prop-types'
 
 export type ContextProvider = (props: { children: React.ReactNode }) => JSX.Element
 
@@ -23,13 +22,6 @@ export type FullResult<T, E = Error> = {
     success: false
     error: E
 }
-
-export const Position = PropTypes.shape({
-    x: PropTypes.number.isRequired,
-    y: PropTypes.number.isRequired
-})
-
-export const Null = PropTypes.oneOf([null])
 
 export interface SimpleWorker<I, O, E = Error> {
     terminate(): void

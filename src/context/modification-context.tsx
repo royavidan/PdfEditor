@@ -1,6 +1,5 @@
 import React, { useState, createContext } from 'react'
-import PropTypes from 'prop-types'
-import { ContextProvider, Permutation, Position, Border } from '../types'
+import type { ContextProvider, Permutation, Position, Border } from '../types'
 
 export interface Bloon extends Border {
     content: string
@@ -11,19 +10,6 @@ export interface Bloon extends Border {
     }
 }
 
-export const Bloon = PropTypes.shape({
-  left: PropTypes.number.isRequired,
-  top: PropTypes.number.isRequired,
-  right: PropTypes.number.isRequired,
-  bottom: PropTypes.number.isRequired,
-  content: PropTypes.string.isRequired,
-  measurement: PropTypes.string.isRequired,
-  tolerance: PropTypes.shape({
-    '+': PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
-    '-': PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired
-  })
-})
-
 export interface Modification {
   readonly id: number
   value: number
@@ -33,14 +19,21 @@ export interface Modification {
   disabled?: boolean
 }
 
-export const Modification = PropTypes.shape({
-  id: PropTypes.number.isRequired,
-  value: PropTypes.number.isRequired,
-  position: Position.isRequired,
-  page: PropTypes.number.isRequired,
-  bloon: Bloon,
-  disabled: PropTypes.bool
-})
+export const isModification = (mod: any): mod is Modification => 
+  typeof mod === 'object'
+  && typeof mod.id === 'number'
+  && typeof mod.value === 'number'
+  && typeof mod.position === 'object' && typeof mod.position.x === 'number' && typeof mod.position.y === 'number'
+  && typeof mod.page === 'number'
+  && typeof mod.bloon === 'object'
+    && typeof mod.bloon.left === 'number'
+    && typeof mod.bloon.right === 'number'
+    && typeof mod.bloon.top === 'number'
+    && typeof mod.bloon.bottom === 'number'
+    && typeof mod.bloon.content === 'string'
+    && typeof mod.bloon.measurement === 'string'
+    && ((typeof mod.bloon.tolerance === 'object' && typeof mod.bloon.tolerance['+'] === 'number' && typeof mod.bloon.tolerance['-'] === 'number') || !('tolerance' in mod.bloon))
+  && (typeof mod.disabled === 'boolean' || !('disabled' in mod))
 
 type ModificationInput = Omit<Modification, 'id'>
 

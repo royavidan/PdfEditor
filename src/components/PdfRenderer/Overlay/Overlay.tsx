@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect, useContext } from 'react'
 import KeyboardEventHandler from 'react-keyboard-event-handler'
-import PropTypes from 'prop-types'
 
 import { ModificationContext, Modification } from '../../../context/modification-context'
 import OverlayItem from './OverlayItem'
@@ -88,16 +87,6 @@ function Overlay({ items, scale, template, onItemMove, onItemDelete, onChangeMea
       ))}
     </div>
   )
-}
-
-Overlay.propTypes = {
-  items: PropTypes.arrayOf(Modification).isRequired,
-  scale: PropTypes.number.isRequired,
-  template: PropTypes.func.isRequired,
-  onItemMove: PropTypes.func.isRequired,
-  onItemDelete: PropTypes.func.isRequired,
-  onChangeMeasurement: PropTypes.func.isRequired,
-  fontSize: PropTypes.number.isRequired
 }
 
 export default Overlay

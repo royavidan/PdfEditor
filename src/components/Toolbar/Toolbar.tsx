@@ -1,5 +1,4 @@
 import React, { useContext } from 'react'
-import PropTypes from 'prop-types'
 
 import { PageContext } from '../../context/page-context'
 
@@ -138,23 +137,6 @@ function Toolbar({
       </div>
     </div>
   )
-}
-
-Toolbar.propTypes = {
-  disabled: PropTypes.bool,
-  scale: PropTypes.number,
-  initialCounter: PropTypes.number,
-  setInitialCounter: PropTypes.func,
-  counter: PropTypes.number,
-  onZoomChange: PropTypes.func,
-  onRotate: PropTypes.func,
-  onDownload: PropTypes.func,
-  onLoad: PropTypes.func,
-  onExport: PropTypes.func,
-  onSave: PropTypes.func,
-  fontSize: PropTypes.number,
-  setFontSize: PropTypes.func,
-  onChangePageNum: PropTypes.func
 }
 
 export default Toolbar

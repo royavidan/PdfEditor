@@ -9,7 +9,6 @@
     "jszip": "^3.10.1",
     "pdf-lib": "^1.0.1",
     "pdfjs-dist": "2.16.105",
-    "prop-types": "^15.5.7",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-files": "^2.4.8",
@@ -33,7 +32,7 @@
   },
   "jest": {
     "moduleNameMapper": {
-      "^worker-loader!(?:.+[\\\/])*([^\\\/]+)$": "<rootDir>/src/test-utils/mocks/$1"
+      "^worker-loader!(?:.+[\\/])*([^\\/]+)$": "<rootDir>/src/test-utils/mocks/$1"
     }
   },
   "browserslist": {
