@@ -4,7 +4,7 @@ import { readPDFFile, readJSONFile } from '../test-utils/utils'
 import type { TextItem } from 'pdfjs-dist/types/src/display/api'
 import type { Modification } from '../context/modification-context'
 
-const TESTS = 1
+const TESTS = 2
 
 type SymbolTable = Record<string, number>
 
@@ -28,7 +28,7 @@ describe('PDF Worker', () => {
     }
 
     for (let i = 1; i <= TESTS; i++) {
-        it.concurrent(`PDF Worker - symbols ${i}`, async () => {
+        it(`symbols ${i}`, async () => {
             const [expected, actual] = await Promise.all([readJSONFile(i, 'symbols') as Promise<SymbolTable[]>, readPDF(i)])
             expect(actual).toEqual(expected)
         })

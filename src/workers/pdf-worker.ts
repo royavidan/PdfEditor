@@ -1,9 +1,14 @@
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.js'
 
-import { arrayIsEqual, floatIsEqual, findOne } from '../utils'
+import { arrayIsEqual, floatIsEqual, findOne, replaceMany } from '../utils'
 import type { TextItem, PDFOperatorList } from 'pdfjs-dist/types/src/display/api'
 import type { Position, Border, WorkerUsage, SimpleWorker } from '../types'
 import type { Text, Symbol, SymbolType, Transform, Data } from '../context/pdf-context'
+
+const TEXT_REPLACE_TABLE = {
+    '\x01$\x02': '°',
+    '\x01n\x02': ''
+}
 
 type Point = Position & [number, number]
 
@@ -247,7 +252,7 @@ function fixPlusMinus(lines: Line[], text: any[]) {
 export function extractPDFPageData(opList: PDFOperatorList, rotation: number, pageHeight: number, textItems: TextItem[]) {
     let { circles, lines, halfCircles, trapezoids } = parseShapes(opList.fnArray, opList.argsArray, pageHeight)
     const text = textItems.filter(item => item.str.trim()).map(item => ({
-        str: item.str,
+        str: replaceMany(item.str, TEXT_REPLACE_TABLE),
         top: pageHeight - (item.transform[5] + item.height),
         left: item.transform[4],
         width: Math.abs(item.width),

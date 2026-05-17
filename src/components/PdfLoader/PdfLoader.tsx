@@ -15,7 +15,6 @@ class PdfLoader extends Component<PdfLoaderProps> {
     console.log('got request to load files:', files)
     const file = files[0]
     const data = await file.arrayBuffer()
-    console.log('data:', data)
     this.props.onLoad(data)
   }
 

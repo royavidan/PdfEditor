@@ -23,7 +23,6 @@ export const FileContext = createContext({
 
 export default (({ children }) => {
   const [data, setData] = useState<FileData | null>(NO_FILE_DATA)
-  console.log('[file-context] file data:', data)
   const isFileLoaded = () => data !== NO_FILE_DATA
 
   return (

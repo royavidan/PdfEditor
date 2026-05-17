@@ -3,11 +3,11 @@ import { fillBloon } from './bloons-logic'
 import type { Modification } from '../../context/modification-context'
 import type { Data } from '../../context/pdf-context'
 
-const TESTS = 1
+const TESTS = 2
 
-describe('PDF Worker', () => {
+describe('Bloons', () => {
     for (let i = 1; i <= TESTS; i++) {
-        it.concurrent(`PDF Worker - symbols ${i}`, async () => {
+        it(`bloons ${i}`, async () => {
             const data = await readJSONFile(i, 'data') as Data[]
             const modList = await readJSONFile(i, 'modList') as Modification[]
 
@@ -17,7 +17,7 @@ describe('PDF Worker', () => {
                     right: mod.bloon.right,
                     top: mod.bloon.top,
                     bottom: mod.bloon.bottom
-                }
+            }
                 const bloon = fillBloon(basicBloon, data[mod.page])
                 expect(bloon).toEqual(mod.bloon)
             }

@@ -38,8 +38,6 @@ class PdfDoc extends Component<PdfDocProps, PdfDocState> {
   async componentDidUpdate(prevProps: PdfDocProps, prevState: PdfDocState) {
     // will update state only when 'props.data' changes
     if (this.props.data !== prevProps.data) {
-      console.log('[PdfDoc] updating doc object')
-
       const docObj = await loadDocument(this.props.data)
       this.setState({
         docObj,

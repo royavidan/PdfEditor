@@ -11,7 +11,7 @@ export const floatIsEqual = (a: number, b: number, epsilon: number = 0.0001) => 
 
 export const mostCommon = <T,>(arr: readonly T[]) => {
     // eslint-disable-next-line no-sequences
-    const counts = arr.reduce((curr, elem) => (curr.set(elem, (curr.get(elem) || 0) + 1), curr), new Map())
+    const counts = arr.reduce((curr, elem) => (curr.set(elem, (curr.get(elem) || 0) + 1), curr), new Map<T, number>())
     let maxCount = 0, maxElem
     for (const [elem, count] of counts.entries()) {
         if (count > maxCount) {
@@ -56,3 +56,8 @@ export const translatePos = (angle: number, x: number, y: number, width: number,
 export const getPositiveAngle = (angle: number) => ((angle % 360) + 360) % 360
 
 export const isInside = (inner: Border, outer: Border) => inner.left >= outer.left && inner.right <= outer.right && inner.top >= outer.top && inner.bottom <= outer.bottom
+
+export const replaceMany = (text: string, table: Record<string, string>) => {
+    for (const [key, value] of Object.entries(table)) text = text.replaceAll(key, value)
+    return text
+}

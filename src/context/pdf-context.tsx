@@ -38,7 +38,6 @@ interface Info {
 }
 
 async function extractPDFData(fileData: FileData, setData: React.Dispatch<React.SetStateAction<(Data | null)[]>>) {
-    console.log('Loading PDF context')
     const loadingTask = pdfjs.getDocument({ data: fileData })
     const pdfDocument = await loadingTask.promise
     const p: PdfWorkerData[] = []

@@ -16,8 +16,6 @@ import PageProvider from '../../context/page-context'
 import styles from './PdfEditor.module.scss'
 
 function PdfEditor() {
-  console.log('[PdfEditor] render')
-
   return (
     <div className={styles.screenViewport}>
       <ViewportStateProvider>

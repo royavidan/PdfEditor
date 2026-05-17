@@ -100,7 +100,6 @@ const PdfViewport: typeof OriginalPdfViewport = props => {
         ReactDOM.render(cover, node)
     }
 
-    //@ts-ignore
     return <div ref={insertCover}><OriginalPdfViewport {...props} /></div>
 }
 

@@ -12,7 +12,7 @@ export function fillBloon(border: Border, data: Data) {
     const bloon = border as Bloon
     //STEP 1: read text and find tolerances
     const mainAngle = mostCommon(bloonText.map(s => s.angle)) ?? 0
-    let text = bloonText.filter(t => floatIsEqual(t.angle, mainAngle, 0.1) || t.plusminus) as FilledText[]
+    let text = bloonText.filter(t => floatIsEqual(t.angle, mainAngle, 0.1) || t.plusminus).map(t => ({ ...t }) as FilledText)
     // text.sort(floatIsEqual(mainAngle, -Math.PI / 2) ? ((a, b) => b.top - a.top) : ((a, b) => a.left - b.left))
 
     const cosA = Math.cos(mainAngle), sinA = Math.sin(mainAngle)
@@ -51,7 +51,7 @@ export function fillBloon(border: Border, data: Data) {
     while (!bloon.tolerance) {
         const pmText = findOne(text, t => t.plusminus as boolean)
         if (!pmText) break
-        const str = findOne(text, t => t.x < pmText.x && t.x + t.width > pmText.x && floatIsEqual(t.y, pmText.y, 1))
+        const str = findOne(text, t => t.x < pmText.x && t.x + t.width > pmText.x + pmText.width && floatIsEqual(t.y, pmText.y, 1))
         if (!str) break
         const lastSpaceIndex = str.str.lastIndexOf(' ')
         if (lastSpaceIndex === -1) break
@@ -61,6 +61,7 @@ export function fillBloon(border: Border, data: Data) {
         text = [...text.filter(t => !t.plusminus)]
         text.find(t => t.str === str.str)!.str = str.str.slice(0, lastSpaceIndex)
     }
+    
     text.sort((a, b) => a.x - b.x)
     bloon.content = text.map(t => t.str).reduce((a, b) => a + (a.endsWith('R') || (/[a-zA-Z-]/.test(b[0]) && b !== 'x') ? ' ' : '') + b, '').trim()
     bloon.content = bloon.content.replaceAll(/[()*]/g, '')
