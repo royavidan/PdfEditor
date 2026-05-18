@@ -8,7 +8,7 @@ import LoadDialogController from '../../containers/LoadDialogController/LoadDial
 import PdfLoader from '../PdfLoader/PdfLoader'
 import PdfViewport from '../PdfRenderer/PdfViewport'
 import PdfViewportController from '../../containers/PdfViewportController/PdfViewportController'
-import EscKeyHandler from '../EscKeyHandler/EscKeyHandler'
+import GlobalKeyHandler from '../Handlers/GlobalKeyHandler'
 import ModificationProvider from '../../context/modification-context'
 import PDFProvider from '../../context/pdf-context'
 import PageProvider from '../../context/page-context'
@@ -28,7 +28,7 @@ function PdfEditor() {
                     {loadDialogCtrl => (
                       <React.Fragment>
                         {loadDialogCtrl.isAtReload() ? (
-                          <EscKeyHandler onClick={loadDialogCtrl.closeDialog} />
+                          <GlobalKeyHandler keys={['Esc', 'Escape']} onClick={loadDialogCtrl.closeDialog} />
                         ) : null}
 
                         <ToolbarController>

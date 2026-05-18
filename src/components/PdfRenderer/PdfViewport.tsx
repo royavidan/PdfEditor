@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import KeyboardEventHandler from 'react-keyboard-event-handler'
 
+import GlobalKeyHandler from '../Handlers/GlobalKeyHandler'
 import PdfDoc from './PdfDoc'
 import PdfPage from './PdfPage'
 import PdfCanvas, { PdfMouseEventHandler } from './PdfCanvas'
@@ -71,14 +72,10 @@ function PdfViewport({
               <PdfPage document={doc} pageNum={pageNum}>
                 {page => (
                   <>
-                  <KeyboardEventHandler
-                    handleKeys={['ctrl+s']}
-                    handleEventType="keydown"
-                    onKeyEvent={(_, e) => {
-                      e.stopPropagation()
-                      e.preventDefault()
-                      onSave()
-                    }}
+                  <GlobalKeyHandler block
+                    keys={['ctrl+s']}
+                    event="keydown"
+                    onClick={onSave}
                   />
                   <KeyboardEventHandler
                     handleKeys={['pageup']}
