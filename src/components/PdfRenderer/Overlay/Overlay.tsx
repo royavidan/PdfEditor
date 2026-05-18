@@ -24,11 +24,12 @@ interface OverlayProps {
   template: OverlayTemplate
   onItemMove(position: Position, id: number): void
   onItemDelete(id: number): void
+  onChangeContent(id: number): void
   onChangeMeasurement(id: number, measurement: string): void
   fontSize: number
 }
 
-function Overlay({ items, scale, template, onItemMove, onItemDelete, onChangeMeasurement, fontSize }: OverlayProps) {
+function Overlay({ items, scale, template, onItemMove, onItemDelete, onChangeContent, onChangeMeasurement, fontSize }: OverlayProps) {
   const overlayRef = useRef<HTMLDivElement>(null)
   const { nextId } = useContext(ModificationContext)
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null)
@@ -82,6 +83,7 @@ function Overlay({ items, scale, template, onItemMove, onItemDelete, onChangeMea
             event.stopPropagation()
           }}
           onDelete={() => onItemDelete(item.id)}
+          onChangeContent={() => onChangeContent(item.id)}
           onChangeMeasurement={measurement => onChangeMeasurement(item.id, measurement)}
         />
       ))}

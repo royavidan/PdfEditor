@@ -26,6 +26,7 @@ interface PdfViewportControllerData {
   onItemDelete(id: number): void
   fontSize: number
   markedPosition: Position | null
+  onChangeContent(id: number): void
   onChangeMeasurement(id: number, measurement: string): void
   onPageUp(): void
   onPageDown(): void
@@ -124,6 +125,13 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
     },
     fontSize,
     markedPosition,
+    onChangeContent: id => {
+      const mod = modList.find(mod => mod.id === id)!
+      const content = prompt('Change content', mod.bloon.content)
+      if (content !== null) {
+        changeMod(id, mod => ({ ...mod, bloon: { ...mod.bloon, content } }))
+      }
+    },
     onChangeMeasurement: (id, measurement) => {
       const mod = modList.find(mod => mod.id === id)
       if (!mod || mod.bloon.measurement === measurement) return

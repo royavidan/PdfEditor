@@ -28,6 +28,7 @@ interface PdfViewportProps {
   onItemDelete(id: number): void
   fontSize: number
   markedPosition: Position | null
+  onChangeContent(id: number): void
   onChangeMeasurement(id: number, measurement: string): void
   onSave(): void
   onPageUp(): void
@@ -50,6 +51,7 @@ function PdfViewport({
   onItemDelete,
   fontSize,
   markedPosition,
+  onChangeContent,
   onChangeMeasurement,
   onSave,
   onPageUp,
@@ -94,6 +96,7 @@ function PdfViewport({
                       template={overlayTemplate}
                       onItemMove={onItemMove}
                       onItemDelete={onItemDelete}
+                      onChangeContent={onChangeContent}
                       onChangeMeasurement={onChangeMeasurement}
                       fontSize={fontSize}
                     />

@@ -17,6 +17,7 @@ interface OverlayItemsProps {
   isSelected: boolean
   hasContextMenu: boolean
   onDelete(): void
+  onChangeContent(): void
   onChangeMeasurement(measurement: string): void
 }
 
@@ -29,6 +30,7 @@ function OverlayItem({
   isSelected,
   hasContextMenu,
   onDelete,
+  onChangeContent,
   onChangeMeasurement,
   ...otherProps
 }: OverlayItemsProps & React.HTMLAttributes<HTMLDivElement>) {
@@ -93,6 +95,17 @@ function OverlayItem({
             }}
             onMouseEnter={() => setShowSubMenu(false)}>
             Delete
+          </div>
+          <div
+            className={styles.contextbutton}
+            onClick={
+              () => {
+                closeContextMenu()
+                onChangeContent()
+              }
+            }
+            onMouseEnter={() => setShowSubMenu(false)}>
+            Change Content
           </div>
           <div
             className={styles.contextbutton}
