@@ -1,4 +1,4 @@
-import { Component } from 'react'
+import { useEffect, useState } from 'react'
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.js'
 
 import type { PDFDocumentProxy } from 'pdfjs-dist'
@@ -13,42 +13,14 @@ interface PdfDocProps {
   children(docObj: PDFDocumentProxy): JSX.Element
 }
 
-interface PdfDocState {
-  docObj: PDFDocumentProxy | null
-  data: FileData
-}
+function PdfDoc({ data, children }: PdfDocProps) {
+  const [doc, setDoc] = useState<PDFDocumentProxy | null>(null)
 
-class PdfDoc extends Component<PdfDocProps, PdfDocState> {
-  constructor(props: PdfDocProps) {
-    super(props)
-    this.state = {
-      docObj: null,
-      data: props.data
-    }
-  }
+  useEffect(() => {
+    loadDocument(data).then(setDoc)
+  }, [data])
 
-  async componentDidMount() {
-    const docObj = await loadDocument(this.props.data)
-    this.setState({
-      docObj
-    })
-  }
-
-  async componentDidUpdate(prevProps: PdfDocProps, prevState: PdfDocState) {
-    // will update state only when 'props.data' changes
-    if (this.props.data !== prevProps.data) {
-      const docObj = await loadDocument(this.props.data)
-      this.setState({
-        docObj,
-        data: this.props.data
-      })
-    }
-  }
-
-  render() {
-    const { children } = this.props
-    return this.state.docObj !== null ? children(this.state.docObj) : null
-  }
+  return doc && children(doc)
 }
 
 export default PdfDoc

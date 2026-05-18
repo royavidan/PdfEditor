@@ -1,27 +1,21 @@
-import { Component } from 'react'
+import { useEffect } from 'react'
 
 interface EscKeyHandlerProps {
   onClick(): void
 }
 
-class EscKeyHandler extends Component<EscKeyHandlerProps> {
-  componentDidMount() {
-    document.addEventListener('keyup', this.onKeyup, false)
-  }
-
-  componentWillUnmount() {
-    document.removeEventListener('keyup', this.onKeyup, false)
-  }
-
-  onKeyup = (event: KeyboardEvent) => {
-    if (['Escape', 'Esc'].includes(event.key)) {
-      this.props.onClick()
+function EscKeyHandler({ onClick }: EscKeyHandlerProps) {
+  useEffect(() => {
+    const onKeyup = (event: KeyboardEvent) => {
+      if (['Escape', 'Esc'].includes(event.key)) {
+        onClick()
+      }
     }
-  }
+    document.addEventListener('keyup', onKeyup, false)
+    return () => document.removeEventListener('keyup', onKeyup, false)
+  }, [onClick])
 
-  render() {
-    return null
-  }
+  return null
 }
 
 export default EscKeyHandler

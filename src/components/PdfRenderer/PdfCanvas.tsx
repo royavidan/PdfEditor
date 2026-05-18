@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { useRef, useEffect } from 'react'
 import type { PDFPageProxy } from 'pdfjs-dist'
 
 import type { Position } from '../../types'
@@ -29,59 +29,32 @@ interface PdfCanvasProps {
   onMouseMove?: PdfMouseEventHandler
 }
 
-class PdfCanvas extends Component<PdfCanvasProps> {
-  private canvasRef: React.RefObject<HTMLCanvasElement>
+function PdfCanvas({ page, scale, onClick, onMouseDown, onMouseUp, onMouseLeave, onMouseMove }: PdfCanvasProps) {
+  const ref = useRef<HTMLCanvasElement>(null)
 
-  constructor(props: PdfCanvasProps) {
-    super(props)
-    this.canvasRef = React.createRef()
-  }
+  useEffect(() => {
+    if (ref.current) renderPdfToCanvas(ref.current, page, scale)
+  }, [page, scale, ref])
 
-  componentDidMount() {
-    const { page, scale } = this.props
-    renderPdfToCanvas(this.canvasRef.current!, page, scale)
-  }
-
-  componentDidUpdate(prevProps: PdfCanvasProps) {
-    const { page, scale } = this.props
-    if (page !== prevProps.page || scale !== prevProps.scale) {
-      renderPdfToCanvas(this.canvasRef.current!, page, scale)
-    }
-  }
-
-  // drawDot = event => {
-  //   const { x, y } = this.getMousePos(event.clientX, event.clientY)
-  //   const canvas = this.canvasRef.current
-  //   const ctx = canvas.getContext('2d')
-  //   ctx.fillRect(x, y, 2, 2)
-  // }
-
-  getMousePos = (x: number, y: number): Position => {
-    // get mouse position relative to canvas
-    const canvas = this.canvasRef.current!
-    const { left, top } = canvas.getBoundingClientRect()
+  const getMousePos = (e: React.MouseEvent): Position => {
+    const { left, top } = ref.current!.getBoundingClientRect()
     return {
-      x: x - left,
-      y: y - top
+      x: e.clientX - left,
+      y: e.clientY - top
     }
   }
 
-  render() {
-    const { onClick, onMouseDown, onMouseUp, onMouseLeave, onMouseMove } = this.props
-    const wrap = (handler: PdfMouseEventHandler | undefined): React.MouseEventHandler | undefined => handler && (event => handler(event, this.getMousePos(event.clientX, event.clientY)))
+  const wrap = (handler: PdfMouseEventHandler | undefined): React.MouseEventHandler | undefined => handler && (event => handler(event, getMousePos(event)))
 
-    return (
-      <canvas
-        ref={this.canvasRef}
-        onClick={wrap(onClick)}
-        onMouseDown={wrap(onMouseDown)}
-        onMouseUp={wrap(onMouseUp)}
-        onMouseLeave={wrap(onMouseLeave)}
-        onMouseMove={wrap(onMouseMove)}
-        style={{ cursor: 'crosshair' }}
-      />
-    )
-  }
+  return <canvas
+    ref={ref}
+    onClick={wrap(onClick)}
+    onMouseDown={wrap(onMouseDown)}
+    onMouseUp={wrap(onMouseUp)}
+    onMouseLeave={wrap(onMouseLeave)}
+    onMouseMove={wrap(onMouseMove)}
+    style={{ cursor: 'crosshair' }}
+  />
 }
 
 export default PdfCanvas
