@@ -5,6 +5,11 @@ import type { Bloon } from '../../context/modification-context'
 
 type FilledText = Text & Position
 
+const MEASUREMENT_CHAR_MAP: Record<string, string> = {
+    '⌀': 'DIA',
+    '↧': 'DEPTH'
+}
+
 export function fillBloon(border: Border, data: Data) {
     const bloonText = data.text.filter(t => isInside(t.border, border))
     const symbols = Object.fromEntries(Object.entries(data.symbols).map(e => [e[0], e[1].find(s => isInside(s, border))]).filter(e => e[1]))
@@ -65,6 +70,7 @@ export function fillBloon(border: Border, data: Data) {
     text.sort((a, b) => a.x - b.x)
     bloon.content = text.map(t => t.str).reduce((a, b) => a + (a.endsWith('R') || (/[a-zA-Z-]/.test(b[0]) && b !== 'x') ? ' ' : '') + b, '').trim()
     bloon.content = bloon.content.replaceAll(/[()*]/g, '')
+    bloon.content = bloon.content.replace('°°', '°')
     let plusminus = /±([\d.]+)/.exec(bloon.content)
     if (plusminus) {
         bloon.tolerance = { '+': plusminus[1], '-': plusminus[1] }
@@ -72,7 +78,12 @@ export function fillBloon(border: Border, data: Data) {
     }
 
     //STEP 2: find measurement
-    bloon.measurement = (function () {
+    const measurementMatch = Object.entries(MEASUREMENT_CHAR_MAP).find(e => bloon.content.includes(e[0]))
+    if (measurementMatch) {
+        bloon.measurement = measurementMatch[1]
+        bloon.content = bloon.content.replaceAll(measurementMatch[0], '')
+    }
+    else bloon.measurement = (function () {
         const txt = bloon.content.replaceAll(' ', '')
         const words = bloon.content.split(/[-\d\s]/)
         let symbol = Object.keys(symbols).find(sym => sym !== 'dia')
@@ -97,8 +108,6 @@ export function fillBloon(border: Border, data: Data) {
 
         return 'LINEAR'
     })()
-
-    bloon.content = bloon.content.replace('°°', '°')
 
     return bloon
 }

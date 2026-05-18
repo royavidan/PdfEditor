@@ -4,7 +4,7 @@ import { readPDFFile, readJSONFile } from '../test-utils/utils'
 import type { TextItem } from 'pdfjs-dist/types/src/display/api'
 import type { Modification } from '../context/modification-context'
 
-const TESTS = 2
+const TESTS = 3
 
 type SymbolTable = Record<string, number>
 

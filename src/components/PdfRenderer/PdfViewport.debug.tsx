@@ -104,6 +104,4 @@ const PdfViewport: typeof OriginalPdfViewport = props => {
     return <div ref={insertCover}><OriginalPdfViewport {...props} /></div>
 }
 
-PdfViewport.propTypes = OriginalPdfViewport.propTypes
-
 export default PdfViewport

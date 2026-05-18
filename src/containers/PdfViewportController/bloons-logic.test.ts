@@ -3,7 +3,7 @@ import { fillBloon } from './bloons-logic'
 import type { Modification } from '../../context/modification-context'
 import type { Data } from '../../context/pdf-context'
 
-const TESTS = 2
+const TESTS = 3
 
 describe('Bloons', () => {
     for (let i = 1; i <= TESTS; i++) {

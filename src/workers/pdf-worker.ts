@@ -9,8 +9,11 @@ export const Symbols = ['dia', 'depth', 'straightness', 'flatness', 'circlarity'
 
 const TEXT_REPLACE_TABLE = {
     '\x01$\x02': '°',
-    '\x01n\x02': ''
+    '\x01n\x02': '⌀',
+    '\x01x\x02': '↧'
 }
+
+const SPLIT_CHARS = ['↧', '⌀']
 
 type Point = Position & [number, number]
 
@@ -172,7 +175,11 @@ const parseShapes = (fn: number[], args: any[], pageHeight: number, _rotation: n
                     }
                 }
                 if (!hasCurves) {
-                    paths.push(Shape(path, transforms[0]))
+                    if (path.length === 3) {
+                        paths.push(Shape(path.slice(0, 2), transforms[0]))
+                        paths.push(Shape(path.slice(1, 3), transforms[0]))
+                    }
+                    else paths.push(Shape(path, transforms[0]))
                 }
             } break
 
@@ -251,8 +258,37 @@ function fixPlusMinus(lines: Line[], text: Text[]) {
     return linesToRemove
 }
 
+const splitTexts = (text: Text[]) => text.map(t => {
+    for (const c of SPLIT_CHARS) {
+        const index = t.str.indexOf(c)
+        if (index === -1) continue
+        const T: Text[] = [{
+            ...t,
+            str: c,
+            left: t.left + t.width * index / t.str.length,
+            right: t.left + t.width * (index + c.length) / t.str.length,
+            width: t.width * c.length / t.str.length
+        }]
+        const leftText = t.str.slice(0, index).trim(), rightText = t.str.slice(index + c.length).trim()
+        if (leftText) T.push({
+            ...t,
+            str: leftText,
+            right: t.left + t.width * leftText.length / t.str.length,
+            width: t.width * leftText.length / t.str.length
+        })
+        if (rightText) T.push({
+            ...t,
+            str: rightText,
+            left: t.left + t.width * rightText.length / t.str.length,
+            width: t.width * rightText.length / t.str.length
+        })
+        return T
+    }
+    return t
+}).flat()
+
 const convertTextItems = (textItems: TextItem[], lines: Line[], pageHeight: number, rotation: number) => {
-    const text = textItems.filter(item => item.str.trim()).map(item => ({
+    let text = textItems.filter(item => item.str.trim()).map(item => ({
         str: replaceMany(item.str, TEXT_REPLACE_TABLE),
         top: pageHeight - (item.transform[5] + item.height),
         left: item.transform[4],
@@ -263,6 +299,7 @@ const convertTextItems = (textItems: TextItem[], lines: Line[], pageHeight: numb
         transform: item.transform,
         angle: -rotation - Math.atan2(item.transform[1], item.transform[0])
     } as Text))
+    text = splitTexts(text)
     const linesToRemove = fixPlusMinus(lines, text)
 
     text.forEach(t => {
@@ -344,7 +381,8 @@ const parseSymbols = ({ circles, lines, halfCircles, trapezoids }: ReturnType<ty
 
         //CYLINDRICITY:
         const tangentLines = lines.filter(l => floatIsEqual(l.distance(circle.center), circle.radius))
-        if (tangentLines.length === 2 && floatIsEqual(tangentLines[0].angle, tangentLines[1].angle)) {
+        if (tangentLines.length === 2 && floatIsEqual(tangentLines[0].angle, tangentLines[1].angle, 0.1)
+            && floatIsEqual(tangentLines[0].len, tangentLines[1].len, 1) && Math.max(...tangentLines.map(l => l.len)) < circle.radius * 2.5) {
             symbols.cylindricity.push(addRects(circle, ...tangentLines))
         }
     }
