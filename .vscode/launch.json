@@ -5,11 +5,36 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Auto",
+            "type": "auto-debug",
+            "request": "launch",
+            "map": {
+                "*.test.ts": "Debug Test File",
+                "*": "Launch Chrome"
+            }
+        },
+        {
             "name": "Launch Chrome",
             "request": "launch",
             "type": "chrome",
             "url": "http://localhost:3000/PdfEditor",
             "webRoot": "${workspaceFolder}"
+        },
+        {
+            "name": "Debug Test File",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/react-scripts",
+            "args": [
+                "test",
+                "${fileBasename}",
+                "--runInBand",
+                "--no-cache",
+                "--watchAll=false",
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen"
         }
     ]
 }
