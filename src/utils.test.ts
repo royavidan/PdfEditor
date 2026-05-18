@@ -1,4 +1,4 @@
-import { arrayIsEqual, floatIsEqual, mostCommon, crossIntervals, findOne, findOneIndex, translatePos, getPositiveAngle, isInside, replaceMany } from './utils'
+import { arrayIsEqual, floatIsEqual, mostCommon, crossIntervals, findOne, findOneIndex, translatePos, getPositiveAngle, isInside, replaceMany, isInsideSkew } from './utils'
 
 describe('arrayIsEqual', () => {
     it('simple - true', () => {
@@ -120,6 +120,32 @@ describe('isInside', () => {
 
     it('simple - false', () => {
         expect(isInside({ left: 1, right: 2, top: 3, bottom: 4 }, { left: 0, right: 1, top: 2, bottom: 5 })).toBe(false)
+    })
+})
+
+describe('isInsideSkew', () => {
+    it('simple - true', () => {
+        expect(isInsideSkew({ diagonal: [{ x: 10, y: 10 }, { x: 20, y: 10 }], angle: Math.PI / 4 })({ left: 14, right: 16, top: 10, bottom: 13 })).toBe(true)
+    })
+
+    it('simple - false', () => {
+        expect(isInsideSkew({ diagonal: [{ x: 10, y: 10 }, { x: 20, y: 20 }], angle: Math.PI / 4 })({ left: 14, right: 16, top: 14, bottom: 16 })).toBe(false)
+    })
+
+    it('complex - true', () => {
+        expect(isInsideSkew({ diagonal: [{ x: 10, y: 10 }, { x: 30, y: 20 }], angle: 0 })({ left: 10.01, right: 29.99, top: 10.01, bottom: 19.99 })).toBe(true)
+        expect(isInsideSkew({ diagonal: [{ x: 10, y: 10 }, { x: 20, y: 10 }], angle: Math.PI / 4 })({ left: 14.9, right: 15.1, top: 5.2, bottom: 14.8 })).toBe(true)
+        expect(isInsideSkew({ diagonal: [{ x: 10, y: 10 }, { x: 20, y: 10 }], angle: Math.PI / 4 })({ left: 12.51, right: 17.49, top: 7.51, bottom: 12.49 })).toBe(true)
+        expect(isInsideSkew({ diagonal: [{ x: 10, y: 10 }, { x: 20, y: 10 }], angle: -Math.PI / 4 })({ left: 14.9, right: 15.1, top: 5.2, bottom: 14.8 })).toBe(true)
+        expect(isInsideSkew({ diagonal: [{ x: 0, y: 0 }, { x: 10, y: 0 }], angle: Math.PI / 6 })({ left: 4, right: 6, top: -1, bottom: 1 })).toBe(true)
+        expect(isInsideSkew({ diagonal: [{ x: 10, y: 10 }, { x: 30, y: 20 }], angle: Math.PI / 2 })({ left: 12, right: 28, top: 12, bottom: 18 })).toBe(true)
+    })
+
+    it('complex - false', () => {
+        expect(isInsideSkew({ diagonal: [{ x: 10, y: 10 }, { x: 30, y: 20 }], angle: 0 })({ left: 9.99, right: 29.99, top: 10.01, bottom: 19.99 })).toBe(false)
+        expect(isInsideSkew({ diagonal: [{ x: 10, y: 10 }, { x: 20, y: 10 }], angle: Math.PI / 4 })({ left: 14.9, right: 15.1, top: 4.8, bottom: 14.8 })).toBe(false)
+        expect(isInsideSkew({ diagonal: [{ x: 10, y: 10 }, { x: 20, y: 10 }], angle: Math.PI / 4 })({ left: 12.4, right: 17.6, top: 7.4, bottom: 12.6 })).toBe(false)
+        expect(isInsideSkew({ diagonal: [{ x: 0, y: 0 }, { x: 10, y: 0 }], angle: Math.PI / 6 })({ left: 4, right: 6, top: -1, bottom: 2.4 })).toBe(false)
     })
 })
 

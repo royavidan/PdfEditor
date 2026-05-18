@@ -1,7 +1,7 @@
 import React, { useState, createContext } from 'react'
-import type { ContextProvider, Permutation, Position, Border } from '../types'
+import type { ContextProvider, Permutation, Position, SkewBorder } from '../types'
 
-export interface Bloon extends Border {
+export interface Bloon extends SkewBorder {
     content: string
     measurement: string
     tolerance?: {
@@ -26,10 +26,9 @@ export const isModification = (mod: any): mod is Modification =>
   && typeof mod.position === 'object' && typeof mod.position.x === 'number' && typeof mod.position.y === 'number'
   && typeof mod.page === 'number'
   && typeof mod.bloon === 'object'
-    && typeof mod.bloon.left === 'number'
-    && typeof mod.bloon.right === 'number'
-    && typeof mod.bloon.top === 'number'
-    && typeof mod.bloon.bottom === 'number'
+    && Array.isArray(mod.bloon.diagonal) && mod.bloon.diagonal.length === 2
+    && mod.bloon.diagonal.every((diag: any) => typeof diag === 'object' && typeof diag.x === 'number' && typeof diag.y === 'number')
+    && typeof mod.bloon.angle === 'number'
     && typeof mod.bloon.content === 'string'
     && typeof mod.bloon.measurement === 'string'
     && ((typeof mod.bloon.tolerance === 'object' && typeof mod.bloon.tolerance['+'] === 'number' && typeof mod.bloon.tolerance['-'] === 'number') || !('tolerance' in mod.bloon))

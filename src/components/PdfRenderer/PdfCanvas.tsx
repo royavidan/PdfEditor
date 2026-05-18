@@ -27,6 +27,7 @@ interface PdfCanvasProps {
   onMouseUp?: PdfMouseEventHandler
   onMouseLeave?: PdfMouseEventHandler
   onMouseMove?: PdfMouseEventHandler
+  onWheel?: (e: WheelEvent) => void
 }
 
 class PdfCanvas extends Component<PdfCanvasProps> {
@@ -40,21 +41,17 @@ class PdfCanvas extends Component<PdfCanvasProps> {
   componentDidMount() {
     const { page, scale } = this.props
     renderPdfToCanvas(this.canvasRef.current!, page, scale)
+    if (this.props.onWheel) this.canvasRef.current!.addEventListener('wheel', this.props.onWheel, { passive: false, capture: true })
   }
 
   componentDidUpdate(prevProps: PdfCanvasProps) {
     const { page, scale } = this.props
     if (page !== prevProps.page || scale !== prevProps.scale) {
       renderPdfToCanvas(this.canvasRef.current!, page, scale)
+      if (prevProps.onWheel) this.canvasRef.current!.removeEventListener('wheel', prevProps.onWheel)
+      if (this.props.onWheel) this.canvasRef.current!.addEventListener('wheel', this.props.onWheel, { passive: false, capture: true })
     }
   }
-
-  // drawDot = event => {
-  //   const { x, y } = this.getMousePos(event.clientX, event.clientY)
-  //   const canvas = this.canvasRef.current
-  //   const ctx = canvas.getContext('2d')
-  //   ctx.fillRect(x, y, 2, 2)
-  // }
 
   getMousePos = (x: number, y: number): Position => {
     // get mouse position relative to canvas

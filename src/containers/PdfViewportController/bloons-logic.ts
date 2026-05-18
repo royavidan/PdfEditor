@@ -1,6 +1,6 @@
-import { isInside, mostCommon, floatIsEqual, crossIntervals, findOne } from '../../utils'
+import { isInsideSkew, mostCommon, floatIsEqual, crossIntervals, findOne } from '../../utils'
 import type { Data, Text } from '../../context/pdf-context'
-import type { Border, Position } from '../../types'
+import type { Position, SkewBorder } from '../../types'
 import type { Bloon } from '../../context/modification-context'
 
 type FilledText = Text & Position
@@ -10,15 +10,15 @@ const MEASUREMENT_CHAR_MAP: Record<string, string> = {
     '↧': 'DEPTH'
 }
 
-export function fillBloon(border: Border, data: Data) {
-    const bloonText = data.text.filter(t => isInside(t.border, border))
-    const symbols = Object.fromEntries(Object.entries(data.symbols).map(e => [e[0], e[1].find(s => isInside(s, border))]).filter(e => e[1]))
+export function fillBloon(border: SkewBorder, data: Data) {
+    const isInside = isInsideSkew(border)
+    const bloonText = data.text.filter(t => isInside(t.border))
+    const symbols = Object.fromEntries(Object.entries(data.symbols).map(e => [e[0], e[1].find(isInside)]).filter(e => e[1]))
 
     const bloon = border as Bloon
     //STEP 1: read text and find tolerances
     const mainAngle = mostCommon(bloonText.map(s => s.angle)) ?? 0
     let text = bloonText.filter(t => floatIsEqual(t.angle, mainAngle, 0.1) || t.plusminus).map(t => ({ ...t }) as FilledText)
-    // text.sort(floatIsEqual(mainAngle, -Math.PI / 2) ? ((a, b) => b.top - a.top) : ((a, b) => a.left - b.left))
 
     const cosA = Math.cos(mainAngle), sinA = Math.sin(mainAngle)
 

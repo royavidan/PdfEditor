@@ -12,6 +12,8 @@ import type { PdfMouseEventHandler } from '../../components/PdfRenderer/PdfCanva
 import type { ControllerProps, Position } from '../../types'
 import type { OverlayTemplate } from '../../components/PdfRenderer/Overlay/Overlay'
 
+const ANGLE_DELTA = Math.PI / 48
+
 interface PdfViewportControllerData {
   disabled: boolean
   data: FileData
@@ -22,10 +24,12 @@ interface PdfViewportControllerData {
   onMouseUp: PdfMouseEventHandler
   onMouseDown: PdfMouseEventHandler
   onMouseLeave: PdfMouseEventHandler
+  onWheel(e: WheelEvent): void
   onItemMove(position: Position, id: number): void
   onItemDelete(id: number): void
   fontSize: number
   markedPosition: Position | null
+  angle: number
   onChangeContent(id: number): void
   onChangeMeasurement(id: number, measurement: string): void
   onPageUp(): void
@@ -43,10 +47,14 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
     ModificationContext
   )
   const [markedPosition, setMarkedPosition] = useState<Position | null>(null)
+  const [boxAngle, setBoxAngle] = useState(0)
   const { currentPage, nextPage, prevPage } = useContext(PageContext)
 
   const isMain = (event: React.MouseEvent) => event.button === 0
-  const onMouseDown: PdfMouseEventHandler = (event, position) => isMain(event) && setMarkedPosition(position)
+  const onMouseDown: PdfMouseEventHandler = (event, position) => {
+    setBoxAngle(0)
+    if (isMain(event)) setMarkedPosition(position)
+  }
   const onMouseUp: PdfMouseEventHandler = (event, position) => {
     if (!isMain(event) || !markedPosition) return
 
@@ -54,14 +62,7 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
     const size = getSize(currentPage), angle = getAngle(currentPage)
 
     const positions = [markedPosition, position].map(p => translatePos(angle, p.x, p.y, size.width, size.height))
-    const X = positions.map(p => p.x / scale), Y = positions.map(p => p.y / scale)
-    const bloonInput = {
-      left: Math.min(...X),
-      right: Math.max(...X),
-      top: Math.min(...Y),
-      bottom: Math.max(...Y)
-    }
-    const bloon = fillBloon(bloonInput, { text, symbols })
+    const bloon = fillBloon({ diagonal: positions.map(p => ({ x: p.x / scale, y: p.y / scale })) as [Position, Position], angle: boxAngle }, { text, symbols })
 
     addMod({
       position: {
@@ -87,8 +88,21 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
       }, 1)
       incrementCounter()
     }
+    setBoxAngle(0)
   }
-  const onMouseLeave: PdfMouseEventHandler = event => isMain(event) && setMarkedPosition(null)
+  const onMouseLeave: PdfMouseEventHandler = event => {
+    setBoxAngle(0)
+    if (isMain(event)) setMarkedPosition(null)
+  }
+
+  const onWheel = (e: WheelEvent) => {
+    if (e.buttons & 1) {
+      e.preventDefault()
+      e.stopPropagation()
+      if (e.deltaY > 0) setBoxAngle(angle => angle + ANGLE_DELTA)
+      else setBoxAngle(angle => angle - ANGLE_DELTA)
+    }
+  }
 
   return children({
     disabled: getLoadedPages() <= currentPage,
@@ -103,6 +117,7 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
     onMouseDown,
     onMouseUp,
     onMouseLeave,
+    onWheel,
     onItemMove: (position, id) => {
       changeMod(id, mod => ({
         ...mod,
@@ -125,6 +140,7 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
     },
     fontSize,
     markedPosition,
+    angle: boxAngle,
     onChangeContent: id => {
       const mod = modList.find(mod => mod.id === id)!
       const content = prompt('Change content', mod.bloon.content)

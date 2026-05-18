@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { CSSProperties, useState } from 'react'
 import KeyboardEventHandler from 'react-keyboard-event-handler'
 
 import PdfDoc from './PdfDoc'
@@ -9,7 +9,7 @@ import Overlay from './Overlay/Overlay'
 import styles from './PdfViewport.module.scss'
 import { FileData } from '../../context/file-context'
 import type { Modification } from '../../context/modification-context'
-import type { Position } from '../../types'
+import type { Position, SkewBorder } from '../../types'
 import type { OverlayTemplate } from './Overlay/Overlay'
 
 interface PdfViewportProps {
@@ -20,19 +20,35 @@ interface PdfViewportProps {
   overlayItems: Modification[]
   overlayTemplate: OverlayTemplate
   className?: string
-  style?: React.CSSProperties
+  style?: CSSProperties
   onMouseDown?: PdfMouseEventHandler
   onMouseUp?: PdfMouseEventHandler
   onMouseLeave?: PdfMouseEventHandler
+  onWheel?: (e: WheelEvent) => void
   onItemMove(position: Position, id: number): void
   onItemDelete(id: number): void
   fontSize: number
   markedPosition: Position | null
+  angle: number
   onChangeContent(id: number): void
   onChangeMeasurement(id: number, measurement: string): void
   onSave(): void
   onPageUp(): void
   onPageDown(): void
+}
+
+const translateBox = (border: SkewBorder) => {
+  const center: Position = { x: (border.diagonal[0].x + border.diagonal[1].x) / 2, y: (border.diagonal[0].y + border.diagonal[1].y) / 2 }
+  const diaLen = Math.hypot(border.diagonal[1].x - border.diagonal[0].x, border.diagonal[1].y - border.diagonal[0].y), diaAngle = Math.atan2(border.diagonal[1].y - border.diagonal[0].y, border.diagonal[1].x - border.diagonal[0].x)
+  const width = Math.abs(diaLen * Math.cos(diaAngle - border.angle)), height = Math.abs(diaLen * Math.sin(diaAngle - border.angle))
+  
+  return {
+    left: center.x - width / 2,
+    top: center.y - height / 2,
+    width,
+    height,
+    transform: `rotate(${border.angle}rad)`,
+  }
 }
 
 function PdfViewport({
@@ -47,10 +63,12 @@ function PdfViewport({
   onMouseDown,
   onMouseUp,
   onMouseLeave,
+  onWheel,
   onItemMove,
   onItemDelete,
   fontSize,
   markedPosition,
+  angle,
   onChangeContent,
   onChangeMeasurement,
   onSave,
@@ -101,15 +119,10 @@ function PdfViewport({
                       fontSize={fontSize}
                     />
                     <PdfCanvas page={page} scale={scale} onMouseDown={onMouseDown} onMouseUp={onMouseUp} onMouseLeave={onMouseLeave}
-                      onMouseMove={onMouseMove} />
+                      onMouseMove={onMouseMove} onWheel={onWheel} />
                     {markedPosition && currentMousePos && (
                       <div className={styles.selectionbox}
-                        style={{
-                          left: Math.min(markedPosition.x, currentMousePos.x),
-                          top: Math.min(markedPosition.y, currentMousePos.y),
-                          width: Math.abs(markedPosition.x - currentMousePos.x),
-                          height: Math.abs(markedPosition.y - currentMousePos.y)
-                        }}
+                        style={translateBox({ diagonal: [markedPosition, currentMousePos], angle })}
                       />
                     )}
                   </>

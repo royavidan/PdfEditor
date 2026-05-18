@@ -2,6 +2,8 @@ import type React from 'react'
 
 export type ContextProvider = (props: { children: React.ReactNode }) => JSX.Element
 
+export type Predicate<T> = (arg: T) => boolean
+
 export type Permutation<T> = (arg: T) => T
 
 export type ControllerProps<T> = { children(data: T): JSX.Element }
@@ -13,6 +15,11 @@ export type Border = {
     top: number
     right: number
     bottom: number
+}
+
+export type SkewBorder = {
+    diagonal: [Position, Position]
+    angle: number
 }
 
 export type FullResult<T, E = Error> = {

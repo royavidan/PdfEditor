@@ -21,10 +21,8 @@ describe('file-logics', () => {
             value: 2,
             position: { x: 10, y: 10 },
             bloon: {
-                left: 100,
-                right: 100,
-                top: 100,
-                bottom: 100,
+                diagonal: [{ x: 100, y: 100 }, { x: 100, y: 100 }],
+                angle: 0,
                 content: '1',
                 measurement: 'LINEAR'
             }
@@ -43,10 +41,8 @@ describe('file-logics', () => {
             page: 0,
             position: { x: 10, y: 10 },
             bloon: {
-                left: 100,
-                right: 100,
-                top: 100,
-                bottom: 100,
+                diagonal: [{ x: 100, y: 100 }, { x: 100, y: 100 }],
+                angle: 0,
                 content: '1',
                 measurement: 'LINEAR'
             }

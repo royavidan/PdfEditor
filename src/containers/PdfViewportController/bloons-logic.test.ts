@@ -13,11 +13,9 @@ describe('Bloons', () => {
 
             for (const mod of modList) {
                 const basicBloon = {
-                    left: mod.bloon.left,
-                    right: mod.bloon.right,
-                    top: mod.bloon.top,
-                    bottom: mod.bloon.bottom
-            }
+                    diagonal: mod.bloon.diagonal,
+                    angle: mod.bloon.angle
+                }
                 const bloon = fillBloon(basicBloon, data[mod.page])
                 expect(bloon).toEqual(mod.bloon)
             }
