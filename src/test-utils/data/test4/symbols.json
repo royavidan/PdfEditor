@@ -1,16 +1,16 @@
-{
-    "dia": 0,
-    "depth": 0,
+[{
+    "dia": 31,
+    "depth": 5,
     "straightness": 0,
     "flatness": 0,
-    "circlarity": 0,
+    "circlarity": 1,
     "cylindricity": 0,
     "surface profile": 0,
-    "perpendicularity": 0,
+    "perpendicularity": 1,
     "angularity": 0,
-    "parallelism": 0,
+    "parallelism": 3,
     "symmetry": 0,
-    "true position": 0,
+    "true position": 9,
     "concentricity": 0,
     "run out": 0
-}
+}]

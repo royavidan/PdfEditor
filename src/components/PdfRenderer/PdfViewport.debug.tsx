@@ -74,8 +74,8 @@ const PdfViewport: typeof OriginalPdfViewport = props => {
     const isLoaded = isFileLoaded() && getLoadedPages() > currentPage
     const text = getText(currentPage)!, symbols = getSymbols(currentPage)!
 
-    const insertCover = (ins: HTMLDivElement | null) => {
-        if (!ins || !isLoaded) return
+    const insertCover = () => {
+        if (!isLoaded || document.getElementsByClassName('debug').length > 0) return
         
         const cover = <>
             {text.map((t, i) => <TextBox text={t} key={`text-${i}`}/>)}
