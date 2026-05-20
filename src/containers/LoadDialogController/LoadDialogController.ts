@@ -1,7 +1,7 @@
 import { useState, useContext } from 'react'
 import { saveAs } from 'file-saver'
 
-import { compactMods, tryLoadMods } from './file-logics'
+import { compactMods, tryLoadMods } from './file-logic'
 import { FileContext, FileData } from '../../context/file-context'
 import { ViewportContext } from '../../context/viewport-context'
 import { CounterContext } from '../../context/counter-context'

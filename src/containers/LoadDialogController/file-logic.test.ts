@@ -1,4 +1,4 @@
-import { compactMods, tryLoadMods } from './file-logics'
+import { compactMods, tryLoadMods } from './file-logic'
 import { readPlainFile } from '../../test-utils/utils'
 import type { FileData } from '../../context/file-context'
 import type { Modification } from '../../context/modification-context'
