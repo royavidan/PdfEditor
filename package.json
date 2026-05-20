@@ -14,6 +14,7 @@
     "react-files": "^2.4.8",
     "react-keyboard-event-handler": "^1.5.1",
     "react-scripts": "^3.4.1",
+    "worker-loader": "^3.0.8",
     "xml-js": "^1.6.11"
   },
   "scripts": {
@@ -22,11 +23,17 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "release": "np",
+    "jest": "jest",
     "predeploy": "npm run release && npm run build",
     "deploy": "gh-pages -d build && git push --follow-tags"
   },
   "eslintConfig": {
     "extends": "react-app"
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "^worker-loader!(?:.+[\\/])*([^\\/]+)$": "<rootDir>/src/test-utils/mocks/$1"
+    }
   },
   "browserslist": {
     "production": [
@@ -42,7 +49,13 @@
   },
   "devDependencies": {
     "@types/file-saver": "^2.0.1",
+    "@types/jest": "^24.9.0",
+    "@types/react": "^16.8.6",
+    "@types/react-dom": "^16.9.25",
+    "@types/react-keyboard-event-handler": "^1.5.1",
     "gh-pages": "^2.1.1",
-    "np": "^6.2.0"
+    "np": "^6.2.0",
+    "sass": "^1.78.0",
+    "typescript": "^3.9.10"
   }
 }

@@ -1,0 +1,40 @@
+.toolbar {
+  display: flex;
+  height: 40px;
+  padding: 5px 5px;
+  box-sizing: border-box;
+  font-size: 14px;
+
+  button:not([disabled]) {
+    cursor: pointer;
+  }
+
+  >* {
+    margin: 0 2px;
+  }
+
+  .group {
+    display: flex;
+    margin: 0 5px;
+    border: 1px solid #666;
+
+    >* {
+      margin: 1px;
+    }
+
+    input {
+      width: 4em;
+      text-align: center;
+    }
+
+    label {
+      color: white;
+      margin: auto 3px;
+    }
+  }
+
+  .text {
+    color: white;
+    margin: auto 16px;
+  }
+}

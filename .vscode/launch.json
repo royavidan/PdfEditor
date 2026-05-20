@@ -1,15 +1,47 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Launch Chrome",
-            "request": "launch",
-            "type": "chrome",
-            "url": "http://localhost:3000/PdfEditor",
-            "webRoot": "${workspaceFolder}"
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Auto",
+      "type": "auto-debug",
+      "request": "launch",
+      "map": {
+        "*.test.ts": "Debug Test File",
+        "*": "Launch Chrome"
+      }
+    },
+    {
+      "name": "Launch Chrome",
+      "request": "launch",
+      "type": "chrome",
+      "url": "http://localhost:3000/PdfEditor",
+      "webRoot": "${workspaceFolder}"
+    },
+    {
+      "name": "Debug Test File",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/react-scripts",
+      "args": [
+        "test",
+        "${fileBasename}",
+        "--runInBand",
+        "--no-cache",
+        "--watchAll=false"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "args": [],
+      "stopAtEntry": false,
+      "console": "externalTerminal",
+      "cwd": "c:/Users/User/Technion/CompetetiveProgramming/presentations",
+      "program": "c:/Users/User/Technion/CompetetiveProgramming/presentations/build/Debug/outDebug"
+    }
+  ]
 }
