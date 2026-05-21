@@ -18,6 +18,8 @@ interface PdfViewportProps {
   data: FileData | null
   pageNum: number
   scale: number
+  minValue: number
+  maxValue: number
   overlayItems: Modification[]
   overlayTemplate: OverlayTemplate
   className?: string
@@ -29,6 +31,7 @@ interface PdfViewportProps {
   onItemDelete(id: number): void
   fontSize: number
   markedPosition: Position | null
+  onChangeValue(id: number, value: number): void
   onChangeContent(id: number): void
   onChangeMeasurement(id: number, measurement: string): void
   onSave(): void
@@ -41,6 +44,8 @@ function PdfViewport({
   data,
   pageNum,
   scale,
+  minValue,
+  maxValue,
   overlayItems,
   overlayTemplate,
   className = '',
@@ -52,6 +57,7 @@ function PdfViewport({
   onItemDelete,
   fontSize,
   markedPosition,
+  onChangeValue,
   onChangeContent,
   onChangeMeasurement,
   onSave,
@@ -90,9 +96,12 @@ function PdfViewport({
                     <Overlay
                       items={overlayItems}
                       scale={scale}
+                      minValue={minValue}
+                      maxValue={maxValue}
                       template={overlayTemplate}
                       onItemMove={onItemMove}
                       onItemDelete={onItemDelete}
+                      onChangeValue={onChangeValue}
                       onChangeContent={onChangeContent}
                       onChangeMeasurement={onChangeMeasurement}
                       fontSize={fontSize}

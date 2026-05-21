@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 
 import styles from './Overlay.module.scss'
 import type { Position } from '../../../types'
@@ -12,11 +12,14 @@ interface OverlayItemsProps {
   position: Position
   size: number
   value: number
+  minValue: number
+  maxValue: number
   scale: number
   template: OverlayProperties
   isSelected: boolean
   hasContextMenu: boolean
   onDelete(): void
+  onChangeValue(value: number): void
   onChangeContent(): void
   onChangeMeasurement(measurement: string): void
 }
@@ -25,17 +28,21 @@ function OverlayItem({
   position,
   size,
   value,
+  minValue,
+  maxValue,
   scale,
   template,
   isSelected,
   hasContextMenu,
   onDelete,
+  onChangeValue,
   onChangeContent,
   onChangeMeasurement,
   ...otherProps
 }: OverlayItemsProps & React.HTMLAttributes<HTMLDivElement>) {
   const [contextMenu, setContextMenu] = useState<Position | null>(null)
   const [showSubMenu, setShowSubMenu] = useState(false)
+  const changeValueInputRef = useRef<HTMLInputElement>(null)
 
   const closeContextMenu = () => {
     setContextMenu(null)
@@ -106,6 +113,17 @@ function OverlayItem({
             }
             onMouseEnter={() => setShowSubMenu(false)}>
             Change Content
+          </div>
+          <div
+            className={styles.contextbutton}
+            onClick={
+              e => {
+                closeContextMenu()
+                onChangeValue(parseInt(changeValueInputRef.current!.value))
+              }
+            }
+            onMouseEnter={() => setShowSubMenu(false)}>
+              Change Value to <input ref={changeValueInputRef} type="number" min={minValue} max={maxValue}/>
           </div>
           <div
             className={styles.contextbutton}

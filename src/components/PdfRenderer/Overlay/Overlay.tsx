@@ -21,15 +21,18 @@ function getRelativeMousePos(element: HTMLElement, event: React.MouseEvent) {
 interface OverlayProps {
   items: Modification[]
   scale: number
+  minValue: number
+  maxValue: number
   template: OverlayTemplate
   onItemMove(position: Position, id: number): void
   onItemDelete(id: number): void
+  onChangeValue(id: number, value: number): void
   onChangeContent(id: number): void
   onChangeMeasurement(id: number, measurement: string): void
   fontSize: number
 }
 
-function Overlay({ items, scale, template, onItemMove, onItemDelete, onChangeContent, onChangeMeasurement, fontSize }: OverlayProps) {
+function Overlay({ items, scale, minValue, maxValue, template, onItemMove, onItemDelete, onChangeValue, onChangeContent, onChangeMeasurement, fontSize }: OverlayProps) {
   const overlayRef = useRef<HTMLDivElement>(null)
   const { nextId } = useContext(ModificationContext)
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null)
@@ -68,6 +71,8 @@ function Overlay({ items, scale, template, onItemMove, onItemDelete, onChangeCon
           position={item.position}
           size={fontSize}
           value={item.value}
+          minValue={minValue}
+          maxValue={maxValue}
           scale={scale}
           template={template(item)}
           hasContextMenu={!item.disabled}
@@ -83,6 +88,7 @@ function Overlay({ items, scale, template, onItemMove, onItemDelete, onChangeCon
             event.stopPropagation()
           }}
           onDelete={() => onItemDelete(item.id)}
+          onChangeValue={value => onChangeValue(item.id, value)}
           onChangeContent={() => onChangeContent(item.id)}
           onChangeMeasurement={measurement => onChangeMeasurement(item.id, measurement)}
         />

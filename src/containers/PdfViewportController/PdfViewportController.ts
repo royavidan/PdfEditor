@@ -17,6 +17,8 @@ interface PdfViewportControllerData {
   data: FileData
   pageNum: number
   scale: number
+  minValue: number
+  maxValue: number
   overlayItems: Modification[]
   overlayTemplate: OverlayTemplate
   onMouseUp: PdfMouseEventHandler
@@ -26,6 +28,7 @@ interface PdfViewportControllerData {
   onItemDelete(id: number): void
   fontSize: number
   markedPosition: Position | null
+  onChangeValue(id: number, value: number): void
   onChangeContent(id: number): void
   onChangeMeasurement(id: number, measurement: string): void
   onPageUp(): void
@@ -36,7 +39,7 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
   const { data } = useContext(FileContext)
   const { scale, fontSize } = useContext(ViewportContext)
   const { getText, getSymbols, getSize, getAngle, getLoadedPages } = useContext(PDFContext)
-  const { counter, incrementCounter, decrementCounter } = useContext(
+  const { counter, initialCounter, incrementCounter, decrementCounter } = useContext(
     CounterContext
   )
   const { modList, addMod, changeMod, removeMod } = useContext(
@@ -62,7 +65,7 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
       bottom: Math.max(...Y)
     }
     const bloon = fillBloon(bloonInput, { text, symbols })
-
+    
     addMod({
       position: {
         x: (position.x + scale) / scale,
@@ -95,6 +98,8 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
     data: data!,
     pageNum: currentPage + 1,
     scale,
+    minValue: initialCounter,
+    maxValue: counter - 1,
     overlayItems: modList.filter(mod => mod.page === currentPage),
     overlayTemplate: mod => ({
       title: `${mod.bloon.measurement}: ${mod.bloon.content}${mod.bloon.tolerance ? ` (${mod.bloon.tolerance['+']}/${mod.bloon.tolerance['-']})` : ''}`,
@@ -125,6 +130,18 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
     },
     fontSize,
     markedPosition,
+    onChangeValue: (id, value) => {
+      const mod = modList.find(mod => mod.id === id)!
+      const nextMod = modList.find(mod => mod.value === mod.value + 1)
+      removeMod(mod.id)
+      mod.value = value
+      addMod(mod)
+      if (mod.bloon.measurement === 'TAP') {
+        removeMod(nextMod!.id)
+        nextMod!.value = value + 1
+        addMod(nextMod!)
+      }
+    },
     onChangeContent: id => {
       const mod = modList.find(mod => mod.id === id)!
       const content = prompt('Change content', mod.bloon.content)
