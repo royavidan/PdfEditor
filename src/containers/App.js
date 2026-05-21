@@ -2,14 +2,19 @@ import React from 'react'
 import './App.css'
 
 import FileProvider from '../context/file-context'
+import SettingsProvider from '../context/settings-context'
 import PdfEditor from '../components/PdfEditor/PdfEditor'
+import Settings from '../popups/Settings/Settings'
 
 function App() {
   return (
     <div className="App">
-      <FileProvider>
-        <PdfEditor />
-      </FileProvider>
+      <SettingsProvider>
+        <FileProvider>
+          <PdfEditor />
+          <Settings/>
+        </FileProvider>
+      </SettingsProvider>
     </div>
   )
 }

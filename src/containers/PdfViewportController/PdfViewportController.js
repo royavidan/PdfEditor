@@ -8,10 +8,12 @@ import { BloonsContext } from '../../context/bloons-context'
 import { PDFContext } from '../../context/pdf-context'
 import { PageContext } from '../../context/page-context'
 import { translatePos } from '../../utils'
+import { SettingsContext } from '../../context/settings-context'
 
 function PdfViewportController({ children }) {
   const { data } = useContext(FileContext)
-  const { scale, fontSize } = useContext(ViewportContext)
+  const { scale } = useContext(ViewportContext)
+  const { fontSize, doubleBloonsOnTap } = useContext(SettingsContext)
   const { getText, getSymbols, getSize, getAngle, isLoaded } = useContext(PDFContext)
   const { counter, incrementCounter, decrementCounter } = useContext(
     CounterContext
@@ -46,6 +48,7 @@ function PdfViewportController({ children }) {
     bloon.text = text.filter(t => isInside(t.border))
     bloon.symbols = Object.fromEntries(Object.entries(symbols).map(e => [e[0], e[1].find(isInside)]).filter(e => e[1]))
 
+    const hasExtra = doubleBloonsOnTap && bloon.measurement === 'TAP'
     fillBloon(bloon)
     addBloon(id, bloon)
     addModification({
@@ -55,12 +58,13 @@ function PdfViewportController({ children }) {
       },
       page: currentPage,
       value: counter,
+      hasExtra,
       title: `${bloon.measurement}: ${bloon.content}${bloon.tolerance ? ` (${bloon.tolerance['+']}/${bloon.tolerance['-']})` : ''}`,
       template
     })
     incrementCounter()
     setMarkedPosition(null)
-    if (bloon.measurement === 'TAP') {
+    if (hasExtra) {
       const newBloon = { ...bloon, id: bloon.id + 1, measurement: 'DIA' }
       addBloon(id + 1, newBloon)
       addModification({
@@ -104,7 +108,7 @@ function PdfViewportController({ children }) {
       removeMod(id)
       removeBloon(id)
       decrementCounter()
-      if (originalBloon.measurement === 'TAP') {
+      if (originalBloon.hasExtra) {
         removeMod(idToRemove)
         removeBloon(idToRemove)
         decrementCounter()
@@ -120,8 +124,7 @@ function PdfViewportController({ children }) {
         mod.title = measurement + mod.title.slice(mod.title.indexOf(':'))
         return mod
       })
-
-      if (measurement === 'TAP') {
+      if (doubleBloonsOnTap && measurement === 'TAP') {
         const value = bloons[id].id + 1
         const newBloon = { ...bloons[id], id: value, measurement: 'DIA' }
         insertBloon(nextId, newBloon)
@@ -137,7 +140,7 @@ function PdfViewportController({ children }) {
           template
         })
         incrementCounter()
-      } else if (originalMeasurement === 'TAP') {
+      } else if (originalMeasurement.hasExtra) {
         const idToRemove = Number(Object.entries(bloons).find(e => e[1].id === bloons[id].id + 1)[0])
         removeMod(idToRemove)
         removeBloon(idToRemove)

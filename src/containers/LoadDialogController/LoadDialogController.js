@@ -7,6 +7,7 @@ import { ViewportContext } from '../../context/viewport-context'
 import { CounterContext } from '../../context/counter-context'
 import { ModificationContext } from '../../context/modification-context'
 import { BloonsContext } from '../../context/bloons-context'
+import { SettingsContext } from '../../context/settings-context'
 
 function LoadDialogController({ children }) {
   const [showDialog, setShowDialog] = useState(true)
@@ -15,6 +16,7 @@ function LoadDialogController({ children }) {
   const { resetCounter, incrementCounter } = useContext(CounterContext)
   const { resetModList, addMod, modList } = useContext(ModificationContext)
   const { resetBloons, addBloon, bloons } = useContext(BloonsContext)
+  const { resetSettings } = useContext(SettingsContext)
 
   const onLoad = async data => {
     setShowDialog(false)
@@ -28,6 +30,7 @@ function LoadDialogController({ children }) {
       resetScale()
       resetCounter()
       resetModList()
+      resetSettings()
       resetBloons()
       modList.forEach((m, i) => {
         m.template = value => `(${value})`
@@ -40,6 +43,7 @@ function LoadDialogController({ children }) {
       resetScale()
       resetCounter()
       resetModList()
+      resetSettings()
       resetBloons()
     }
   }
