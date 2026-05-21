@@ -10,14 +10,7 @@ export interface CounterContext {
   decrementCounter: (i?: number) => void
 }
 
-export const CounterContext = createContext({
-  counter: 0,
-  initialCounter: 0,
-  resetCounter: () => {},
-  setInitialCounter: () => {},
-  incrementCounter: () => {},
-  decrementCounter: () => {}
-} as CounterContext)
+export const CounterContext = createContext({} as CounterContext)
 
 export default (({ children }) => {
   const [initialCounter, setInitialCounter] = useState(2)

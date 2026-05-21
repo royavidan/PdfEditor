@@ -49,14 +49,7 @@ export interface ModificationContext {
 const initialModList: Modification[] = []
 const initialId = 0
 
-export const ModificationContext = createContext({
-  modList: initialModList,
-  nextId: initialId,
-  resetModList: () => { },
-  addMod: () => { },
-  changeMod: () => { },
-  removeMod: () => { }
-} as ModificationContext)
+export const ModificationContext = createContext({} as ModificationContext)
 
 export default (({ children }) => {
   const [modList, setModList] = useState(initialModList)

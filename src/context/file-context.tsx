@@ -12,11 +12,7 @@ export interface FileContext<T> {
 
 const NO_FILE_DATA = null
 export const initialState = { data: NO_FILE_DATA }
-export const FileContext = createContext({
-  data: NO_FILE_DATA,
-  setData: () => {},
-  isFileLoaded: () => false
-} as FileContext<FileData>)
+export const FileContext = createContext({} as FileContext<FileData>)
 
 export default (({ children }) => {
   const [data, setData] = useState<FileData | null>(NO_FILE_DATA)

@@ -12,13 +12,7 @@ export interface PageContext {
     prevPage(): void
 }
 
-export const PageContext = createContext({
-    pages: 1,
-    currentPage: 0,
-    setPage: page => {},
-    nextPage: () => {},
-    prevPage: () => {}
-} as PageContext)
+export const PageContext = createContext({} as PageContext)
 
 export default (({ children }) => {
     const [pages, setPages] = useState(1)

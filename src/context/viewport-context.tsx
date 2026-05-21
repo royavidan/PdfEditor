@@ -12,13 +12,7 @@ export interface ViewportContext {
   setFontSize: React.Dispatch<React.SetStateAction<number>>
 }
 
-export const ViewportContext = createContext({
-  scale: initialScale,
-  setScale: () => {},
-  resetScale: () => {},
-  fontSize: initialFontSize,
-  setFontSize: () => {}
-} as ViewportContext)
+export const ViewportContext = createContext({} as ViewportContext)
 
 export default (({ children }) => {
   const [scale, setScale] = useState(initialScale)

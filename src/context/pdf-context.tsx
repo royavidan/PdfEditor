@@ -82,13 +82,7 @@ export interface PDFContext {
     getLoadedPages(): number
 }
 
-export const PDFContext = createContext({
-    getText: page => { },
-    getSymbols: page => { },
-    getSize: page => { },
-    getAngle: page => { },
-    getLoadedPages: () => 0
-} as PDFContext)
+export const PDFContext = createContext({} as PDFContext)
 
 export default (({ children }) => {
     const { data: fileData, isFileLoaded } = useContext(FileContext)
