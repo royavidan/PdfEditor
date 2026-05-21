@@ -48,8 +48,8 @@ function PdfViewportController({ children }) {
     bloon.text = text.filter(t => isInside(t.border))
     bloon.symbols = Object.fromEntries(Object.entries(symbols).map(e => [e[0], e[1].find(isInside)]).filter(e => e[1]))
 
-    const hasExtra = doubleBloonsOnTap && bloon.measurement === 'TAP'
     fillBloon(bloon)
+    const hasExtra = doubleBloonsOnTap && bloon.measurement === 'TAP'
     addBloon(id, bloon)
     addModification({
       position: {
@@ -102,13 +102,14 @@ function PdfViewportController({ children }) {
       }))
     },
     onItemDelete: id => {
-      if (modList.find(mod => mod.id === id).disabled) return
+      const originalMod = modList.find(mod => mod.id === id)
+      if (originalMod.disabled) return
       const originalBloon = bloons[id]
       const idToRemove = Number(Object.entries(bloons).find(e => e[1].id === originalBloon.id + 1)?.[0])
       removeMod(id)
       removeBloon(id)
       decrementCounter()
-      if (originalBloon.hasExtra) {
+      if (originalMod.hasExtra) {
         removeMod(idToRemove)
         removeBloon(idToRemove)
         decrementCounter()
@@ -117,6 +118,7 @@ function PdfViewportController({ children }) {
     fontSize,
     markedPosition,
     onChangeMeasurement: (id, measurement) => {
+      const originalMod = modList.find(mod => mod.id === id)
       const originalMeasurement = bloons[id].measurement
       if (measurement === originalMeasurement) return
       modifyBloon(id, { measurement })
@@ -140,7 +142,7 @@ function PdfViewportController({ children }) {
           template
         })
         incrementCounter()
-      } else if (originalMeasurement.hasExtra) {
+      } else if (originalMod.hasExtra) {
         const idToRemove = Number(Object.entries(bloons).find(e => e[1].id === bloons[id].id + 1)[0])
         removeMod(idToRemove)
         removeBloon(idToRemove)
