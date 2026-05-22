@@ -1,10 +1,9 @@
 import React, { useState, useEffect, createContext, useContext } from 'react'
-import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.js'
+import * as pdfjs from 'pdfjs-dist'
 import { PDFDocument } from 'pdf-lib'
-//eslint-disable-next-line import/no-webpack-loader-syntax
-import PDFWorker from 'worker-loader!../workers/pdf-worker.ts'
 
-import { FileContext, FileData } from './file-context'
+import { FileContext, type FileData } from './file-context'
+import PDFWorker from '../workers/pdf-worker?worker'
 import type { ContextProvider, Border } from '../types'
 import type { WorkerType, PdfWorkerData, Symbols } from '../workers/pdf-worker'
 
@@ -38,7 +37,7 @@ interface Info {
 }
 
 async function extractPDFData(fileData: FileData, setData: React.Dispatch<React.SetStateAction<(Data | null)[]>>) {
-    const loadingTask = pdfjs.getDocument({ data: fileData })
+    const loadingTask = pdfjs.getDocument({ data: fileData.slice(0) })
     const pdfDocument = await loadingTask.promise
     const p: PdfWorkerData[] = []
     for (let i = 1; i <= pdfDocument.numPages; i++) {
@@ -49,7 +48,7 @@ async function extractPDFData(fileData: FileData, setData: React.Dispatch<React.
         const textContent = await page.getTextContent()
         p.push({ opList, rotation, pageHeight: viewport.height, textItems: textContent.items } as PdfWorkerData)
     }
-    const worker = new PDFWorker() as WorkerType
+    const worker = new PDFWorker({ name: 'pdf-worker' }) as WorkerType
     const promise = new Promise<void>((resolve, reject) => {
         let counter = 0
         worker.onmessage = e => {
@@ -82,9 +81,10 @@ export interface PDFContext {
     getLoadedPages(): number
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const PDFContext = createContext({} as PDFContext)
 
-export default (({ children }) => {
+const PDFProvider: ContextProvider = ({ children }) => {
     const { data: fileData, isFileLoaded } = useContext(FileContext)
     const [data, setData] = useState<(Data | null)[]>([null])
     const [info, setInfo] = useState<(Info)[]>([{ size: { width: 0, height: 0 }, angle: 0 }])
@@ -92,6 +92,7 @@ export default (({ children }) => {
     const getLoadedPages = () => info[0].size.width ? (data[0] === null ? 0 : data.length) : 0
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setData([null])
         setInfo([{ size: { width: 0, height: 0 }, angle: 0 }])
         if (isFileLoaded()) {
@@ -112,4 +113,6 @@ export default (({ children }) => {
             {children}
         </PDFContext.Provider>
     )
-}) as ContextProvider
+}
+
+export default PDFProvider

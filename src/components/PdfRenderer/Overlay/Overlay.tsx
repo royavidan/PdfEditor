@@ -1,12 +1,12 @@
-import React, { useRef, useState, useEffect, useContext } from 'react'
-import KeyboardEventHandler from 'react-keyboard-event-handler'
+import React, { useRef, useState, useContext } from 'react'
 
-import { ModificationContext, Modification } from '../../../context/modification-context'
+import { ModificationContext, type Modification } from '../../../context/modification-context'
 import OverlayItem from './OverlayItem'
 
 import styles from './Overlay.module.scss'
 import type { Position } from '../../../types'
 import type { OverlayProperties } from './OverlayItem'
+import { arrayIsEqual } from '../../../utils'
 
 export type OverlayTemplate = (mod: Modification) => OverlayProperties
 
@@ -35,14 +35,14 @@ interface OverlayProps {
 function Overlay({ items, scale, minValue, maxValue, template, onItemMove, onItemDelete, onChangeValue, onChangeContent, onChangeMeasurement, fontSize }: OverlayProps) {
   const overlayRef = useRef<HTMLDivElement>(null)
   const { nextId } = useContext(ModificationContext)
-  const [selectedItemId, setSelectedItemId] = useState<number | null>(null)
-  useEffect(() => setSelectedItemId(nextId - 1), [nextId])
+  const [selectedItemId, setSelectedItemId] = useState<number | null>(items.length === 0 ? null : nextId - 1)
+  const getUpdateState = () => [nextId, items.length]
+  const [updateState, setUpdateState] = useState(getUpdateState())
 
-  useEffect(() => {
-    if (items.length === 0) {
-      setSelectedItemId(null)
-    }
-  }, [items])
+  if (!arrayIsEqual(updateState, getUpdateState())) {
+    setUpdateState(getUpdateState())
+    setSelectedItemId(items.length === 0 ? null : nextId - 1)
+  }
 
   return (
     <div
@@ -54,17 +54,14 @@ function Overlay({ items, scale, minValue, maxValue, template, onItemMove, onIte
       onClick={() => {
         setSelectedItemId(null)
       }}
+      onKeyUp={e => {
+        if (e.key === 'Delete' && selectedItemId !== null) {
+          onItemDelete(selectedItemId)
+          setSelectedItemId(null)
+        }
+      }}
+      tabIndex={-1}
     >
-      <KeyboardEventHandler
-        handleKeys={['delete']}
-        handleEventType="keyup"
-        onKeyEvent={() => {
-          if (selectedItemId !== null) {
-            onItemDelete(selectedItemId)
-            setSelectedItemId(null)
-          }
-        }}
-      />
       {items.map(item => (
         <OverlayItem
           key={item.id}

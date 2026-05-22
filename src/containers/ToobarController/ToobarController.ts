@@ -5,9 +5,9 @@ import { FileContext } from '../../context/file-context'
 import { ViewportContext } from '../../context/viewport-context'
 import { CounterContext } from '../../context/counter-context'
 import { ModificationContext } from '../../context/modification-context'
-import { ControllerProps } from '../../types'
 import { PageContext } from '../../context/page-context'
 import { PDFContext } from '../../context/pdf-context'
+import type { ControllerProps } from '../../types'
 
 interface ToolbarControllerData {
   disabled: boolean

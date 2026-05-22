@@ -12,9 +12,10 @@ export interface ViewportContext {
   setFontSize: React.Dispatch<React.SetStateAction<number>>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const ViewportContext = createContext({} as ViewportContext)
 
-export default (({ children }) => {
+const ViewportProvider: ContextProvider = ({ children }) => {
   const [scale, setScale] = useState(initialScale)
   const [fontSize, setFontSize] = useState(initialFontSize)
   const resetScale = () => setScale(initialScale)
@@ -26,4 +27,6 @@ export default (({ children }) => {
       {children}
     </ViewportContext.Provider>
   )
-}) as ContextProvider
+}
+
+export default ViewportProvider

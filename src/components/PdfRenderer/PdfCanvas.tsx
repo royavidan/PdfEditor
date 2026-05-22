@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react'
-import type { PDFPageProxy } from 'pdfjs-dist'
+import { type PDFPageProxy } from 'pdfjs-dist'
 
 import type { Position } from '../../types'
 
@@ -12,8 +12,9 @@ function renderPdfToCanvas(canvasEl: HTMLCanvasElement, page: PDFPageProxy, scal
   canvasEl.height = viewport.height
 
   // console.warn('[PdfCanvas] page.render')
-  page.render({
-    canvasContext: canvasEl.getContext('2d')!,
+  return page.render({
+    canvas: canvasEl,
+    // canvasContext: canvasEl.getContext('2d')!,
     viewport
   })
 }
@@ -33,7 +34,13 @@ function PdfCanvas({ page, scale, onClick, onMouseDown, onMouseUp, onMouseLeave,
   const ref = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
-    if (ref.current) renderPdfToCanvas(ref.current, page, scale)
+    if (ref.current) {
+      const task = renderPdfToCanvas(ref.current, page, scale)
+      return () => {
+        task.promise.catch(() => {})
+        task.cancel()
+      }
+    }
   }, [page, scale, ref])
 
   const getMousePos = (e: React.MouseEvent): Position => {
@@ -44,15 +51,13 @@ function PdfCanvas({ page, scale, onClick, onMouseDown, onMouseUp, onMouseLeave,
     }
   }
 
-  const wrap = (handler: PdfMouseEventHandler | undefined): React.MouseEventHandler | undefined => handler && (event => handler(event, getMousePos(event)))
-
   return <canvas
     ref={ref}
-    onClick={wrap(onClick)}
-    onMouseDown={wrap(onMouseDown)}
-    onMouseUp={wrap(onMouseUp)}
-    onMouseLeave={wrap(onMouseLeave)}
-    onMouseMove={wrap(onMouseMove)}
+    onClick={onClick && (e => onClick(e, getMousePos(e)))}
+    onMouseDown={onMouseDown && (e => onMouseDown(e, getMousePos(e)))}
+    onMouseUp={onMouseUp && (e => onMouseUp(e, getMousePos(e)))}
+    onMouseLeave={onMouseLeave && (e => onMouseLeave(e, getMousePos(e)))}
+    onMouseMove={onMouseMove && (e => onMouseMove(e, getMousePos(e)))}
     style={{ cursor: 'crosshair' }}
   />
 }

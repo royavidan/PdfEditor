@@ -1,7 +1,7 @@
 import { saveAs } from 'file-saver'
 import { PDFDocument, rgb, degrees } from 'pdf-lib'
 import fontkit from '@pdf-lib/fontkit'
-import { xml2js, js2xml, Element } from 'xml-js'
+import { xml2js, js2xml, type Element } from 'xml-js'
 import JSZip from 'jszip'
 
 import { translatePos, getPositiveAngle } from '../../utils'

@@ -1,5 +1,5 @@
 import React, { useState, createContext, useEffect, useContext } from 'react'
-import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.js'
+import * as pdfjs from 'pdfjs-dist'
 
 import { FileContext } from './file-context'
 import type { ContextProvider } from '../types'
@@ -12,18 +12,18 @@ export interface PageContext {
     prevPage(): void
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const PageContext = createContext({} as PageContext)
 
-export default (({ children }) => {
+const PageProvider: ContextProvider = ({ children }) => {
     const [pages, setPages] = useState(1)
     const [currentPage, setCurrentPage] = useState(0)
     const { data, isFileLoaded } = useContext(FileContext)
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPage(0)
         if (isFileLoaded()) {
-            pdfjs.getDocument(data!).promise.then(pdfDoc => {
-                setPages(pdfDoc.numPages)
-            })
+            pdfjs.getDocument(data!.slice(0)).promise.then(pdfDoc => setPages(pdfDoc.numPages))
         } else {
             setPages(1)
         }
@@ -39,4 +39,6 @@ export default (({ children }) => {
             {children}
         </PageContext.Provider>
     )
-}) as ContextProvider
+}
+
+export default PageProvider

@@ -1,4 +1,4 @@
-import React, { useState, createContext } from 'react'
+import { useState, createContext } from 'react'
 import type { ContextProvider, Permutation, Position, Border } from '../types'
 
 export interface Bloon extends Border {
@@ -19,8 +19,9 @@ export interface Modification {
   disabled?: boolean
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, react-refresh/only-export-components
 export const isModification = (mod: any): mod is Modification => 
-  typeof mod === 'object'
+  typeof mod === 'object' && mod !== null
   && typeof mod.id === 'number'
   && typeof mod.value === 'number'
   && typeof mod.position === 'object' && typeof mod.position.x === 'number' && typeof mod.position.y === 'number'
@@ -49,9 +50,10 @@ export interface ModificationContext {
 const initialModList: Modification[] = []
 const initialId = 0
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const ModificationContext = createContext({} as ModificationContext)
 
-export default (({ children }) => {
+const ModificationProvider: ContextProvider = ({ children }) => {
   const [modList, setModList] = useState(initialModList)
   const [nextId, setNextId] = useState(initialId)
   
@@ -97,4 +99,6 @@ export default (({ children }) => {
       {children}
     </ModificationContext.Provider>
   )
-}) as ContextProvider
+}
+
+export default ModificationProvider

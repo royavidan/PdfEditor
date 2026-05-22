@@ -14,7 +14,7 @@
       "name": "Launch Chrome",
       "request": "launch",
       "type": "chrome",
-      "url": "http://localhost:3000/PdfEditor",
+      "url": "http://localhost:5173/PdfEditor",
       "webRoot": "${workspaceFolder}"
     },
     {

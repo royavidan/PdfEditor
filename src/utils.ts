@@ -10,7 +10,6 @@ export const arrayIsEqual = <T,>(a: ArrayLike<T>, b: ArrayLike<T>) => {
 export const floatIsEqual = (a: number, b: number, epsilon: number = 0.0001) => Math.abs(a - b) < epsilon
 
 export const mostCommon = <T,>(arr: readonly T[]) => {
-    // eslint-disable-next-line no-sequences
     const counts = arr.reduce((curr, elem) => (curr.set(elem, (curr.get(elem) || 0) + 1), curr), new Map<T, number>())
     let maxCount = 0, maxElem
     for (const [elem, count] of counts.entries()) {

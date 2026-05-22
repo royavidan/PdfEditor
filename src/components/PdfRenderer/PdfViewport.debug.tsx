@@ -1,11 +1,11 @@
-import React, { useContext, useEffect } from 'react'
-import ReactDOM from 'react-dom'
+import { useContext, useEffect } from 'react'
 import OriginalPdfViewport from './PdfViewport'
 import { FileContext } from '../../context/file-context'
-import { PDFContext, Text, Symbol } from '../../context/pdf-context'
+import { PDFContext, type SymbolType } from '../../context/pdf-context'
 import { PageContext } from '../../context/page-context'
 import { ModificationContext } from '../../context/modification-context'
-import type { SymbolType } from '../../context/pdf-context'
+
+import styles from './PdfViewport.debug.module.scss'
 
 const colors: Record<SymbolType, string> = {
   dia: 'red',
@@ -25,39 +25,9 @@ const colors: Record<SymbolType, string> = {
   'run out': 'cyan'
 }
 
-const style: React.CSSProperties = {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    background: 'transparent',
-    border: '1px solid darkred',
-    pointerEvents: 'none',
-    opacity: 0.5,
-    transformOrigin: 'bottom left'
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const global: any = globalThis
 
-const TextBox = ({ text }: { text: Text }) => {
-    return <div style={{
-        ...style,
-        width: `${text.width}px`,
-        height: `${text.height}px`,
-        transform: `translate(${text.left}px, ${text.top}px) rotate(${text.angle}rad)`,
-        borderColor: 'black',
-        borderRadius: text.plusminus ? '25%' : 0
-    }} />
-}
-
-const SymbolBox = ({ symbol, type }: { symbol: Symbol, type: SymbolType }) => {
-    return <div title={'help'} style={{
-        ...style,
-        width: `${symbol.width}px`,
-        height: `${symbol.height}px`,
-        transform: `translate(${symbol.left}px, ${symbol.top}px)`,
-        borderColor: colors[type]
-    }} />
-}
-
-declare var global: any
 global.debugEnabled = true
 
 const PdfViewport: typeof OriginalPdfViewport = props => {
@@ -76,11 +46,6 @@ const PdfViewport: typeof OriginalPdfViewport = props => {
 
     const insertCover = () => {
         if (!isLoaded || document.getElementsByClassName('debug').length > 0) return
-        
-        const cover = <>
-            {text.map((t, i) => <TextBox text={t} key={`text-${i}`}/>)}
-            {Object.entries(symbols).map(([symbol, matches]) => matches.map((s, i) => <SymbolBox symbol={s} type={symbol as SymbolType} key={`symbol-${symbol}-${i}`} />)).flat()}
-        </>
 
         const canvas = document.getElementsByTagName('canvas')[0]
         const base = canvas.parentElement!
@@ -95,10 +60,29 @@ const PdfViewport: typeof OriginalPdfViewport = props => {
             }
         })
         const node = document.createElement('div')
+        for (const t of text) {
+            const div = document.createElement('div')
+            div.classList.add(styles.cover)
+            div.style.width = `${t.width}px`
+            div.style.height = `${t.height}px`
+            div.style.transform = `translate(${t.left}px, ${t.top}px) rotate(${t.angle}rad)`
+            div.style.borderColor = 'black'
+            div.style.borderRadius = t.plusminus ? '25%' : '0'
+            node.appendChild(div)
+        }
+        for (const n in symbols) {
+            for (const s of symbols[n as SymbolType]) {
+                const div = document.createElement('div')
+                div.classList.add(styles.cover)
+                div.style.width = `${s.width}px`
+                div.style.height = `${s.height}px`
+                div.style.transform = `translate(${s.left}px, ${s.top}px)`
+                div.style.borderColor = colors[n as SymbolType]
+                node.appendChild(div)
+            }
+        }
         node.className = 'debug cover'
         base.appendChild(node)
-
-        ReactDOM.render(cover, node)
     }
 
     return <div ref={insertCover}><OriginalPdfViewport {...props} /></div>

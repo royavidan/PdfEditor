@@ -11,10 +11,10 @@ export interface FileContext<T> {
 }
 
 const NO_FILE_DATA = null
-export const initialState = { data: NO_FILE_DATA }
+// eslint-disable-next-line react-refresh/only-export-components
 export const FileContext = createContext({} as FileContext<FileData>)
 
-export default (({ children }) => {
+const FileProvider: ContextProvider = ({ children }) => {
   const [data, setData] = useState<FileData | null>(NO_FILE_DATA)
   const isFileLoaded = () => data !== NO_FILE_DATA
 
@@ -23,4 +23,6 @@ export default (({ children }) => {
       {children}
     </FileContext.Provider>
   )
-}) as ContextProvider
+}
+
+export default FileProvider

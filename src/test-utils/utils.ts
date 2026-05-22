@@ -1,4 +1,4 @@
-import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.js'
+import * as pdfjs from 'pdfjs-dist'
 import { promises as fs } from 'fs'
 import path from 'path'
 

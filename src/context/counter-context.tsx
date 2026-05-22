@@ -10,9 +10,10 @@ export interface CounterContext {
   decrementCounter: (i?: number) => void
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const CounterContext = createContext({} as CounterContext)
 
-export default (({ children }) => {
+const CounterProvider: ContextProvider = ({ children }) => {
   const [initialCounter, setInitialCounter] = useState(2)
   const [counter, setCounter] = useState(initialCounter)
   const resetCounter = () => setCounter(initialCounter)
@@ -25,4 +26,6 @@ export default (({ children }) => {
       {children}
     </CounterContext.Provider>
   )
-}) as ContextProvider
+}
+
+export default CounterProvider

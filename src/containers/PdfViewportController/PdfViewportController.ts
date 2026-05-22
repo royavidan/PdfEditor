@@ -1,9 +1,9 @@
 import { useContext, useState } from 'react'
 
-import { FileContext, FileData } from '../../context/file-context'
+import { FileContext, type FileData } from '../../context/file-context'
 import { ViewportContext } from '../../context/viewport-context'
 import { CounterContext } from '../../context/counter-context'
-import { ModificationContext, Modification } from '../../context/modification-context'
+import { ModificationContext, type Modification } from '../../context/modification-context'
 import { PDFContext } from '../../context/pdf-context'
 import { PageContext } from '../../context/page-context'
 import { translatePos } from '../../utils'

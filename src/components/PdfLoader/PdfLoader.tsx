@@ -1,5 +1,4 @@
-import React from 'react'
-import Files, { FileData, FilesErrorHandler } from 'react-files'
+import Files, { type FileData, type FilesErrorHandler } from 'react-files'
 
 import type { FileData as PDFFileData } from '../../context/file-context'
 
@@ -20,9 +19,9 @@ function PdfLoader({ onLoad }: PdfLoaderProps) {
   const onFilesError: FilesErrorHandler = (error, files) => {
     console.warn(`error loading files ${files}. error:`, error)
   }
-
+  
   return <div className={styles.dropzone}>
-    <Files
+    <Files.default
       className={styles.inner}
       onChange={onFilesChange}
       onError={onFilesError}
@@ -31,7 +30,7 @@ function PdfLoader({ onLoad }: PdfLoaderProps) {
       maxFiles={1}
     >
       Drop a file here or click to upload
-    </Files>
+    </Files.default>
   </div>
 
 }

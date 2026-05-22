@@ -1,16 +1,16 @@
-import { useEffect, useState } from 'react'
-import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.js'
+import { type ReactNode, useEffect, useState } from 'react'
+import * as pdfjs from 'pdfjs-dist'
 
 import type { PDFDocumentProxy } from 'pdfjs-dist'
-import { FileData } from '../../context/file-context'
+import type { FileData } from '../../context/file-context'
 
 function loadDocument(data: FileData) {
-  return pdfjs.getDocument(data).promise
+  return pdfjs.getDocument(data.slice(0)).promise
 }
 
 interface PdfDocProps {
   data: FileData
-  children(docObj: PDFDocumentProxy): JSX.Element
+  children(docObj: PDFDocumentProxy): ReactNode
 }
 
 function PdfDoc({ data, children }: PdfDocProps) {

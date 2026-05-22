@@ -27,7 +27,7 @@ interface OverlayItemsProps {
 function OverlayItem({
   position,
   size,
-  value,
+  // value,
   minValue,
   maxValue,
   scale,
@@ -63,7 +63,7 @@ function OverlayItem({
   const handleContextMenu: React.MouseEventHandler = e => {
     e.preventDefault()
     e.stopPropagation()
-    hasContextMenu && setContextMenu({ x: e.clientX, y: e.clientY })
+    if (hasContextMenu) setContextMenu({ x: e.clientX, y: e.clientY })
   }
 
   return (
@@ -117,7 +117,7 @@ function OverlayItem({
           <div
             className={styles.contextbutton}
             onClick={
-              e => {
+              () => {
                 closeContextMenu()
                 onChangeValue(parseInt(changeValueInputRef.current!.value))
               }
@@ -130,7 +130,9 @@ function OverlayItem({
             onMouseEnter={() => setShowSubMenu(true)}>
             Change Measurement {String.fromCharCode(showSubMenu ? 9654 : 9660)}
             {showSubMenu && (
-              <div className={styles.contextsubmenu} ref={ref => ref && (ref.style.top = `${Math.min(0, window.innerHeight - ref.getBoundingClientRect().bottom) - 1}px`)}>
+              <div className={styles.contextsubmenu} ref={ref => {
+                if (ref) ref.style.top = `${Math.min(0, window.innerHeight - ref.getBoundingClientRect().bottom) - 1}px`
+              }}>
                 {['TAP', 'MATERIAL', 'COATING', 'PAINTING', 'HEAT TREATMENT', 'MARKING', 'SURFACE TEXTURE', 'REMOVE BURRS'].map(measurement => (
                   <div
                     key={measurement}
@@ -148,7 +150,7 @@ function OverlayItem({
                   onClick={() => {
                     closeContextMenu()
                     const measurement = window.prompt('Enter custom measurement')
-                    measurement && onChangeMeasurement(measurement.toUpperCase())
+                    if (measurement) onChangeMeasurement(measurement.toUpperCase())
                   }}>
                   CUSTOM
                 </div>
