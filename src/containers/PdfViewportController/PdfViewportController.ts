@@ -118,9 +118,9 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
       }))
     },
     onItemDelete: id => {
-      const mod = modList.find(mod => mod.id === id)
+      const mod = modList.find(m => m.id === id)
       if (!mod || mod.disabled) return
-      const nextMod = modList.find(mod => mod.value === mod.value + 1)
+      const nextMod = modList.find(m => m.value === mod.value + 1)
       removeMod(id)
       decrementCounter()
       if (mod.bloon.measurement === 'TAP') {

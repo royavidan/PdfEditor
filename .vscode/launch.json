@@ -7,8 +7,26 @@
       "request": "launch",
       "map": {
         "*.test.ts": "Debug Test File",
+        "*.test.tsx": "Debug Test File",
         "*": "Launch Chrome"
       }
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Test File",
+      "autoAttachChildProcesses": true,
+      "skipFiles": [
+        "<node_internals>/**",
+        "**/node_modules/**"
+      ],
+      "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
+      "args": [
+        "run",
+        "${file}"
+      ],
+      "smartStep": true,
+      "console": "integratedTerminal"
     },
     {
       "name": "Launch Chrome",
@@ -17,31 +35,6 @@
       "url": "http://localhost:5173/PdfEditor",
       "webRoot": "${workspaceFolder}"
     },
-    {
-      "name": "Debug Test File",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/react-scripts",
-      "args": [
-        "test",
-        "${fileBasename}",
-        "--runInBand",
-        "--no-cache",
-        "--watchAll=false"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen"
-    },
-    {
-      "name": "C/C++ Runner: Debug Session",
-      "type": "cppvsdbg",
-      "request": "launch",
-      "args": [],
-      "stopAtEntry": false,
-      "console": "externalTerminal",
-      "cwd": "c:/Users/User/Technion/CompetetiveProgramming/presentations",
-      "program": "c:/Users/User/Technion/CompetetiveProgramming/presentations/build/Debug/outDebug"
-    }
+    
   ]
 }

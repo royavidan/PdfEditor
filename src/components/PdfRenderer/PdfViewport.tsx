@@ -23,6 +23,7 @@ interface PdfViewportProps {
   overlayTemplate: OverlayTemplate
   className?: string
   style?: React.CSSProperties
+  children?: React.ReactNode
   onMouseDown?: PdfMouseEventHandler
   onMouseUp?: PdfMouseEventHandler
   onMouseLeave?: PdfMouseEventHandler
@@ -49,6 +50,7 @@ function PdfViewport({
   overlayTemplate,
   className = '',
   style,
+  children,
   onMouseDown,
   onMouseUp,
   onMouseLeave,
@@ -106,6 +108,7 @@ function PdfViewport({
                     />
                     <PdfCanvas page={page} scale={scale} onMouseDown={wrap(onMouseDown)} onMouseUp={wrap(onMouseUp)} onMouseLeave={wrap(onMouseLeave)}
                       onMouseMove={onMouseMove} />
+                    {children}
                     {markedPosition && currentMousePos && (
                       <div className={styles.selectionbox}
                         style={{

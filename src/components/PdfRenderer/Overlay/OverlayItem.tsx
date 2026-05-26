@@ -69,6 +69,7 @@ function OverlayItem({
   return (
     <>
       <div
+        ref={r => { if (r && isSelected) r.parentElement!.focus(); }}
         className={`${styles.item} ${isSelected ? styles.selected : ''}`}
         style={{
           left: `${(position.x - size / 2) * scale}px`,

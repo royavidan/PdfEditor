@@ -35,6 +35,7 @@ const PdfViewport: typeof OriginalPdfViewport = props => {
     const { currentPage } = useContext(PageContext)
     const { isFileLoaded } = useContext(FileContext)
     const { modList } = useContext(ModificationContext)
+
     useEffect(() => {
         global.text = getText(currentPage)
         global.symbols = getSymbols(currentPage)
@@ -44,12 +45,24 @@ const PdfViewport: typeof OriginalPdfViewport = props => {
     const isLoaded = isFileLoaded() && getLoadedPages() > currentPage
     const text = getText(currentPage)!, symbols = getSymbols(currentPage)!
 
-    const insertCover = () => {
-        if (!isLoaded || document.getElementsByClassName('debug').length > 0) return
+    const cover = isLoaded ? <div className='debug'>
+        {text.map((t, i) => <div key={`text-${i}`} className={styles.cover} style={{
+            width: `${t.width}px`,
+            height: `${t.height}px`,
+            transform: `translate(${t.left}px, ${t.top}px) rotate(${t.angle}rad)`,
+            borderColor: 'black',
+            borderRadius: t.plusminus ? '25%' : '0'
+        }}/>)}
+        {Object.entries(symbols).map(([symbolType, symbols]) => symbols.map((s, i) => <div key={`symbol-${symbolType}-${i}`} className={styles.cover} style={{
+            width: `${s.width}px`,
+            height: `${s.height}px`,
+            transform: `translate(${s.left}px, ${s.top}px)`,
+            borderColor: colors[symbolType as SymbolType]
+        }}/>).flat())}
+    </div> : null
 
-        const canvas = document.getElementsByTagName('canvas')[0]
-        const base = canvas.parentElement!
-        document.body.addEventListener('keydown', e => {
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
             if (e.key === 'c' && e.ctrlKey) {
                 navigator.clipboard.writeText(JSON.stringify({ text: global.text, symbols: global.symbols }, null, 4))
                 console.log('Copied data')
@@ -58,34 +71,12 @@ const PdfViewport: typeof OriginalPdfViewport = props => {
                 navigator.clipboard.writeText(JSON.stringify(modList, null, 4))
                 console.log('Copied mod list')
             }
-        })
-        const node = document.createElement('div')
-        for (const t of text) {
-            const div = document.createElement('div')
-            div.classList.add(styles.cover)
-            div.style.width = `${t.width}px`
-            div.style.height = `${t.height}px`
-            div.style.transform = `translate(${t.left}px, ${t.top}px) rotate(${t.angle}rad)`
-            div.style.borderColor = 'black'
-            div.style.borderRadius = t.plusminus ? '25%' : '0'
-            node.appendChild(div)
         }
-        for (const n in symbols) {
-            for (const s of symbols[n as SymbolType]) {
-                const div = document.createElement('div')
-                div.classList.add(styles.cover)
-                div.style.width = `${s.width}px`
-                div.style.height = `${s.height}px`
-                div.style.transform = `translate(${s.left}px, ${s.top}px)`
-                div.style.borderColor = colors[n as SymbolType]
-                node.appendChild(div)
-            }
-        }
-        node.className = 'debug cover'
-        base.appendChild(node)
-    }
+        document.body.addEventListener('keydown', handler)
+        return () => document.body.removeEventListener('keydown', handler)
+    }, [modList])
 
-    return <div ref={insertCover}><OriginalPdfViewport {...props} /></div>
+    return <OriginalPdfViewport {...props} children={cover}/>
 }
 
 export default PdfViewport

@@ -1,19 +1,24 @@
-import React from 'react'
-import ReactDOM from 'react-dom'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { createRoot, type Root } from 'react-dom/client'
 import App from './App'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const global: any
 
 describe('rendering', () => {
   let div: HTMLDivElement
+  let root: Root
 
   beforeAll(() => div = document.createElement('div'))
-  afterAll(() => ReactDOM.unmountComponentAtNode(div))
+  afterAll(() => root.unmount())
 
   it('renders without crashing', () => {
-    ReactDOM.render(<App />, div)
+    root = createRoot(div)
+    root.render(<App />)
   })
 
   it('no debug', () => {
     expect(div.getElementsByClassName('debug')).toHaveLength(0)
-    expect((global as any).debugEnabled).toBeFalsy()
+    expect(global.debugEnabled).toBeFalsy()
   })
 })

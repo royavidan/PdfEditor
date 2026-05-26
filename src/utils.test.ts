@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest'
 import { arrayIsEqual, floatIsEqual, mostCommon, crossIntervals, findOne, findOneIndex, translatePos, getPositiveAngle, isInside, replaceMany } from './utils'
 
 describe('arrayIsEqual', () => {
