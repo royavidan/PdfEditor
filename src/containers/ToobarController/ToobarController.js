@@ -13,6 +13,7 @@ import { BloonsContext } from '../../context/bloons-context'
 import { translatePos, getPositiveAngle } from '../../utils'
 import { PageContext } from '../../context/page-context'
 import { PDFContext } from '../../context/pdf-context'
+import { SettingsContext } from '../../context/settings-context'
 
 async function exportBloons(bloons) {
   const template = await fetch('https://raw.githubusercontent.com/royavidan/PdfEditor/refs/heads/resources/template.xlsm')
@@ -122,12 +123,13 @@ function ToolbarController({ children }) {
   const { data: fileData, isFileLoaded, setData: setFileData } = useContext(
     FileContext
   )
-  const { scale, setScale, fontSize, setFontSize } = useContext(ViewportContext)
-  const { initialCounter, setInitialCounter, counter, resetCounter } = useContext(CounterContext)
+  const { scale, setScale } = useContext(ViewportContext)
+  const { counter, resetCounter } = useContext(CounterContext)
   const { modList, resetModList } = useContext(ModificationContext)
   const { bloons, resetBloons } = useContext(BloonsContext)
   const { currentPage, setPage, pages } = useContext(PageContext)
   const { isLoaded } = useContext(PDFContext)
+  const { fontSize, openSettings, resetSettings } = useContext(SettingsContext)
   const onZoomChange = amount => setScale(scale => scale + amount)
 
   const onChangePageNum = event => {
@@ -150,15 +152,13 @@ function ToolbarController({ children }) {
       resetModList()
       resetBloons()
       resetCounter()
+      resetSettings()
     },
-    initialCounter,
-    setInitialCounter,
     counter,
     onDownload: () => download(fileData, modList, fontSize),
     onExport: () => exportBloons(bloons),
-    onChangePageNum,
-    fontSize,
-    setFontSize
+    onSettings: openSettings,
+    onChangePageNum
   })
 }
 
