@@ -37,4 +37,15 @@
     color: white;
     margin: auto 16px;
   }
+
+
+  .icon {
+    cursor: pointer;
+    float: right;
+    margin: auto 16px;
+    margin-left: auto;
+    aspect-ratio: 1 / 1;
+    height: 100%;
+    fill: #999;
+  }
 }

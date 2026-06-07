@@ -6,6 +6,7 @@ import { FileContext, type FileData } from '../../context/file-context'
 import { ViewportContext } from '../../context/viewport-context'
 import { CounterContext } from '../../context/counter-context'
 import { ModificationContext } from '../../context/modification-context'
+import { SettingsContext } from '../../context/settings-context'
 import type { ControllerProps } from '../../types'
 
 interface LoadDialogControllerData {
@@ -23,6 +24,7 @@ function LoadDialogController({ children }: ControllerProps<LoadDialogController
   const { resetScale } = useContext(ViewportContext)
   const { resetCounter, incrementCounter } = useContext(CounterContext)
   const { resetModList, addMod, modList } = useContext(ModificationContext)
+  const { resetSettings } = useContext(SettingsContext)
 
   const onLoad = (data: FileData) => {
     setShowDialog(false)
@@ -31,6 +33,7 @@ function LoadDialogController({ children }: ControllerProps<LoadDialogController
     resetScale()
     resetCounter()
     resetModList()
+    resetSettings()
     
     if (loadedContent.modList) {
       loadedContent.modList.forEach((m, i) => addMod(m, i))

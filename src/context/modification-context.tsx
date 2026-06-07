@@ -15,6 +15,7 @@ export interface Modification {
   value: number
   position: Position
   page: number
+  hasExtra?: boolean
   bloon: Bloon
   disabled?: boolean
 }

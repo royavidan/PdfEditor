@@ -8,6 +8,7 @@ import { PDFContext } from '../../context/pdf-context'
 import { PageContext } from '../../context/page-context'
 import { translatePos } from '../../utils'
 import { fillBloon } from './bloons-logic'
+import { SettingsContext } from '../../context/settings-context'
 import type { PdfMouseEventHandler } from '../../components/PdfRenderer/PdfCanvas'
 import type { ControllerProps, Position } from '../../types'
 import type { OverlayTemplate } from '../../components/PdfRenderer/Overlay/Overlay'
@@ -37,9 +38,10 @@ interface PdfViewportControllerData {
 
 function PdfViewportController({ children }: ControllerProps<PdfViewportControllerData>) {
   const { data } = useContext(FileContext)
-  const { scale, fontSize } = useContext(ViewportContext)
+  const { scale } = useContext(ViewportContext)
+  const { fontSize, doubleBloonsOnTap, initialCounter } = useContext(SettingsContext)
   const { getText, getSymbols, getSize, getAngle, getLoadedPages } = useContext(PDFContext)
-  const { counter, initialCounter, incrementCounter, decrementCounter } = useContext(
+  const { counter, incrementCounter, decrementCounter } = useContext(
     CounterContext
   )
   const { modList, addMod, changeMod, removeMod } = useContext(
@@ -65,6 +67,7 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
       bottom: Math.max(...Y)
     }
     const bloon = fillBloon(bloonInput, { text, symbols })
+    const hasExtra = doubleBloonsOnTap && bloon.measurement === 'TAP'
     
     addMod({
       position: {
@@ -73,11 +76,12 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
       },
       page: currentPage,
       value: counter,
+      hasExtra,
       bloon
     })
     incrementCounter()
     setMarkedPosition(null)
-    if (bloon.measurement === 'TAP') {
+    if (hasExtra) {
       addMod({
         position: {
           x: (position.x + scale) / scale + 25,
@@ -123,7 +127,7 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
       const nextMod = modList.find(m => m.value === mod.value + 1)
       removeMod(id)
       decrementCounter()
-      if (mod.bloon.measurement === 'TAP') {
+      if (mod.hasExtra) {
         removeMod(nextMod!.id)
         decrementCounter()
       }
@@ -154,7 +158,7 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
       if (!mod || mod.bloon.measurement === measurement) return
       changeMod(id, mod => ({ ...mod, bloon: { ...mod.bloon, measurement } }))
 
-      if (measurement === 'TAP') {
+      if (doubleBloonsOnTap && measurement === 'TAP') {
         addMod({
           position: {
             x: mod.position.x + 25,
@@ -166,7 +170,7 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
           disabled: true
         })
         incrementCounter()
-      } else if (mod.bloon.measurement === 'TAP') {
+      } else if (mod.hasExtra) {
         removeMod(modList.find(mod => mod.value === mod.value + 1)!.id)
         decrementCounter()
       }
