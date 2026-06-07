@@ -2,7 +2,7 @@
 
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import pkg from './package.json'
+import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -13,13 +13,13 @@ export default defineConfig({
     needsInterop: ['react-files']
   },
   define: {
-    'import.meta.env.version': JSON.stringify(pkg.version)
+    'import.meta.env.version': JSON.stringify(process.env.NPM_PACKAGE_VERSION)
   },
   test: {
+    onStackTrace: (err, frame) => console.error(err),
     environment: 'jsdom',
     // alias: {
-    //   'pdfjs-dist': 'pdfjs-dist/legacy/build/pdf.mjs',
-    //   'pdfjs-dist/build/pdf.worker.min.mjs': 'pdfjs-dist/legacy/build/pdf.worker.min.mjs'
+    //   'pdfjs-dist': path.resolve(__dirname, 'node_modules/pdfjs-dist/legacy/build/pdf.mjs')
     // }
   }
 })

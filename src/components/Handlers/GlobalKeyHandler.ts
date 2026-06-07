@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 
 interface GlobalKeyHandlerProps<T extends string> {
-  keys: T[]
+  keys: T | T[]
   event?: 'keyup' | 'keydown' | 'keypress'
   block?: boolean
   onClick(key: T): void
@@ -9,9 +9,10 @@ interface GlobalKeyHandlerProps<T extends string> {
 
 function GlobalKeyHandler<T extends string>({ keys, event, block, onClick }: GlobalKeyHandlerProps<T>) {
   useEffect(() => {
+    const arrKeys = Array.isArray(keys) ? keys : [keys]
     const onKeyup = (e: KeyboardEvent) => {
       const key = e.key as T
-      const match = keys.find(k => {
+      const match = arrKeys.find(k => {
         let s = k as string
         let match: RegExpMatchArray | null
         while ((match = s.match(/^(ctrl|alt|shift)\+/i))) {
