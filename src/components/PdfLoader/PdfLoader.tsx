@@ -5,7 +5,7 @@ import type { FileData as PDFFileData } from '../../context/file-context'
 import styles from './PdfLoader.module.scss'
 
 interface PdfLoaderProps {
-  onLoad(data: PDFFileData): void
+  onLoad(data: PDFFileData, name: string): void
 }
 
 function PdfLoader({ onLoad }: PdfLoaderProps) {
@@ -13,7 +13,7 @@ function PdfLoader({ onLoad }: PdfLoaderProps) {
     console.log('got request to load files:', files)
     const file = files[0]
     const data = await file.arrayBuffer()
-    onLoad(data)
+    onLoad(data, file.name)
   }
 
   const onFilesError: FilesErrorHandler = (error, files) => {

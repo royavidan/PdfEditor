@@ -13,20 +13,21 @@ interface LoadDialogControllerData {
   showDialog: boolean
   openDialog(): void
   closeDialog(): void
-  onLoad(data: FileData): void
+  onLoad(data: FileData, name: string): void
   onSave(): void
   isAtReload(): boolean
 }
 
 function LoadDialogController({ children }: ControllerProps<LoadDialogControllerData>) {
   const [showDialog, setShowDialog] = useState(true)
-  const { data: fileData, isFileLoaded, setData: setFileData } = useContext(FileContext)
+  const { data: fileData, isFileLoaded, setData: setFileData, name: fileName, setName: setFileName } = useContext(FileContext)
   const { resetScale } = useContext(ViewportContext)
   const { resetCounter, incrementCounter } = useContext(CounterContext)
   const { resetModList, addMod, modList } = useContext(ModificationContext)
   const { resetSettings } = useContext(SettingsContext)
 
-  const onLoad = (data: FileData) => {
+  const onLoad = (data: FileData, name: string) => {
+    setFileName(name)
     setShowDialog(false)
     const loadedContent = tryLoadMods(data)
     setFileData(loadedContent.data)
@@ -42,7 +43,7 @@ function LoadDialogController({ children }: ControllerProps<LoadDialogController
   }
 
   const onSave = async () => {
-    saveAs(compactMods(fileData!, modList), 'דוח ביקורת - עם בלונים.pdf')
+    saveAs(compactMods(fileData!, modList), `${(fileName || 'scan.pdf').replace('.pdf', ' - in progress.pdf')}`)
   }
 
   return children({

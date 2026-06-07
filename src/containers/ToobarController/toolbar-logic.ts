@@ -8,7 +8,7 @@ import { translatePos, getPositiveAngle } from '../../utils'
 import type { FileData } from '../../context/file-context'
 import type { Modification } from '../../context/modification-context'
 
-export async function exportBloons(modList: Modification[]) {
+export async function exportBloons(modList: Modification[], name: string) {
   const template = await fetch('https://raw.githubusercontent.com/royavidan/PdfEditor/refs/heads/resources/template.xlsm')
   const zip = await JSZip.loadAsync(await template.blob())
   const readXml = async (path: string) => xml2js(await zip.file(path)!.async('string'), { trim: false, compact: false, captureSpacesBetweenElements: true })
@@ -62,10 +62,10 @@ export async function exportBloons(modList: Modification[]) {
   writeXml(`xl/${sheetPath}`, sheet)
   const blob = new Blob([await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })], { type: 'application/vnd.ms-excel.sheet.macroEnabled.12' })
   console.log('request to download file accepted', blob)
-  saveAs(blob, 'דוח ביקורת.xlsm')
+  saveAs(blob, `${name}.xlsm`)
 }
 
-export async function download(fileData: FileData, modificationList: Modification[], fontSize: number) {
+export async function download(fileData: FileData, modificationList: Modification[], fontSize: number, name: string) {
   const pdfDoc = await PDFDocument.load(fileData)
   pdfDoc.registerFontkit(fontkit)
   const fontBytes = await fetch('/fonts/Roboto/Roboto-Regular.ttf').then(res => res.arrayBuffer())
@@ -99,7 +99,7 @@ export async function download(fileData: FileData, modificationList: Modificatio
 
   const blob = new Blob([modifiedData.buffer as FileData], { type: 'application/pdf' })
   console.log('request to download file accepted', blob)
-  saveAs(blob, 'output.pdf')
+  saveAs(blob, name)
 }
 
 export async function rotate(fileData: FileData, setFileData: (data: FileData) => void, angle: number, currentPage: number) {

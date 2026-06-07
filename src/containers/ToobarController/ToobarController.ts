@@ -23,7 +23,7 @@ interface ToolbarControllerData {
 }
 
 function ToolbarController({ children }: ControllerProps<ToolbarControllerData>) {
-  const { data: fileData, isFileLoaded, setData: setFileData } = useContext(
+  const { data: fileData, isFileLoaded, setData: setFileData, name: fileName } = useContext(
     FileContext
   )
   const { scale, setScale } = useContext(ViewportContext)
@@ -31,7 +31,7 @@ function ToolbarController({ children }: ControllerProps<ToolbarControllerData>)
   const { modList, resetModList } = useContext(ModificationContext)
   const { currentPage, setPage, pages } = useContext(PageContext)
   const { getLoadedPages } = useContext(PDFContext)
-  const { fontSize, openSettings } = useContext(SettingsContext)
+  const { fontSize, defaultXlsmName, openSettings } = useContext(SettingsContext)
   const onZoomChange = (amount: number) => setScale(scale => scale + amount)
 
   const onChangePageNum: React.ChangeEventHandler<HTMLInputElement> = event => {
@@ -55,8 +55,8 @@ function ToolbarController({ children }: ControllerProps<ToolbarControllerData>)
       resetCounter()
     },
     counter,
-    onDownload: () => download(fileData!, modList, fontSize),
-    onExport: () => exportBloons(modList),
+    onDownload: () => download(fileData!, modList, fontSize, fileName || 'output.pdf'),
+    onExport: () => exportBloons(modList, defaultXlsmName),
     onSettings: openSettings,
     onChangePageNum,
   })

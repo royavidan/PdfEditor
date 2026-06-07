@@ -8,6 +8,8 @@ export interface SettingsContext {
   setFontSize: React.Dispatch<React.SetStateAction<number>>
   initialCounter: number
   setInitialCounter: React.Dispatch<React.SetStateAction<number>>
+  defaultXlsmName: string
+  setDefaultXlsmName: React.Dispatch<React.SetStateAction<string>>
 
   showSettings: boolean
   openSettings(): void
@@ -22,6 +24,7 @@ const SettingsProvider: ContextProvider = ({ children }) => {
   const [doubleBloonsOnTap, setDoubleBloonsOnTap] = useState(true)
   const [fontSize, setFontSize] = useState(12)
   const [initialCounter, setInitialCounter] = useState(2)
+  const [defaultXlsmName, setDefaultXlsmName] = useState('דוח ביקורת')
   const [showSettings, setShowSettings] = useState(false)
 
   const openSettings = () => setShowSettings(true)
@@ -32,7 +35,7 @@ const SettingsProvider: ContextProvider = ({ children }) => {
   }
   return (
     <SettingsContext.Provider
-      value={{ doubleBloonsOnTap, setDoubleBloonsOnTap, fontSize, setFontSize, initialCounter, setInitialCounter, showSettings, openSettings, closeSettings, resetSettings }}
+      value={{ doubleBloonsOnTap, setDoubleBloonsOnTap, fontSize, setFontSize, initialCounter, setInitialCounter, defaultXlsmName, setDefaultXlsmName, showSettings, openSettings, closeSettings, resetSettings }}
     >
       {children}
     </SettingsContext.Provider>

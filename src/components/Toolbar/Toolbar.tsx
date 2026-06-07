@@ -59,16 +59,16 @@ function Toolbar({
         </button>
       </div>
 
-      <button disabled={disabled} onClick={onLoad}>
+      <button title="Load a clean PDF or a bloons PDF." disabled={disabled} onClick={onLoad}>
         Load
       </button>
-      <button disabled={disabled} onClick={onDownload}>
+      <button title="Download the current PDF with the bloons." disabled={disabled} onClick={onDownload}>
         Download
       </button>
-      <button disabled={disabled} onClick={onExport}>
+      <button title="Export the CSV of the bloons data." disabled={disabled} onClick={onExport}>
         Export
       </button>
-      <button disabled={disabled} onClick={onSave}>
+      <button title="Save the current PDF with the bloons data. Bloons won't be visible in the PDF outside this editor." disabled={disabled} onClick={onSave}>
         Save
       </button>
       <div className={styles.text}>

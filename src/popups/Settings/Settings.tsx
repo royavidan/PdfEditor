@@ -5,11 +5,12 @@ import { SettingsContext } from '../../context/settings-context'
 import { arrayIsEqual } from '../../utils'
 
 function Settings() {
-    const { doubleBloonsOnTap, setDoubleBloonsOnTap, fontSize, setFontSize, initialCounter, setInitialCounter, showSettings, closeSettings } = useContext(SettingsContext)
+    const { doubleBloonsOnTap, setDoubleBloonsOnTap, fontSize, setFontSize, initialCounter, setInitialCounter, defaultXlsmName, setDefaultXlsmName, showSettings, closeSettings } = useContext(SettingsContext)
     
     const [doubleBloonsOnTapValue, setDoubleBloonsOnTapValue] = useState(doubleBloonsOnTap)
     const [fontSizeValue, setFontSizeValue] = useState(fontSize)
     const [initialCounterValue, setInitialCounterValue] = useState(initialCounter)
+    const [defaultXlsmNameValue, setDefaultXlsmNameValue] = useState(defaultXlsmName)
     
     if (!showSettings) return null
 
@@ -17,11 +18,12 @@ function Settings() {
         setDoubleBloonsOnTap(doubleBloonsOnTapValue)
         setFontSize(fontSizeValue)
         setInitialCounter(initialCounterValue)
+        setDefaultXlsmName(defaultXlsmNameValue)
         
         closeSettings()
     }
 
-    const hasChanges = () => !arrayIsEqual([doubleBloonsOnTap, fontSize, initialCounter], [doubleBloonsOnTapValue, fontSizeValue, initialCounterValue])
+    const hasChanges = () => !arrayIsEqual([doubleBloonsOnTap, fontSize, initialCounter, defaultXlsmName], [doubleBloonsOnTapValue, fontSizeValue, initialCounterValue, defaultXlsmNameValue])
 
     return (
         <div className={styles.overlay}>
@@ -55,6 +57,16 @@ function Settings() {
                         type="number" 
                         className={styles.numberInput} 
                         defaultValue={initialCounter}
+                    />
+                </div>
+
+                <div className={styles.row}>
+                    <label className={styles.label}>Default XLSM Name</label>
+                    <input onChange={e => setDefaultXlsmNameValue(e.target.value)}
+                        dir="auto"
+                        type="text" 
+                        className={styles.textInput}
+                        defaultValue={defaultXlsmName}
                     />
                 </div>
 

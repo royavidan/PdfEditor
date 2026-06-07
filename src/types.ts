@@ -38,3 +38,5 @@ export interface WorkerUsage<I, O, E = Error> {
 export type OneOf<T extends Record<string, Record<PropertyKey, unknown>>, S extends string = 'type'> = keyof T extends infer K ? K extends keyof T ? {
     [P in S | keyof T[K]]: P extends S ? K : T[K][P]
 } : never : never
+
+export type Capitalize<S extends string> = S extends `${infer First}${infer Rest}` ? `${Uppercase<First>}${Rest}` : S
