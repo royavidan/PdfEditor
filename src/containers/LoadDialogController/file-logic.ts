@@ -12,10 +12,11 @@ export const tryLoadMods = (data: FileData): { data: FileData, modList: Modifica
     if (eofIndex < 0) return { data, modList: null }
     eofIndex += EOF.length
     if (eofIndex < arrData.length) {
+        data = arrData.slice(0, eofIndex).buffer
         try {
             const modList = JSON.parse(atob(String.fromCharCode(...arrData.slice(eofIndex))))
             if (!Array.isArray(modList) || !modList.every(isModification)) return { data, modList: null }
-            return { data: arrData.slice(0, eofIndex).buffer, modList }
+            return { data, modList }
         } catch { /* empty */ }
     }
     return { data, modList: null }

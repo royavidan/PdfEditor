@@ -5,7 +5,7 @@
   "type": "module",
   "homepage": "https://royavidan.github.io/PdfEditor",
   "scripts": {
-    "dev": "vite",
+    "start": "vite",
     "prebuild": "tsc -b",
     "build": "vite build",
     "lint": "eslint .",

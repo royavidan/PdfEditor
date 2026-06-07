@@ -46,7 +46,7 @@ export function fillBloon(border: Border, data: Data) {
                     if (currentText[match].str === '-') bottomText = currentText[match].str + bottomText
                     indexes.push(match)
                 }
-                bloon.tolerance = { '+': topText, '-': bottomText }
+                bloon.tolerance = { '+': parseFloat(topText), '-': parseFloat(bottomText) }
                 text = text.filter((_, index) => !indexes.includes(index))
                 break
             }
@@ -73,7 +73,7 @@ export function fillBloon(border: Border, data: Data) {
     bloon.content = bloon.content.replace('°°', '°')
     const plusminus = /±([\d.]+)/.exec(bloon.content)
     if (plusminus) {
-        bloon.tolerance = { '+': plusminus[1], '-': plusminus[1] }
+        bloon.tolerance = { '+': parseFloat(plusminus[1]), '-': parseFloat(plusminus[1]) }
         bloon.content = (bloon.content.slice(0, plusminus.index) + bloon.content.slice(plusminus.index + plusminus[0].length)).trim()
     }
 

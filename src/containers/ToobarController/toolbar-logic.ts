@@ -67,9 +67,8 @@ export async function exportBloons(modList: Modification[]) {
 
 export async function download(fileData: FileData, modificationList: Modification[], fontSize: number) {
   const pdfDoc = await PDFDocument.load(fileData)
-  const fontUrl = `${process.env.PUBLIC_URL}/fonts/Roboto/Roboto-Regular.ttf`
   pdfDoc.registerFontkit(fontkit)
-  const fontBytes = await fetch(fontUrl).then(res => res.arrayBuffer())
+  const fontBytes = await fetch('/fonts/Roboto/Roboto-Regular.ttf').then(res => res.arrayBuffer())
   const font = await pdfDoc.embedFont(fontBytes)
   await Promise.all(pdfDoc.getPages().map(async (page, index) => {
     const { width, height } = page.getSize()

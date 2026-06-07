@@ -5,8 +5,8 @@ export interface Bloon extends Border {
     content: string
     measurement: string
     tolerance?: {
-        '+': number | string
-        '-': number | string
+        '+': number
+        '-': number
     }
 }
 
@@ -27,7 +27,7 @@ export const isModification = (mod: any): mod is Modification =>
   && typeof mod.value === 'number'
   && typeof mod.position === 'object' && typeof mod.position.x === 'number' && typeof mod.position.y === 'number'
   && typeof mod.page === 'number'
-  && (typeof mod.isExtra === 'boolean' || !('hasExtra' in mod))
+  && (typeof mod.hasExtra === 'boolean' || !('hasExtra' in mod))
   && typeof mod.bloon === 'object'
     && typeof mod.bloon.left === 'number'
     && typeof mod.bloon.right === 'number'
