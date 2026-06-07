@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+/// <reference types="vitest/globals" />
 import { arrayIsEqual, floatIsEqual, mostCommon, crossIntervals, findOne, findOneIndex, translatePos, getPositiveAngle, isInside, replaceMany } from './utils'
 
 describe('arrayIsEqual', () => {

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-export type ContextProvider = (props: { children: React.ReactNode }) => ReactNode
+export type ContextProvider = (props: { children: ReactNode }) => ReactNode
 
 export type Permutation<T> = (arg: T) => T
 

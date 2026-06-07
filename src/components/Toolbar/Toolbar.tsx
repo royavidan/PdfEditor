@@ -7,8 +7,6 @@ import styles from './Toolbar.module.scss'
 interface ToolbarProps {
   disabled: boolean
   scale: number
-  initialCounter: number
-  setInitialCounter: React.Dispatch<React.SetStateAction<number>>
   counter: number
   onZoomChange(amount: number): void
   onRotate(angle: number): void
@@ -17,8 +15,6 @@ interface ToolbarProps {
   onExport(): void
   onSave(): void
   onSettings(): void
-  fontSize: number
-  setFontSize: React.Dispatch<React.SetStateAction<number>>
   onChangePageNum: React.ChangeEventHandler<HTMLInputElement>
 }
 

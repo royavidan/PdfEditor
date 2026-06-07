@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+/// <reference types="vitest/globals" />
 import { createRoot, type Root } from 'react-dom/client'
 import App from './App'
 

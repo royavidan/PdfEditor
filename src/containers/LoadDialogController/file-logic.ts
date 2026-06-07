@@ -8,7 +8,8 @@ const EOF = [...'%%EOF'].map(c => c.charCodeAt(0))
 export const tryLoadMods = (data: FileData): { data: FileData, modList: Modification[] | null } => {
     const arrData = new Uint8Array(data)
     let eofIndex = arrData.length - EOF.length
-    while (!arrayIsEqual(arrData.slice(eofIndex, eofIndex + EOF.length), EOF)) eofIndex--
+    while (eofIndex >= 0 && !arrayIsEqual(arrData.slice(eofIndex, eofIndex + EOF.length), EOF)) eofIndex--
+    if (eofIndex < 0) return { data, modList: null }
     eofIndex += EOF.length
     if (eofIndex < arrData.length) {
         try {

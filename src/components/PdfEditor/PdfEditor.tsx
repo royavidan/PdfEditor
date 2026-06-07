@@ -6,7 +6,7 @@ import ToolbarController from '../../containers/ToobarController/ToobarControlle
 import Toolbar from '../Toolbar/Toolbar'
 import LoadDialogController from '../../containers/LoadDialogController/LoadDialogController'
 import PdfLoader from '../PdfLoader/PdfLoader'
-import PdfViewport from '../PdfRenderer/PdfViewport.debug'
+import PdfViewport from '../PdfRenderer/PdfViewport'
 import PdfViewportController from '../../containers/PdfViewportController/PdfViewportController'
 import GlobalKeyHandler from '../Handlers/GlobalKeyHandler'
 import ModificationProvider from '../../context/modification-context'

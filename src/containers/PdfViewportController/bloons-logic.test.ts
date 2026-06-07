@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+/// <reference types="vitest/globals" />
 import { readJSONFile } from '../../test-utils/utils'
 import { fillBloon } from './bloons-logic'
 import type { Modification } from '../../context/modification-context'

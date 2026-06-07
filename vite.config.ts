@@ -16,10 +16,11 @@ export default defineConfig({
     'import.meta.env.version': JSON.stringify(process.env.NPM_PACKAGE_VERSION)
   },
   test: {
-    onStackTrace: (err, frame) => console.error(err),
+    globals: true,
+    testTimeout: 30000,
     environment: 'jsdom',
-    // alias: {
-    //   'pdfjs-dist': path.resolve(__dirname, 'node_modules/pdfjs-dist/legacy/build/pdf.mjs')
-    // }
+    alias: {
+      'pdfjs-dist': path.resolve(__dirname, 'node_modules/pdfjs-dist/legacy/build/pdf.mjs')
+    }
   }
 })

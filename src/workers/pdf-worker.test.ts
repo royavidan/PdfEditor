@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+/// <reference types="vitest/globals" />
 import { extractPDFPageData } from './pdf-worker'
 import { isInside } from '../utils'
 import { readPDFFile, readJSONFile } from '../test-utils/utils'
