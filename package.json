@@ -1,7 +1,7 @@
 {
   "name": "pdf-editor",
   "private": true,
-  "version": "1.1.0",
+  "version": "2.0.0",
   "type": "module",
   "homepage": "https://royavidan.github.io/PdfEditor",
   "scripts": {
@@ -10,7 +10,10 @@
     "build": "vite build",
     "lint": "eslint .",
     "test": "vitest",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "release": "np",
+    "predeploy": "npm run release && npm run build",
+    "deploy": "gh-pages -d dist && git push --follow-tags"
   },
   "dependencies": {
     "@pdf-lib/fontkit": "^1.1.1",
