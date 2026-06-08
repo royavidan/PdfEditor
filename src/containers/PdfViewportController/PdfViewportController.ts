@@ -169,9 +169,11 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
           bloon: { ...mod.bloon, measurement: 'DIA' },
           disabled: true
         })
+        changeMod(id, mod => ({ ...mod, hasExtra: true }))
         incrementCounter()
       } else if (mod.hasExtra) {
         removeMod(modList.find(mod => mod.value === mod.value + 1)!.id)
+        changeMod(id, mod => ({ ...mod, hasExtra: false }))
         decrementCounter()
       }
     },

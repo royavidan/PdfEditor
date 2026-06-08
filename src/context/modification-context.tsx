@@ -73,11 +73,9 @@ const ModificationProvider: ContextProvider = ({ children }) => {
   }
 
   const changeMod: ModificationContext['changeMod'] = (id, changeFunc) => {
-    const changedModList = modList.map(mod =>
+    setModList(modList => modList.map(mod =>
       mod.id !== id ? mod : changeFunc(mod)
-    )
-
-    setModList(changedModList)
+    ))
   }
 
   const removeMod: ModificationContext['removeMod'] = id => {
