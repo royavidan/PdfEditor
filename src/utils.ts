@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import type { Border } from './types'
 
 export const arrayIsEqual = <T,>(a: ArrayLike<T>, b: ArrayLike<T>) => {
@@ -59,4 +60,14 @@ export const isInside = (inner: Border, outer: Border) => inner.left >= outer.le
 export const replaceMany = (text: string, table: Record<string, string>) => {
     for (const [key, value] of Object.entries(table)) text = text.replaceAll(key, value)
     return text
+}
+
+export const useLocalStorage = <T>(key: string, defaultValue: T) => {
+    const [value, setValue] = useState<T>(() => {
+        const jsonValue = localStorage.getItem(key)
+        console.log(jsonValue)
+        return jsonValue != null ? JSON.parse(jsonValue) : defaultValue
+    })
+    useEffect(() => localStorage.setItem(key, JSON.stringify(value)), [key, value])
+    return [value, setValue] as const
 }

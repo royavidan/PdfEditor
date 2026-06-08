@@ -1,5 +1,6 @@
 import React, { useState, createContext } from 'react'
 import type { ContextProvider } from '../types'
+import { useLocalStorage } from '../utils'
 
 export interface SettingsContext {
   doubleBloonsOnTap: boolean
@@ -24,7 +25,7 @@ const SettingsProvider: ContextProvider = ({ children }) => {
   const [doubleBloonsOnTap, setDoubleBloonsOnTap] = useState(true)
   const [fontSize, setFontSize] = useState(12)
   const [initialCounter, setInitialCounter] = useState(2)
-  const [defaultXlsmName, setDefaultXlsmName] = useState('דוח ביקורת')
+  const [defaultXlsmName, setDefaultXlsmName] = useLocalStorage('defaultXlsmName', 'דוח ביקורת')
   const [showSettings, setShowSettings] = useState(false)
 
   const openSettings = () => setShowSettings(true)
