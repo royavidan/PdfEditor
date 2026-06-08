@@ -71,10 +71,10 @@ export function fillBloon(border: Border, data: Data) {
     bloon.content = text.map(t => t.str).reduce((a, b) => a + (a.endsWith('R') || (/[a-zA-Z-]/.test(b[0]) && b !== 'x') ? ' ' : '') + b, '').trim()
     bloon.content = bloon.content.replaceAll(/[()*]/g, '')
     bloon.content = bloon.content.replace('°°', '°')
-    const plusminus = /±([\d.]+)/.exec(bloon.content)
+    const plusminus = /\s*±\s*([\d.]+)/.exec(bloon.content)
     if (plusminus) {
         bloon.tolerance = { '+': parseFloat(plusminus[1]), '-': parseFloat(plusminus[1]) }
-        bloon.content = (bloon.content.slice(0, plusminus.index) + bloon.content.slice(plusminus.index + plusminus[0].length)).trim()
+        bloon.content = (bloon.content.slice(0, plusminus.index).trimEnd() + bloon.content.slice(plusminus.index + plusminus[0].length).trimStart()).trim()
     }
 
     //STEP 2: find measurement

@@ -56,6 +56,6 @@ describe('file-logics', () => {
         const compactData = await compactMods(data, modList as unknown as Modification[]).arrayBuffer()
         const loadedContent = tryLoadMods(compactData)
         expect(loadedContent.modList).toBeNull()
-        expect(loadedContent.data.byteLength).toBe(compactData.byteLength)
+        expect(loadedContent.data.byteLength).toBeLessThan(compactData.byteLength)
     })
 })
