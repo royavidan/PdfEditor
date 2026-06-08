@@ -65,7 +65,6 @@ export const replaceMany = (text: string, table: Record<string, string>) => {
 export const useLocalStorage = <T>(key: string, defaultValue: T) => {
     const [value, setValue] = useState<T>(() => {
         const jsonValue = localStorage.getItem(key)
-        console.log(jsonValue)
         return jsonValue != null ? JSON.parse(jsonValue) : defaultValue
     })
     useEffect(() => localStorage.setItem(key, JSON.stringify(value)), [key, value])

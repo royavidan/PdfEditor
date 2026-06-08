@@ -10,7 +10,9 @@ export const Symbols = ['dia', 'depth', 'straightness', 'flatness', 'circlarity'
 const TEXT_REPLACE_TABLE = {
     '\x01$\x02': '°',
     '\x01n\x02': '⌀',
-    '\x01x\x02': '↧'
+    '\x00n\x02': '⌀',
+    '\x01x\x02': '↧',
+    '\x00x\x02': '↧'
 }
 
 const SPLIT_CHARS = ['↧', '⌀']

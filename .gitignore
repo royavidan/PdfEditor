@@ -29,3 +29,6 @@ dist-ssr
 TODO
 local-tests
 .vscode
+tests/*.pdf
+tests/exported.xlsm
+test-results
