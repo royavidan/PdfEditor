@@ -33,11 +33,9 @@ export default ({ children }) => {
   }
 
   const changeMod = (id, changeFunc) => {
-    const changedModList = modList.map(mod =>
+    setModList(modList => modList.map(mod =>
       mod.id !== id ? mod : changeFunc(mod)
-    )
-
-    setModList(changedModList)
+    ))
   }
 
   const insertMod = (mod) => {

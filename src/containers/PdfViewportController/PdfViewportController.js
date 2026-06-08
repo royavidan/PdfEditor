@@ -141,10 +141,12 @@ function PdfViewportController({ children }) {
           title: `${newBloon.measurement}: ${newBloon.content}${newBloon.tolerance ? ` (${newBloon.tolerance['+']}/${newBloon.tolerance['-']})` : ''}`,
           template
         })
+        changeMod(id, mod => ({ ...mod, hasExtra: true }))
         incrementCounter()
       } else if (originalMod.hasExtra) {
         const idToRemove = Number(Object.entries(bloons).find(e => e[1].id === bloons[id].id + 1)[0])
         removeMod(idToRemove)
+        changeMod(id, mod => ({ ...mod, hasExtra: false }))
         removeBloon(idToRemove)
         decrementCounter()
       }
