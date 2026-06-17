@@ -27,7 +27,7 @@ function ToolbarController({ children }: ControllerProps<ToolbarControllerData>)
     FileContext
   )
   const { scale, setScale } = useContext(ViewportContext)
-  const { counter, resetCounter } = useContext(CounterContext)
+  const { getCounter, resetCounter } = useContext(CounterContext)
   const { modList, resetModList } = useContext(ModificationContext)
   const { currentPage, setPage, pages } = useContext(PageContext)
   const { getLoadedPages } = useContext(PDFContext)
@@ -54,7 +54,7 @@ function ToolbarController({ children }: ControllerProps<ToolbarControllerData>)
       resetModList()
       resetCounter()
     },
-    counter,
+    counter: getCounter(),
     onDownload: () => download(fileData!, modList, fontSize, fileName || 'output.pdf'),
     onExport: () => exportBloons(modList, defaultXlsmName),
     onSettings: openSettings,

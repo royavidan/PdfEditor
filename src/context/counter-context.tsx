@@ -3,7 +3,7 @@ import { SettingsContext } from './settings-context'
 import type { ContextProvider } from '../types'
 
 export interface CounterContext {
-  counter: number
+  getCounter(): number
   resetCounter(): void
   incrementCounter(i?: number): void
   decrementCounter(i?: number): void
@@ -14,13 +14,14 @@ export const CounterContext = createContext({} as CounterContext)
 
 const CounterProvider: ContextProvider = ({ children }) => {
   const { initialCounter } = useContext(SettingsContext)
-  const [counter, setCounter] = useState(initialCounter)
-  const resetCounter = () => setCounter(initialCounter)
-  const incrementCounter = (i = 1) => setCounter(counter => counter + i)
-  const decrementCounter = (i = 1) => setCounter(counter => counter - i)
+  const [counter, setCounter] = useState<number | null>(null)
+  const getCounter = () => counter || initialCounter
+  const resetCounter = () => setCounter(null)
+  const incrementCounter = (i = 1) => setCounter(counter => (counter || initialCounter) + i)
+  const decrementCounter = (i = 1) => setCounter(counter => (counter || initialCounter) - i)
   return (
     <CounterContext.Provider
-      value={{ counter, resetCounter, incrementCounter, decrementCounter }}
+      value={{ getCounter, resetCounter, incrementCounter, decrementCounter }}
     >
       {children}
     </CounterContext.Provider>

@@ -41,7 +41,7 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
   const { scale } = useContext(ViewportContext)
   const { fontSize, doubleBloonsOnTap, initialCounter } = useContext(SettingsContext)
   const { getText, getSymbols, getSize, getAngle, getLoadedPages } = useContext(PDFContext)
-  const { counter, incrementCounter, decrementCounter } = useContext(
+  const { getCounter, incrementCounter, decrementCounter, resetCounter } = useContext(
     CounterContext
   )
   const { modList, addMod, changeMod, removeMod } = useContext(
@@ -75,7 +75,7 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
         y: position.y / scale
       },
       page: currentPage,
-      value: counter,
+      value: getCounter(),
       hasExtra,
       bloon
     })
@@ -88,7 +88,7 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
           y: position.y / scale
         },
         page: currentPage,
-        value: counter + 1,
+        value: getCounter() + 1,
         disabled: true,
         bloon: { ...bloon, measurement: 'DIA' }
       }, 1)
@@ -103,7 +103,7 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
     pageNum: currentPage + 1,
     scale,
     minValue: initialCounter,
-    maxValue: counter - 1,
+    maxValue: getCounter() - 1,
     overlayItems: modList.filter(mod => mod.page === currentPage),
     overlayTemplate: mod => ({
       title: `${mod.bloon.measurement}: ${mod.bloon.content}${mod.bloon.tolerance ? ` (${mod.bloon.tolerance['+']}/${mod.bloon.tolerance['-']})` : ''}`,
@@ -131,6 +131,8 @@ function PdfViewportController({ children }: ControllerProps<PdfViewportControll
         removeMod(nextMod!.id)
         decrementCounter()
       }
+      const newModListLen = modList.length - 1 - Number(mod.hasExtra)
+      if (newModListLen === 0) resetCounter()
     },
     fontSize,
     markedPosition,
