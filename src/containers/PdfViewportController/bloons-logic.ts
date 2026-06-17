@@ -46,7 +46,7 @@ export function fillBloon(border: Border, data: Data) {
                     if (currentText[match].str === '-') bottomText = currentText[match].str + bottomText
                     indexes.push(match)
                 }
-                bloon.tolerance = { '+': topText, '-': bottomText }
+                bloon.tolerance = { '+': parseFloat(topText), '-': parseFloat(bottomText) }
                 text = text.filter((_, index) => !indexes.includes(index))
                 break
             }
@@ -71,10 +71,10 @@ export function fillBloon(border: Border, data: Data) {
     bloon.content = text.map(t => t.str).reduce((a, b) => a + (a.endsWith('R') || (/[a-zA-Z-]/.test(b[0]) && b !== 'x') ? ' ' : '') + b, '').trim()
     bloon.content = bloon.content.replaceAll(/[()*]/g, '')
     bloon.content = bloon.content.replace('°°', '°')
-    let plusminus = /±([\d.]+)/.exec(bloon.content)
+    const plusminus = /\s*±\s*([\d.]+)/.exec(bloon.content)
     if (plusminus) {
-        bloon.tolerance = { '+': plusminus[1], '-': plusminus[1] }
-        bloon.content = (bloon.content.slice(0, plusminus.index) + bloon.content.slice(plusminus.index + plusminus[0].length)).trim()
+        bloon.tolerance = { '+': parseFloat(plusminus[1]), '-': parseFloat(plusminus[1]) }
+        bloon.content = (bloon.content.slice(0, plusminus.index).trimEnd() + bloon.content.slice(plusminus.index + plusminus[0].length).trimStart()).trim()
     }
 
     //STEP 2: find measurement
@@ -86,7 +86,7 @@ export function fillBloon(border: Border, data: Data) {
     else bloon.measurement = (function () {
         const txt = bloon.content.replaceAll(' ', '')
         const words = bloon.content.split(/[-\d\s]/)
-        let symbol = Object.keys(symbols).find(sym => sym !== 'dia')
+        const symbol = Object.keys(symbols).find(sym => sym !== 'dia')
         if (symbol) return symbol.toUpperCase()
 
         if (txt.endsWith('°')) {

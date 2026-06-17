@@ -17,5 +17,5 @@ body {
 @font-face {
   font-family: 'Roboto';
   src: local('Roboto'),
-    url(%PUBLIC_URL%/fonts/Roboto/Roboto-Regular.ttf) format('tff');
+    url(../public/fonts/Roboto/Roboto-Regular.ttf) format('tff');
 }

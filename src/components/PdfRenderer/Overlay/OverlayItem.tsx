@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 
 import styles from './Overlay.module.scss'
 import type { Position } from '../../../types'
@@ -12,11 +12,14 @@ interface OverlayItemsProps {
   position: Position
   size: number
   value: number
+  minValue: number
+  maxValue: number
   scale: number
   template: OverlayProperties
   isSelected: boolean
   hasContextMenu: boolean
   onDelete(): void
+  onChangeValue(value: number): void
   onChangeContent(): void
   onChangeMeasurement(measurement: string): void
 }
@@ -24,18 +27,22 @@ interface OverlayItemsProps {
 function OverlayItem({
   position,
   size,
-  value,
+  // value,
+  minValue,
+  maxValue,
   scale,
   template,
   isSelected,
   hasContextMenu,
   onDelete,
+  onChangeValue,
   onChangeContent,
   onChangeMeasurement,
   ...otherProps
 }: OverlayItemsProps & React.HTMLAttributes<HTMLDivElement>) {
   const [contextMenu, setContextMenu] = useState<Position | null>(null)
   const [showSubMenu, setShowSubMenu] = useState(false)
+  const changeValueInputRef = useRef<HTMLInputElement>(null)
 
   const closeContextMenu = () => {
     setContextMenu(null)
@@ -56,12 +63,13 @@ function OverlayItem({
   const handleContextMenu: React.MouseEventHandler = e => {
     e.preventDefault()
     e.stopPropagation()
-    hasContextMenu && setContextMenu({ x: e.clientX, y: e.clientY })
+    if (hasContextMenu) setContextMenu({ x: e.clientX, y: e.clientY })
   }
 
   return (
     <>
       <div
+        ref={r => { if (r && isSelected) r.parentElement!.focus(); }}
         className={`${styles.item} ${isSelected ? styles.selected : ''}`}
         style={{
           left: `${(position.x - size / 2) * scale}px`,
@@ -109,10 +117,23 @@ function OverlayItem({
           </div>
           <div
             className={styles.contextbutton}
+            onClick={
+              () => {
+                closeContextMenu()
+                onChangeValue(parseInt(changeValueInputRef.current!.value))
+              }
+            }
+            onMouseEnter={() => setShowSubMenu(false)}>
+              Change Value to <input ref={changeValueInputRef} type="number" min={minValue} max={maxValue}/>
+          </div>
+          <div
+            className={styles.contextbutton}
             onMouseEnter={() => setShowSubMenu(true)}>
             Change Measurement {String.fromCharCode(showSubMenu ? 9654 : 9660)}
             {showSubMenu && (
-              <div className={styles.contextsubmenu} ref={ref => ref && (ref.style.top = `${Math.min(0, window.innerHeight - ref.getBoundingClientRect().bottom) - 1}px`)}>
+              <div className={styles.contextsubmenu} ref={ref => {
+                if (ref) ref.style.top = `${Math.min(0, window.innerHeight - ref.getBoundingClientRect().bottom) - 1}px`
+              }}>
                 {['TAP', 'MATERIAL', 'COATING', 'PAINTING', 'HEAT TREATMENT', 'MARKING', 'SURFACE TEXTURE', 'REMOVE BURRS'].map(measurement => (
                   <div
                     key={measurement}
@@ -130,7 +151,7 @@ function OverlayItem({
                   onClick={() => {
                     closeContextMenu()
                     const measurement = window.prompt('Enter custom measurement')
-                    measurement && onChangeMeasurement(measurement.toUpperCase())
+                    if (measurement) onChangeMeasurement(measurement.toUpperCase())
                   }}>
                   CUSTOM
                 </div>

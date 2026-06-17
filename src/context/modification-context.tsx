@@ -1,12 +1,12 @@
-import React, { useState, createContext } from 'react'
+import { useState, createContext } from 'react'
 import type { ContextProvider, Permutation, Position, Border } from '../types'
 
 export interface Bloon extends Border {
     content: string
     measurement: string
     tolerance?: {
-        '+': number | string
-        '-': number | string
+        '+': number
+        '-': number
     }
 }
 
@@ -15,16 +15,19 @@ export interface Modification {
   value: number
   position: Position
   page: number
+  hasExtra?: boolean
   bloon: Bloon
   disabled?: boolean
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, react-refresh/only-export-components
 export const isModification = (mod: any): mod is Modification => 
-  typeof mod === 'object'
+  typeof mod === 'object' && mod !== null
   && typeof mod.id === 'number'
   && typeof mod.value === 'number'
   && typeof mod.position === 'object' && typeof mod.position.x === 'number' && typeof mod.position.y === 'number'
   && typeof mod.page === 'number'
+  && (typeof mod.hasExtra === 'boolean' || !('hasExtra' in mod))
   && typeof mod.bloon === 'object'
     && typeof mod.bloon.left === 'number'
     && typeof mod.bloon.right === 'number'
@@ -49,16 +52,10 @@ export interface ModificationContext {
 const initialModList: Modification[] = []
 const initialId = 0
 
-export const ModificationContext = createContext({
-  modList: initialModList,
-  nextId: initialId,
-  resetModList: () => { },
-  addMod: () => { },
-  changeMod: () => { },
-  removeMod: () => { }
-} as ModificationContext)
+// eslint-disable-next-line react-refresh/only-export-components
+export const ModificationContext = createContext({} as ModificationContext)
 
-export default (({ children }) => {
+const ModificationProvider: ContextProvider = ({ children }) => {
   const [modList, setModList] = useState(initialModList)
   const [nextId, setNextId] = useState(initialId)
   
@@ -76,11 +73,9 @@ export default (({ children }) => {
   }
 
   const changeMod: ModificationContext['changeMod'] = (id, changeFunc) => {
-    const changedModList = modList.map(mod =>
+    setModList(modList => modList.map(mod =>
       mod.id !== id ? mod : changeFunc(mod)
-    )
-
-    setModList(changedModList)
+    ))
   }
 
   const removeMod: ModificationContext['removeMod'] = id => {
@@ -104,4 +99,6 @@ export default (({ children }) => {
       {children}
     </ModificationContext.Provider>
   )
-}) as ContextProvider
+}
+
+export default ModificationProvider

@@ -1,14 +1,13 @@
 import React, { useState } from 'react'
-import KeyboardEventHandler from 'react-keyboard-event-handler'
 
 import GlobalKeyHandler from '../Handlers/GlobalKeyHandler'
 import PdfDoc from './PdfDoc'
 import PdfPage from './PdfPage'
-import PdfCanvas, { PdfMouseEventHandler } from './PdfCanvas'
+import PdfCanvas, { type PdfMouseEventHandler } from './PdfCanvas'
 import Overlay from './Overlay/Overlay'
 
 import styles from './PdfViewport.module.scss'
-import { FileData } from '../../context/file-context'
+import type { FileData } from '../../context/file-context'
 import type { Modification } from '../../context/modification-context'
 import type { Position } from '../../types'
 import type { OverlayTemplate } from './Overlay/Overlay'
@@ -18,10 +17,13 @@ interface PdfViewportProps {
   data: FileData | null
   pageNum: number
   scale: number
+  minValue: number
+  maxValue: number
   overlayItems: Modification[]
   overlayTemplate: OverlayTemplate
   className?: string
   style?: React.CSSProperties
+  children?: React.ReactNode
   onMouseDown?: PdfMouseEventHandler
   onMouseUp?: PdfMouseEventHandler
   onMouseLeave?: PdfMouseEventHandler
@@ -29,6 +31,7 @@ interface PdfViewportProps {
   onItemDelete(id: number): void
   fontSize: number
   markedPosition: Position | null
+  onChangeValue(id: number, value: number): void
   onChangeContent(id: number): void
   onChangeMeasurement(id: number, measurement: string): void
   onSave(): void
@@ -41,10 +44,13 @@ function PdfViewport({
   data,
   pageNum,
   scale,
+  minValue,
+  maxValue,
   overlayItems,
   overlayTemplate,
   className = '',
   style,
+  children,
   onMouseDown,
   onMouseUp,
   onMouseLeave,
@@ -52,6 +58,7 @@ function PdfViewport({
   onItemDelete,
   fontSize,
   markedPosition,
+  onChangeValue,
   onChangeContent,
   onChangeMeasurement,
   onSave,
@@ -59,10 +66,19 @@ function PdfViewport({
   onPageDown
 }: PdfViewportProps) {
   const [currentMousePos, setCurrentMousePos] = useState<Position | null>(null)
-  if (disabled) {
-    onMouseUp = onMouseDown = onMouseLeave = () => {}
+  const wrap = (e?: PdfMouseEventHandler) => disabled ? (() => {}) : e
+  const onMouseMove: PdfMouseEventHandler = (_event, position) => setCurrentMousePos(position)
+
+  const onKeyDown: React.KeyboardEventHandler = e => {
+    switch (e.key) {
+      case 'PageUp':
+        onPageUp()
+        break
+      case 'PageDown':
+        onPageDown()
+        break
+    }
   }
-  const onMouseMove: PdfMouseEventHandler = (event, position) => setCurrentMousePos(position)
   return (
     <div className={`${className} ${styles.viewport}`} style={style}>
       <div className={styles.page}>
@@ -71,34 +87,28 @@ function PdfViewport({
             {doc => (
               <PdfPage document={doc} pageNum={pageNum}>
                 {page => (
-                  <>
+                  <div tabIndex={-1} onKeyDown={onKeyDown}>
                   <GlobalKeyHandler block
                     keys={['ctrl+s']}
                     event="keydown"
                     onClick={onSave}
                   />
-                  <KeyboardEventHandler
-                    handleKeys={['pageup']}
-                    handleEventType="keydown"
-                    onKeyEvent={onPageUp}
-                  />
-                  <KeyboardEventHandler
-                    handleKeys={['pagedown']}
-                    handleEventType="keydown"
-                    onKeyEvent={onPageDown}
-                  />
                     <Overlay
                       items={overlayItems}
                       scale={scale}
+                      minValue={minValue}
+                      maxValue={maxValue}
                       template={overlayTemplate}
                       onItemMove={onItemMove}
                       onItemDelete={onItemDelete}
+                      onChangeValue={onChangeValue}
                       onChangeContent={onChangeContent}
                       onChangeMeasurement={onChangeMeasurement}
                       fontSize={fontSize}
                     />
-                    <PdfCanvas page={page} scale={scale} onMouseDown={onMouseDown} onMouseUp={onMouseUp} onMouseLeave={onMouseLeave}
+                    <PdfCanvas page={page} scale={scale} onMouseDown={wrap(onMouseDown)} onMouseUp={wrap(onMouseUp)} onMouseLeave={wrap(onMouseLeave)}
                       onMouseMove={onMouseMove} />
+                    {children}
                     {markedPosition && currentMousePos && (
                       <div className={styles.selectionbox}
                         style={{
@@ -109,7 +119,7 @@ function PdfViewport({
                         }}
                       />
                     )}
-                  </>
+                  </div>
                 )}
               </PdfPage>
             )}

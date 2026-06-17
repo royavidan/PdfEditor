@@ -1,10 +1,10 @@
-import type React from 'react'
+import type { ReactNode } from 'react'
 
-export type ContextProvider = (props: { children: React.ReactNode }) => JSX.Element
+export type ContextProvider = (props: { children: ReactNode }) => ReactNode
 
 export type Permutation<T> = (arg: T) => T
 
-export type ControllerProps<T> = { children(data: T): JSX.Element }
+export type ControllerProps<T> = { children(data: T): ReactNode }
 
 export type Position = { x: number, y: number }
 
@@ -35,6 +35,8 @@ export interface WorkerUsage<I, O, E = Error> {
     onmessage(event: Omit<MessageEvent, 'data'> & { data: FullResult<O, E> }): void
 }
 
-export type OneOf<T extends Record<string, Record<any, any>>, S extends string = 'type'> = keyof T extends infer K ? K extends keyof T ? {
+export type OneOf<T extends Record<string, Record<PropertyKey, unknown>>, S extends string = 'type'> = keyof T extends infer K ? K extends keyof T ? {
     [P in S | keyof T[K]]: P extends S ? K : T[K][P]
 } : never : never
+
+export type Capitalize<S extends string> = S extends `${infer First}${infer Rest}` ? `${Uppercase<First>}${Rest}` : S

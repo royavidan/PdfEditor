@@ -13,8 +13,8 @@
             "bottom": 94.66666412353516,
             "content": "106",
             "tolerance": {
-                "+": "0.5",
-                "-": "0.5"
+                "+": 0.5,
+                "-": 0.5
             },
             "measurement": "LINEAR"
         },
@@ -34,8 +34,8 @@
             "bottom": 266.66666412353516,
             "content": "11",
             "tolerance": {
-                "+": "0.3",
-                "-": "0.3"
+                "+": 0.3,
+                "-": 0.3
             },
             "measurement": "LINEAR"
         },
@@ -55,8 +55,8 @@
             "bottom": 327.66666412353516,
             "content": "92",
             "tolerance": {
-                "+": "0.3",
-                "-": "0.3"
+                "+": 0.3,
+                "-": 0.3
             },
             "measurement": "LINEAR"
         },
@@ -93,7 +93,7 @@
             "bottom": 339.66666412353516,
             "tolerance": {
                 "+": "+0.2",
-                "-": "0"
+                "-": 0
             },
             "content": "6 x4.8",
             "measurement": "DIA"
@@ -131,8 +131,8 @@
             "bottom": 283.66666412353516,
             "content": "22",
             "tolerance": {
-                "+": "0.5",
-                "-": "0.5"
+                "+": 0.5,
+                "-": 0.5
             },
             "measurement": "LINEAR"
         },
@@ -169,8 +169,8 @@
             "bottom": 130.66666412353516,
             "content": "28",
             "tolerance": {
-                "+": "0.5",
-                "-": "0.5"
+                "+": 0.5,
+                "-": 0.5
             },
             "measurement": "LINEAR"
         },
@@ -207,8 +207,8 @@
             "bottom": 223.66666412353516,
             "content": "R34",
             "tolerance": {
-                "+": "0.5",
-                "-": "0.5"
+                "+": 0.5,
+                "-": 0.5
             },
             "measurement": "RADIUS"
         },
@@ -228,8 +228,8 @@
             "bottom": 395,
             "content": "7",
             "tolerance": {
-                "+": "0.5",
-                "-": "0.5"
+                "+": 0.5,
+                "-": 0.5
             },
             "measurement": "LINEAR"
         },
@@ -266,8 +266,8 @@
             "bottom": 429,
             "content": "2x 6",
             "tolerance": {
-                "+": "0.5",
-                "-": "0.5"
+                "+": 0.5,
+                "-": 0.5
             },
             "measurement": "LINEAR"
         },
@@ -338,8 +338,8 @@
             "bottom": 488,
             "content": "R1",
             "tolerance": {
-                "+": "0.3",
-                "-": "0.3"
+                "+": 0.3,
+                "-": 0.3
             },
             "measurement": "RADIUS"
         },
@@ -359,8 +359,8 @@
             "bottom": 505,
             "content": "R4",
             "tolerance": {
-                "+": "0.3",
-                "-": "0.3"
+                "+": 0.3,
+                "-": 0.3
             },
             "measurement": "RADIUS"
         },
@@ -380,8 +380,8 @@
             "bottom": 555,
             "content": "33",
             "tolerance": {
-                "+": "0.5",
-                "-": "0.5"
+                "+": 0.5,
+                "-": 0.5
             },
             "measurement": "LINEAR"
         },
@@ -400,8 +400,8 @@
             "top": 570,
             "bottom": 607,
             "tolerance": {
-                "+": "0.3",
-                "-": "0"
+                "+": 0.3,
+                "-": 0
             },
             "content": "4",
             "measurement": "LINEAR"
@@ -422,8 +422,8 @@
             "bottom": 611,
             "content": "74",
             "tolerance": {
-                "+": "0.5",
-                "-": "0.5"
+                "+": 0.5,
+                "-": 0.5
             },
             "measurement": "LINEAR"
         },
@@ -460,8 +460,8 @@
             "bottom": 447,
             "content": "88.1",
             "tolerance": {
-                "+": "0.5",
-                "-": "0.5"
+                "+": 0.5,
+                "-": 0.5
             },
             "measurement": "LINEAR"
         },
@@ -481,8 +481,8 @@
             "bottom": 489,
             "content": "55.8",
             "tolerance": {
-                "+": "0.5",
-                "-": "0.5"
+                "+": 0.5,
+                "-": 0.5
             },
             "measurement": "LINEAR"
         },
@@ -502,8 +502,8 @@
             "bottom": 511,
             "content": "39.5",
             "tolerance": {
-                "+": "0.5",
-                "-": "0.5"
+                "+": 0.5,
+                "-": 0.5
             },
             "measurement": "LINEAR"
         },
@@ -523,8 +523,8 @@
             "bottom": 534,
             "content": "24",
             "tolerance": {
-                "+": "0.5",
-                "-": "0.5"
+                "+": 0.5,
+                "-": 0.5
             },
             "measurement": "LINEAR"
         },
@@ -544,8 +544,8 @@
             "bottom": 549,
             "content": "4",
             "tolerance": {
-                "+": "0.5",
-                "-": "0.5"
+                "+": 0.5,
+                "-": 0.5
             },
             "measurement": "LINEAR"
         },
@@ -582,8 +582,8 @@
             "bottom": 579,
             "content": "15",
             "tolerance": {
-                "+": "0.5",
-                "-": "0.5"
+                "+": 0.5,
+                "-": 0.5
             },
             "measurement": "LINEAR"
         },
@@ -603,8 +603,8 @@
             "bottom": 609,
             "content": "2x R2",
             "tolerance": {
-                "+": "0.5",
-                "-": "0.5"
+                "+": 0.5,
+                "-": 0.5
             },
             "measurement": "RADIUS"
         },
@@ -624,8 +624,8 @@
             "bottom": 541,
             "content": "20",
             "tolerance": {
-                "+": "0.3",
-                "-": "0.3"
+                "+": 0.3,
+                "-": 0.3
             },
             "measurement": "LINEAR"
         },
@@ -645,8 +645,8 @@
             "bottom": 617,
             "content": "5",
             "tolerance": {
-                "+": "0.3",
-                "-": "0.3"
+                "+": 0.3,
+                "-": 0.3
             },
             "measurement": "LINEAR"
         },
@@ -666,8 +666,8 @@
             "bottom": 599,
             "content": "92",
             "tolerance": {
-                "+": "0.3",
-                "-": "0.3"
+                "+": 0.3,
+                "-": 0.3
             },
             "measurement": "LINEAR"
         },

@@ -28,7 +28,7 @@ declare module 'react-files' {
 
     interface FilesProps {
         accepts?: string[]
-        children?: React.JSX.Element | ((isDragging: boolean) => React.JSX.Element)
+        children?: React.ReactNode | ((isDragging: boolean) => React.ReactNode)
         className?: string
         clickable?: boolean
         dragActiveClassName?: string
@@ -47,5 +47,6 @@ declare module 'react-files' {
 
     declare function Files(props: FilesProps): React.JSX.Element
 
-    export default Files
+    //TypeScript bug
+    export default { default: Files }
 }

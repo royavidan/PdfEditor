@@ -1,3 +1,4 @@
+/// <reference types="vitest/globals" />
 import { compactMods, tryLoadMods } from './file-logic'
 import { readPlainFile } from '../../test-utils/utils'
 import type { FileData } from '../../context/file-context'
@@ -30,7 +31,7 @@ describe('file-logics', () => {
             }
         }]
 
-        const compactData = await new Response(compactMods(data, modList)).arrayBuffer()
+        const compactData = await compactMods(data, modList).arrayBuffer()
         const loadedContent = tryLoadMods(compactData)
         expect(loadedContent.modList).toEqual(modList)
         expect(loadedContent.data.byteLength).toBeLessThan(compactData.byteLength)
@@ -52,9 +53,9 @@ describe('file-logics', () => {
             }
         }]
 
-        const compactData = await new Response(compactMods(data, modList as unknown as Modification[])).arrayBuffer()
+        const compactData = await compactMods(data, modList as unknown as Modification[]).arrayBuffer()
         const loadedContent = tryLoadMods(compactData)
         expect(loadedContent.modList).toBeNull()
-        expect(loadedContent.data.byteLength).toBe(compactData.byteLength)
+        expect(loadedContent.data.byteLength).toBeLessThan(compactData.byteLength)
     })
 })

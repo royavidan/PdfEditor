@@ -1,4 +1,4 @@
-import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.js'
+import * as pdfjs from 'pdfjs-dist'
 
 import { arrayIsEqual, floatIsEqual, findOne, replaceMany } from '../utils'
 import type { TextItem, PDFOperatorList } from 'pdfjs-dist/types/src/display/api'
@@ -10,7 +10,9 @@ export const Symbols = ['dia', 'depth', 'straightness', 'flatness', 'circlarity'
 const TEXT_REPLACE_TABLE = {
     '\x01$\x02': '°',
     '\x01n\x02': '⌀',
-    '\x01x\x02': '↧'
+    '\x00n\x02': '⌀',
+    '\x01x\x02': '↧',
+    '\x00x\x02': '↧'
 }
 
 const SPLIT_CHARS = ['↧', '⌀']
@@ -45,6 +47,14 @@ interface Line extends Shape {
     perpendicular(line: Line, epsilon?: number): boolean
 }
 
+enum PathOPS {
+    MOVE = 0,
+    LINE = 1,
+    CURVE = 2,
+    QCURVE = 3,
+    CLOSE = 4
+}
+
 const Point = (point: [number, number]): Point => {
     const p = point as Point
     p.x = point[0]
@@ -58,7 +68,7 @@ const middle = (a: Point, b: Point) => Point([(a.x + b.x) / 2, (a.y + b.y) / 2])
 const isCircle = (path: Shape) => path.length >= 10 && arrayIsEqual(path[0], path[path.length - 1]) && floatIsEqual(path.width, path.height, 1)
 const isLine = (path: Shape) => path.length === 2
 
-const parseShapes = (fn: number[], args: any[], pageHeight: number, _rotation: number) => {
+const parseShapes = (fn: PDFOperatorList['fnArray'], args: PDFOperatorList['argsArray'], pageHeight: number/*, rotation: number*/) => {
     const flipY = (y: number) => pageHeight - y
 
     const shapes = {
@@ -68,7 +78,7 @@ const parseShapes = (fn: number[], args: any[], pageHeight: number, _rotation: n
         trapezoids: [] as Shape[]
     }
 
-    const Shape = (path: Point[], transform: Transform) => {
+    const Shape = (path: [number, number][], transform: Transform) => {
         const p = path.map(p => [p[0] * transform[0] + p[1] * transform[2] + transform[4], p[0] * transform[1] + p[1] * transform[3] + transform[5]]) as unknown as Shape
         const X = p.map(p => p[0]), Y = p.map(p => p[1])
 
@@ -129,7 +139,7 @@ const parseShapes = (fn: number[], args: any[], pageHeight: number, _rotation: n
 
     //STEP 1: read paths
     const paths: Shape[] = []
-    let transforms: Transform[] = [[1, 0, 0, 1, 0, 0]]
+    const transforms: Transform[] = [[1, 0, 0, 1, 0, 0]]
 
     for (let i = 0; i < fn.length; i++) {
         switch (fn[i]) {
@@ -146,27 +156,28 @@ const parseShapes = (fn: number[], args: any[], pageHeight: number, _rotation: n
                 break
 
             case pdfjs.OPS.constructPath: {
-                let path: Point[] = []
-                let index = 0, hasCurves = false
-                for (let j = 0; j < args[i][0].length; j++) {
-                    switch (args[i][0][j]) {
-                        case pdfjs.OPS.moveTo:
-                            if (j) {
+                let path: [number, number][] = []
+                let hasCurves = false
+                const currArgs: number[] = args[i][1][0]
+                for (let i = 0; i < currArgs.length; i++) {
+                    switch (currArgs[i]) {
+                        case PathOPS.MOVE:
+                            if (i) {
                                 if (!hasCurves) {
                                     paths.push(Shape(path, transforms[0]))
                                 }
                                 hasCurves = false
-                                path = [args[i][1].slice(index, index + 2)]
+                                path = [[currArgs[i + 1], currArgs[i + 2]]]
                             } else {
-                                path.push(args[i][1].slice(index, index + 2))
+                                path.push([currArgs[i + 1], currArgs[i + 2]])
                             }
-                            index += 2
+                            i += 2
                             break
-                        case pdfjs.OPS.lineTo:
-                            path.push(args[i][1].slice(index, index + 2))
-                            index += 2
+                        case PathOPS.LINE:
+                            path.push([currArgs[i + 1], currArgs[i + 2]])
+                            i += 2
                             break
-                        case pdfjs.OPS.closePath:
+                        case PathOPS.CLOSE:
                             if (path[0] !== path[path.length - 1]) path.push(path[0])
                             break
                         default:
@@ -209,7 +220,7 @@ const parseShapes = (fn: number[], args: any[], pageHeight: number, _rotation: n
 
 type Plus = { h: Line, v: Line }
 function fixPlusMinus(lines: Line[], text: Text[]) {
-    //@ts-ignore
+    //@ts-expect-error Index is foced on the object here and disposed after
     lines.forEach((line, index) => line.index = index)
     const linesToRemove = new Set<number>()
     const horizontal = lines.filter(l => l.len < 20 && l.slope === 0), vertical = lines.filter(l => l.len < 20 && !Number.isFinite(l.slope))
@@ -224,7 +235,7 @@ function fixPlusMinus(lines: Line[], text: Text[]) {
     //STEP 2: find plusminus
     const addPlusMinus = (plus: Plus, minus: Line, angle: number) => {
         const shapes = [plus.h, plus.v, minus]
-        //@ts-ignore
+        //@ts-expect-error Index was forced
         shapes.forEach(s => linesToRemove.add(s.index))
         const r = {
             left: Math.min(...shapes.map(s => s.left)),
@@ -253,7 +264,7 @@ function fixPlusMinus(lines: Line[], text: Text[]) {
             || (diff(l.center, h[0].x < h[1].x ? h[1] : h[0]) < l.len && floatIsEqual(l.top, v.top))))
         if (vminus) addPlusMinus({ h, v }, vminus, -Math.PI / 2)
     }
-    //@ts-ignore
+    //@ts-expect-error Removing forced index property
     lines.forEach(l => delete l.index)
     return linesToRemove
 }
@@ -461,7 +472,7 @@ const parseSymbols = ({ circles, lines, halfCircles, trapezoids }: ReturnType<ty
 }
 
 export function extractPDFPageData(opList: PDFOperatorList, rotation: number, pageHeight: number, textItems: TextItem[]) {
-    const shapes = parseShapes(opList.fnArray, opList.argsArray, pageHeight, rotation)
+    const shapes = parseShapes(opList.fnArray, opList.argsArray, pageHeight/*, rotation*/)
     const { text, linesToRemove } = convertTextItems(textItems, shapes.lines, pageHeight, rotation)
     shapes.lines = shapes.lines.filter((_, i) => !linesToRemove.has(i))
     const symbols = parseSymbols(shapes, text)

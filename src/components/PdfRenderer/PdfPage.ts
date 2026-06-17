@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist'
 
@@ -9,7 +9,7 @@ function loadPage(doc: PDFDocumentProxy, pageNum: number) {
 interface PdfPageProps {
   document: PDFDocumentProxy
   pageNum: number
-  children(pageObj: PDFPageProxy): JSX.Element
+  children(pageObj: PDFPageProxy): ReactNode
 }
 
 function PdfPage({ document, pageNum, children }: PdfPageProps) {

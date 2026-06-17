@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import type { Border } from './types'
 
 export const arrayIsEqual = <T,>(a: ArrayLike<T>, b: ArrayLike<T>) => {
@@ -10,7 +11,6 @@ export const arrayIsEqual = <T,>(a: ArrayLike<T>, b: ArrayLike<T>) => {
 export const floatIsEqual = (a: number, b: number, epsilon: number = 0.0001) => Math.abs(a - b) < epsilon
 
 export const mostCommon = <T,>(arr: readonly T[]) => {
-    // eslint-disable-next-line no-sequences
     const counts = arr.reduce((curr, elem) => (curr.set(elem, (curr.get(elem) || 0) + 1), curr), new Map<T, number>())
     let maxCount = 0, maxElem
     for (const [elem, count] of counts.entries()) {
@@ -60,4 +60,13 @@ export const isInside = (inner: Border, outer: Border) => inner.left >= outer.le
 export const replaceMany = (text: string, table: Record<string, string>) => {
     for (const [key, value] of Object.entries(table)) text = text.replaceAll(key, value)
     return text
+}
+
+export const useLocalStorage = <T>(key: string, defaultValue: T) => {
+    const [value, setValue] = useState<T>(() => {
+        const jsonValue = localStorage.getItem(key)
+        return jsonValue != null ? JSON.parse(jsonValue) : defaultValue
+    })
+    useEffect(() => localStorage.setItem(key, JSON.stringify(value)), [key, value])
+    return [value, setValue] as const
 }
