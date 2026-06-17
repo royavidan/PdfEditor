@@ -2,7 +2,7 @@ import React, { useState, createContext, useContext } from 'react'
 import { SettingsContext } from './settings-context'
 
 export const CounterContext = createContext({
-  counter: 0,
+  getCounter: () => 0,
   resetCounter: () => {},
   incrementCounter: () => {},
   decrementCounter: () => {}
@@ -10,13 +10,14 @@ export const CounterContext = createContext({
 
 export default ({ children }) => {
   const { initialCounter } = useContext(SettingsContext)
-  const [counter, setCounter] = useState(initialCounter)
-  const resetCounter = () => setCounter(initialCounter)
-  const incrementCounter = (i = 1) => setCounter(counter => counter + i)
-  const decrementCounter = (i = 1) => setCounter(counter => counter - i)
+  const [counter, setCounter] = useState(null)
+  const getCounter = () => counter || initialCounter
+  const resetCounter = () => setCounter(null)
+  const incrementCounter = (i = 1) => setCounter(counter => (counter || initialCounter) + i)
+  const decrementCounter = (i = 1) => setCounter(counter => (counter || initialCounter) - i)
   return (
     <CounterContext.Provider
-      value={{ counter, resetCounter, incrementCounter, decrementCounter }}
+      value={{ getCounter, resetCounter, incrementCounter, decrementCounter }}
     >
       {children}
     </CounterContext.Provider>
