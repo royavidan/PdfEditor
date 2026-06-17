@@ -15,7 +15,7 @@ function PdfViewportController({ children }) {
   const { scale } = useContext(ViewportContext)
   const { fontSize, doubleBloonsOnTap } = useContext(SettingsContext)
   const { getText, getSymbols, getSize, getAngle, isLoaded } = useContext(PDFContext)
-  const { counter, incrementCounter, decrementCounter } = useContext(
+  const { getCounter, incrementCounter, decrementCounter, resetCounter } = useContext(
     CounterContext
   )
   const { modList, nextId, addMod: addModification, changeMod, removeMod } = useContext(
@@ -38,7 +38,7 @@ function PdfViewportController({ children }) {
     const positions = [markedPosition, position].map(p => translatePos(angle, p.x, p.y, size.width, size.height))
     const X = positions.map(p => p.x / scale), Y = positions.map(p => p.y / scale)
     const bloon = {
-      id: counter,
+      id: getCounter(),
       left: Math.min(...X),
       right: Math.max(...X),
       top: Math.min(...Y),
@@ -57,7 +57,7 @@ function PdfViewportController({ children }) {
         y: position.y / scale
       },
       page: currentPage,
-      value: counter,
+      value: getCounter(),
       hasExtra,
       title: `${bloon.measurement}: ${bloon.content}${bloon.tolerance ? ` (${bloon.tolerance['+']}/${bloon.tolerance['-']})` : ''}`,
       template
@@ -73,7 +73,7 @@ function PdfViewportController({ children }) {
           y: position.y / scale
         },
         page: currentPage,
-        value: counter + 1,
+        value: getCounter() + 1,
         disabled: true,
         title: `${newBloon.measurement}: ${newBloon.content}${newBloon.tolerance ? ` (${newBloon.tolerance['+']}/${newBloon.tolerance['-']})` : ''}`,
         template
@@ -114,6 +114,8 @@ function PdfViewportController({ children }) {
         removeBloon(idToRemove)
         decrementCounter()
       }
+      const newModListLen = modList.length - 1 - Number(originalMod.hasExtra)
+      if (newModListLen === 0) resetCounter()
     },
     fontSize,
     markedPosition,

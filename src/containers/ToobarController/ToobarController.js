@@ -124,7 +124,7 @@ function ToolbarController({ children }) {
     FileContext
   )
   const { scale, setScale } = useContext(ViewportContext)
-  const { counter, resetCounter } = useContext(CounterContext)
+  const { getCounter, resetCounter } = useContext(CounterContext)
   const { modList, resetModList } = useContext(ModificationContext)
   const { bloons, resetBloons } = useContext(BloonsContext)
   const { currentPage, setPage, pages } = useContext(PageContext)
@@ -154,7 +154,7 @@ function ToolbarController({ children }) {
       resetCounter()
       resetSettings()
     },
-    counter,
+    counter: getCounter(),
     onDownload: () => download(fileData, modList, fontSize),
     onExport: () => exportBloons(bloons),
     onSettings: openSettings,
